@@ -1,0 +1,20 @@
+{
+  "name": "8ThreadTech",
+  "short_name": "8ThreadTech",
+  "description": "Bàn phím THREAD 75 — Gõ chất. Chơi khác.",
+  "start_url": "./",
+  "background_color": "#111111",
+  "theme_color": "#18181B",
+  "icons": [
+    {
+      "src": "icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
