@@ -1,16 +1,25 @@
-# React + Vite
+# 8ThreadTech
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Trang giới thiệu bàn phím cơ THREAD 75, xây dựng bằng React và Vite.
 
-Currently, two official plugins are available:
+## Chạy cục bộ
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+pnpm install
+pnpm dev
+```
 
-## React Compiler
+## Cấu trúc
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `src/assets/`: ảnh và tài nguyên giao diện
+- `src/pages/`: màn hình sản phẩm
+- `src/App.jsx`: ứng dụng gốc
+- `src/main.jsx`: điểm khởi chạy React
+- `src/App.css`: kiểu giao diện
 
-## Expanding the ESLint configuration
+## Build
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+pnpm build
+pnpm preview
+```
