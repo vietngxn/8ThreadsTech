@@ -1,10 +1,10 @@
 import { Layout } from "./layouts/Layout.jsx";
-import ProductDetailPage from "./pages/ProductDetailPage.jsx";
+import ProductList from "./pages/ProductList.jsx";
 
 export default function App() {
   return (
     <Layout>
-      <ProductDetailPage />
+      <ProductList />
     </Layout>
   );
 }
