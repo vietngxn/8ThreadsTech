@@ -12,11 +12,13 @@ import AddressBookPage from "./pages/AddressBookPage.jsx";
 import ChangePasswordPage from "./pages/ChangePasswordPage.jsx";
 import TeamPage from "./pages/TeamPage.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminProductManagement from "./pages/admin/AdminProductManagement.jsx";
 
 export default function App() {
   const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
 
   if (pathname === "/admin" || pathname === "/admin/dashboard") return <AdminDashboard />;
+  if (pathname === "/admin/products") return <AdminProductManagement />;
 
   return (
     <Layout>
