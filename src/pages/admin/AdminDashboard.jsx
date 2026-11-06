@@ -47,7 +47,7 @@ function Sidebar() {
   return <aside className="admin-sidebar" data-node-id="45:2219">
     <a className="admin-brand" href="/" aria-label="8ThreadTech - về cửa hàng"><img src={logo} alt="" /><strong>8ThreadTech</strong></a>
     <nav aria-label="Quản lý"><div className="admin-nav-label">QUẢN LÝ</div>
-      {navigation.map(([Icon, label, count], index) => { const content = <><Icon size={19} stroke={1.5} /><span>{label}</span>{count && <b>{count}</b>}</>; return index === 0 ? <a className="admin-nav-item active" href="/admin" key={label} aria-current="page">{content}</a> : index === 1 ? <a className="admin-nav-item" href="/admin/products" key={label}>{content}</a> : <div className="admin-nav-item" key={label}>{content}</div>; })}
+      {navigation.map(([Icon, label, count], index) => { const content = <><Icon size={19} stroke={1.5} /><span>{label}</span>{count && <b>{count}</b>}</>; return index === 0 ? <a className="admin-nav-item active" href="/admin" key={label} aria-current="page">{content}</a> : index === 1 ? <a className="admin-nav-item" href="/admin/products" key={label}>{content}</a> : index === 2 ? <a className="admin-nav-item" href="/admin/categories" key={label}>{content}</a> : <div className="admin-nav-item" key={label}>{content}</div>; })}
     </nav>
     <div className="admin-sidebar-bottom"><div className="admin-support"><IconHelpCircle size={19} stroke={1.5} />Trung tâm trợ giúp</div><div className="admin-support"><IconSettings size={19} stroke={1.5} />Cài đặt</div>
       <div className="admin-account"><span className="admin-avatar">MA</span><span><strong>Minh Anh</strong><small>Admin</small></span><IconChevronDown size={14} /></div>

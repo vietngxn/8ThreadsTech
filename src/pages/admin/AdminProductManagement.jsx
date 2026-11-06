@@ -35,7 +35,7 @@ const stockState = (stock) => stock === 0 ? 'out' : stock < 10 ? 'low' : 'availa
 function Sidebar() {
   const items = [
     [IconLayoutDashboard, 'Dashboard', '/admin'], [IconPackage, 'Sản phẩm', '/admin/products'],
-    [IconFolder, 'Danh mục'], [IconShoppingBag, 'Đơn hàng', undefined, '12'], [IconUsers, 'Khách hàng'],
+    [IconFolder, 'Danh mục', '/admin/categories'], [IconShoppingBag, 'Đơn hàng', undefined, '12'], [IconUsers, 'Khách hàng'],
     [IconTicket, 'Khuyến mãi'], [IconChartLine, 'Thống kê'], [IconAdjustments, 'Nhật kí'],
   ];
   return <aside className="pm-sidebar" data-node-id="52:490">
