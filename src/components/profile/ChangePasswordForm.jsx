@@ -14,61 +14,63 @@ export default function ChangePasswordForm({ passwords, visible, errors, status,
   ];
 
   return (
-    <div className="profile-content change-password-content">
-      <header className="profile-content-header" data-node-id="23:337">
-        <h1 data-node-id="23:338">ĐỔI MẬT KHẨU</h1>
+    <div className="change-password-main">
+      <header className="change-password-card-heading" data-node-id="23:337">
+        <h2 data-node-id="23:338">Cập nhật mật khẩu</h2>
         <p data-node-id="23:339">
           Đảm bảo tài khoản của bạn luôn được bảo vệ bằng mật khẩu mạnh và duy nhất.
         </p>
       </header>
 
-      <form className="change-password-form" onSubmit={onSubmit} data-node-id="23:340">
-        <div className="change-password-fields">
-          {passwordFields.map((field) => (
-            <div className="change-password-field" key={field.name} data-node-id={field.nodeId}>
-              <label htmlFor={`password-${field.name}`}>{field.label}</label>
-              <div className="change-password-input-wrap">
-                <IconLock size={17} aria-hidden="true" />
-                <input
-                  id={`password-${field.name}`}
-                  name={field.name}
-                  type={visible[field.name] ? "text" : "password"}
-                  autoComplete={field.autoComplete}
-                  placeholder={field.placeholder}
-                  value={passwords[field.name]}
-                  onChange={onUpdate}
-                  required
-                  aria-invalid={Boolean(errors[field.name])}
-                  aria-describedby={errors[field.name] ? `error-${field.name}` : undefined}
-                />
-                <button
-                  className="change-password-toggle"
-                  type="button"
-                  onClick={() => onToggleVisibility(field.name)}
-                  aria-label={visible[field.name] ? `Ẩn ${field.label.toLowerCase()}` : `Hiện ${field.label.toLowerCase()}`}
-                >
-                  {visible[field.name] ? <IconEyeOff size={17} /> : <IconEye size={17} />}
-                </button>
+      <form className="change-password-card" onSubmit={onSubmit} data-node-id="23:340">
+        <div className="change-password-fields-and-guide">
+          <div className="change-password-fields">
+            {passwordFields.map((field) => (
+              <div className="change-password-field" key={field.name} data-node-id={field.nodeId}>
+                <label htmlFor={`password-${field.name}`}>{field.label}</label>
+                <div className="change-password-input-wrap">
+                  <IconLock size={17} aria-hidden="true" />
+                  <input
+                    id={`password-${field.name}`}
+                    name={field.name}
+                    type={visible[field.name] ? "text" : "password"}
+                    autoComplete={field.autoComplete}
+                    placeholder={field.placeholder}
+                    value={passwords[field.name]}
+                    onChange={onUpdate}
+                    required
+                    aria-invalid={Boolean(errors[field.name])}
+                    aria-describedby={errors[field.name] ? `error-${field.name}` : undefined}
+                  />
+                  <button
+                    className="change-password-toggle"
+                    type="button"
+                    onClick={() => onToggleVisibility(field.name)}
+                    aria-label={visible[field.name] ? `Ẩn ${field.label.toLowerCase()}` : `Hiện ${field.label.toLowerCase()}`}
+                  >
+                    {visible[field.name] ? <IconEyeOff size={17} /> : <IconEye size={17} />}
+                  </button>
+                </div>
+                {errors[field.name] && (
+                  <span id={`error-${field.name}`} className="change-password-error" role="alert">
+                    {errors[field.name]}
+                  </span>
+                )}
               </div>
-              {errors[field.name] && (
-                <span id={`error-${field.name}`} className="change-password-error" role="alert">
-                  {errors[field.name]}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="change-password-requirements" data-node-id="23:402">
-          <h2>Yêu cầu mật khẩu</h2>
-          <ul>
-            {requirements.map((req, index) => (
-              <li key={index} className={req.valid ? "is-valid" : ""}>
-                <IconCheck size={14} aria-hidden="true" />
-                {req.label}
-              </li>
             ))}
-          </ul>
+          </div>
+
+          <div className="password-security-guide" data-node-id="23:402">
+            <h3>Yêu cầu mật khẩu</h3>
+            <ul>
+              {requirements.map((req, index) => (
+                <li key={index} className={req.valid ? "is-valid" : ""}>
+                  <IconCheck size={14} aria-hidden="true" />
+                  {req.label}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {status && (
@@ -82,7 +84,7 @@ export default function ChangePasswordForm({ passwords, visible, errors, status,
             HỦY THAY ĐỔI
           </button>
           <button type="submit" className="change-password-submit">
-            LƯU MẬT KHẨU MỚI
+            LƯU MẬT KHẨU MỚI <IconCheck aria-hidden="true" />
           </button>
         </div>
       </form>

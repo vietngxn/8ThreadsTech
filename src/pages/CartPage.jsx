@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import CartHeader from "../components/cart/CartHeader";
+import Navbar from "../components/common/Navbar";
 import CartIntro from "../components/cart/CartIntro";
 import CartList from "../components/cart/CartList";
 import CartSummary from "../components/cart/CartSummary";
@@ -30,7 +30,7 @@ export default function CartPage() {
 
   return (
     <div className="cart-page" data-node-id="3:341">
-      <CartHeader quantity={quantity} />
+      <Navbar quantity={quantity} />
       
       <main>
         <CartIntro quantity={quantity} />

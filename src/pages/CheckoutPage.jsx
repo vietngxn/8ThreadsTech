@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
-import CartHeader from "../components/cart/CartHeader";
+import Navbar from "../components/common/Navbar";
 import CartFooter from "../components/cart/CartFooter";
 import CheckoutIntro from "../components/checkout/CheckoutIntro";
 import CheckoutForm from "../components/checkout/CheckoutForm";
@@ -37,7 +37,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="checkout-page" data-node-id="3:58">
-      <CartHeader quantity={3} />
+      <Navbar quantity={3} />
       
       <main>
         <CheckoutIntro />

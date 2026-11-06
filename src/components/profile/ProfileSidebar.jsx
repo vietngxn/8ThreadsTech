@@ -1,10 +1,10 @@
-import { IconUser, IconLock, IconMapPin, IconLogout, IconPackage, IconShieldCheck, IconChevronRight, IconArrowUpRight } from "@tabler/icons-react";
+import { IconUser, IconLock, IconMapPin, IconLogout, IconPackage, IconChevronRight, IconArrowUpRight } from "@tabler/icons-react";
 
 const menuItems = [
   { id: "profile", label: "Hồ sơ cá nhân", icon: IconUser, href: "/ho-so" },
   { id: "orders", label: "Đơn hàng của tôi", icon: IconPackage, href: "/don-hang" },
   { id: "address", label: "Sổ địa chỉ", icon: IconMapPin, href: "/so-dia-chi" },
-  { id: "change-password", label: "Đổi mật khẩu", icon: IconShieldCheck, href: "/doi-mat-khau" },
+  { id: "change-password", label: "Đổi mật khẩu", icon: IconLock, href: "/doi-mat-khau" },
 ];
 
 export default function ProfileSidebar({ currentPage }) {

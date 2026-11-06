@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { IconArrowUpRight, IconBuilding, IconCheck, IconChevronRight, IconCircleCheck, IconHome, IconLock, IconLogout, IconMapPin, IconPackage, IconPencil, IconPlus, IconSearch, IconShoppingBag, IconTrash, IconUser, IconX } from "@tabler/icons-react";
 import logo from "../assets/thread-logo.png";
-import CartHeader from "../components/cart/CartHeader";
+import Navbar from "../components/common/Navbar";
 import CartFooter from "../components/cart/CartFooter";
 import AddressSidebar from "../components/address/AddressSidebar";
 import AddressPanel from "../components/address/AddressPanel";
@@ -65,7 +65,7 @@ export default function AddressBookPage() {
 
   return (
     <div className="address-page" data-node-id="20:3">
-      <CartHeader quantity={0} />
+      <Navbar quantity={0} />
       
       <main>
         <section className="address-intro" data-node-id="20:22">

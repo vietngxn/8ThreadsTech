@@ -1,5 +1,5 @@
 import { useState } from "react";
-import LoginHeader from "../components/login/LoginHeader";
+import Navbar from "../components/common/Navbar";
 import LoginStage from "../components/login/LoginStage";
 import LoginForm from "../components/login/LoginForm";
 
@@ -8,7 +8,7 @@ export default function LoginPage() {
 
   return (
     <div className="login-page" data-node-id="3:565">
-      <LoginHeader />
+      <Navbar />
       <main className="login-main" data-node-id="3:584">
         <LoginStage />
         <LoginForm notice={notice} onNotice={setNotice} />

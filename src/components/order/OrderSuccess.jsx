@@ -1,4 +1,4 @@
-import { IconCheck } from "@tabler/icons-react";
+import { IconArrowRight, IconArrowUpRight, IconCheck } from "@tabler/icons-react";
 
 export default function OrderSuccess({ orderId, total }) {
   const formatPrice = (price) => `${price.toLocaleString("vi-VN")} ₫`;

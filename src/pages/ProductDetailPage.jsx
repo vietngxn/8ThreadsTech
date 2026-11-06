@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import PageHeader from "../components/product-detail/PageHeader";
+import Navbar from "../components/common/Navbar";
 import HeroSection from "../components/product-detail/HeroSection";
 import PurchaseSection from "../components/product-detail/PurchaseSection";
 import ReviewsSection from "../components/product-detail/ReviewsSection";
@@ -15,7 +15,7 @@ export default function ProductDetailPage() {
 
   return (
     <main className="thread-page" data-node-id="3:1120">
-      <PageHeader onComingSoon={comingSoon} />
+      <Navbar onComingSoon={comingSoon} />
       <HeroSection />
       <PurchaseSection
         color={color}

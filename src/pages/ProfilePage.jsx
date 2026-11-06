@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { IconChevronRight } from "@tabler/icons-react";
-import CartHeader from "../components/cart/CartHeader";
+import Navbar from "../components/common/Navbar";
 import CartFooter from "../components/cart/CartFooter";
 import ProfileSidebar from "../components/profile/ProfileSidebar";
 import ProfileForm from "../components/profile/ProfileForm";
@@ -33,7 +33,7 @@ export default function ProfilePage() {
 
   return (
     <div className="profile-page" data-node-id="8:811">
-      <CartHeader quantity={0} />
+      <Navbar quantity={0} />
       
       <main>
         <section className="profile-intro" data-node-id="8:830">
@@ -44,7 +44,6 @@ export default function ProfilePage() {
             <IconChevronRight />
             <span>Hồ sơ cá nhân</span>
           </div>
-          <div className="profile-title-wrap" data-node-id="8:837">
             <div className="profile-title" data-node-id="8:838">
               <div className="profile-signature" data-node-id="8:839">
                 <i data-node-id="8:840" />
@@ -52,7 +51,6 @@ export default function ProfilePage() {
               </div>
               <h1 data-node-id="8:842">HỒ SƠ</h1>
             </div>
-          </div>
           <div className="profile-intro-divider" data-node-id="8:846" />
         </section>
 

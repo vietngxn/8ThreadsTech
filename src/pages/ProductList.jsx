@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import ProductListHeader from "../components/product-list/ProductListHeader";
+import { useSearchParams } from "react-router-dom";
+import Navbar from "../components/common/Navbar";
 import ProductListIntro from "../components/product-list/ProductListIntro";
 import ProductListSidebar from "../components/product-list/ProductListSidebar";
 import ProductListToolbar from "../components/product-list/ProductListToolbar";
@@ -30,7 +31,8 @@ const products = [
 ];
 
 export default function ProductList() {
-  const [query, setQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [sort, setSort] = useState("featured");
   const [category, setCategory] = useState("Tất cả bàn phím");
   const [filters, setFilters] = useState([]);
@@ -83,7 +85,13 @@ export default function ProductList() {
 
   return (
     <div className="product-list" data-node-id="3:708">
-      <ProductListHeader cartCount={cartCount} />
+      <Navbar
+        quantity={cartCount}
+        onSearch={(searchQuery) => {
+          setQuery(searchQuery);
+          document.querySelector("#products")?.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
       
       <main id="top">
         <ProductListIntro />

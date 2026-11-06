@@ -1,5 +1,5 @@
 import { useState } from "react";
-import CartHeader from "../components/cart/CartHeader";
+import Navbar from "../components/common/Navbar";
 import CartFooter from "../components/cart/CartFooter";
 import OrderDetailIntro from "../components/order/OrderDetailIntro";
 import OrderDetailMain from "../components/order/OrderDetailMain";
@@ -20,7 +20,7 @@ export default function OrderDetailPage() {
 
   return (
     <div className="order-detail-page" data-node-id="15:1238">
-      <CartHeader quantity={0} />
+      <Navbar quantity={0} />
       
       <main>
         <OrderDetailIntro />
