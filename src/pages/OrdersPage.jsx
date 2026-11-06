@@ -134,9 +134,9 @@ function OrderCard({ order, onCancel }) {
               <button onClick={() => setConfirmCancel(false)}>Giữ đơn</button>
             </div>
           )}
-          <button className="order-button order-button--secondary" aria-expanded={detailsOpen} onClick={() => setDetailsOpen((open) => !open)}>
+          {order.id === initialOrders[0].id ? <a className="order-button order-button--secondary" href="/don-hang/chi-tiet">XEM CHI TIẾT</a> : <button className="order-button order-button--secondary" aria-expanded={detailsOpen} onClick={() => setDetailsOpen((open) => !open)}>
             {detailsOpen ? "ĐÓNG CHI TIẾT" : "XEM CHI TIẾT"}
-          </button>
+          </button>}
           {order.status === "shipping" && <button className="order-button order-button--primary" onClick={() => setDetailsOpen(true)}>THEO DÕI ĐƠN <IconArrowUpRight /></button>}
           {(order.status === "delivered" || order.status === "cancelled") && <a className="order-button order-button--primary" href="/">MUA LẠI <IconArrowUpRight /></a>}
         </div>
