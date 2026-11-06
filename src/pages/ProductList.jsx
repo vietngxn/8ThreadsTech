@@ -9,10 +9,10 @@ import {
   IconSearch,
   IconShieldCheck,
   IconShoppingBag,
-  IconSlidersHorizontal,
+  IconAdjustmentsHorizontal,
   IconTruck,
   IconRefresh,
-  IconUserRound,
+  IconUser,
 } from "@tabler/icons-react";
 import logo from "../assets/thread-logo.png";
 import thread75 from "../assets/list-thread-75.png";
@@ -27,15 +27,15 @@ import thread100 from "../assets/list-thread-100.png";
 import "./ProductList.css";
 
 const products = [
-  { id: "thread-75", nodeId: "3:856", name: "THREAD 75", variant: "Bạc ánh trăng · Linear Red Switch", specs: "75% / Nhôm CNC / 3 chế độ", price: 2490000, oldPrice: "2.790.000 đ", image: thread75, badge: "MỚI RA MẮT", colors: ["#c8c9ca", "#393b3d", "#a82125"], layout: "75%", connection: "3 chế độ kết nối", switch: "Linear" },
-  { id: "thread-65", nodeId: "3:879", name: "THREAD 65", variant: "Đen nguyên bản · Linear Switch", specs: "65% / Hot-swap / 3 chế độ", price: 1890000, availability: "Có sẵn · Giao trong 24h", image: thread65, badge: "BÁN CHẠY", colors: ["#393b3d", "#c8c9ca"], layout: "65%", connection: "3 chế độ kết nối", switch: "Linear" },
-  { id: "thread-98", nodeId: "3:901", name: "THREAD 98", variant: "Trắng sương · Tactile Brown Switch", specs: "98% / Phím số / 3 chế độ", price: 2190000, oldPrice: "2.490.000 đ", image: thread98, badge: "TIẾT KIỆM 300K", colors: ["#d8d2bf", "#393b3d"], layout: "98%", connection: "3 chế độ kết nối", switch: "Tactile" },
-  { id: "thread-80-pro", nodeId: "3:924", name: "THREAD 80 PRO", variant: "Xám titan · Linear Silver Switch", specs: "TKL 80% / Nhôm CNC / 8.000 Hz", price: 3290000, availability: "Có sẵn · Giao trong 24h", image: thread80Pro, badge: "HIỆU NĂNG CAO", colors: ["#c8c9ca", "#393b3d"], layout: "80% / TKL", connection: "Có dây USB-C", switch: "Linear" },
-  { id: "thread-60-he", nodeId: "3:946", name: "THREAD 60 HE", variant: "Đỏ dung nham · Switch từ tính", specs: "60% / Rapid Trigger / 8.000 Hz", price: 2790000, availability: "Có sẵn · Giao trong 24h", image: thread60He, badge: "MỚI RA MẮT", colors: ["#a82125", "#393b3d"], layout: "60% / 65%", connection: "Có dây USB-C", switch: "Magnetic" },
-  { id: "thread-75-air", nodeId: "3:968", name: "THREAD 75 AIR", variant: "Xanh khói · Low-profile Switch", specs: "75% / Siêu mỏng / Bluetooth 5.3", price: 1990000, availability: "Có sẵn · Giao trong 24h", image: thread75Air, badge: "MỎNG NHẸ", colors: ["#738391", "#c8c9ca"], layout: "75%", connection: "Không dây Bluetooth", switch: "Linear" },
-  { id: "thread-65-lite", nodeId: "3:991", name: "THREAD 65 LITE", variant: "Kem cát · Linear Red Switch", specs: "65% / Gasket mount / Hot-swap", price: 1290000, oldPrice: "1.490.000 đ", image: thread65Lite, badge: "GIÁ TỐT", colors: ["#d8d2bf", "#393b3d"], layout: "65%", connection: "Có dây USB-C", switch: "Linear" },
-  { id: "thread-87", nodeId: "3:1013", name: "THREAD 87", variant: "Đen carbon · Tactile Brown Switch", specs: "TKL 87 phím / RGB / Hot-swap", price: 1690000, availability: "Có sẵn · Giao trong 24h", image: thread87, badge: "ĐƯỢC YÊU THÍCH", colors: ["#393b3d", "#c8c9ca"], layout: "80% / TKL", connection: "Có dây USB-C", switch: "Tactile" },
-  { id: "thread-100", nodeId: "3:1035", name: "THREAD 100", variant: "Bạc tinh vân · Linear Red Switch", specs: "100% / Phím số / 3 chế độ", price: 2590000, availability: "Có sẵn · Giao trong 24h", image: thread100, badge: "LÀM VIỆC CHUYÊN SÂU", colors: ["#c8c9ca", "#393b3d"], layout: "98% / 100%", connection: "3 chế độ kết nối", switch: "Linear" },
+  { id: "thread-75", nodeId: "3:856", name: "THREAD 75", variant: "Bạc ánh trăng · Linear Red Switch", specs: "75% / Nhôm CNC / 3 chế độ", price: 2490000, oldPrice: "2.790.000 đ", image: thread75, imageFrameId: "3:857", imageNodeId: "3:858", badge: "MỚI RA MẮT", colors: ["#c8c9ca", "#393b3d", "#a82125"], layout: "75%", connection: "3 chế độ kết nối", switch: "Linear" },
+  { id: "thread-65", nodeId: "3:879", name: "THREAD 65", variant: "Đen nguyên bản · Linear Switch", specs: "65% / Hot-swap / 3 chế độ", price: 1890000, availability: "Có sẵn · Giao trong 24h", image: thread65, imageFrameId: "3:880", imageNodeId: "3:881", badge: "BÁN CHẠY", colors: ["#393b3d", "#c8c9ca"], layout: "65%", connection: "3 chế độ kết nối", switch: "Linear" },
+  { id: "thread-98", nodeId: "3:901", name: "THREAD 98", variant: "Trắng sương · Tactile Brown Switch", specs: "98% / Phím số / 3 chế độ", price: 2190000, oldPrice: "2.490.000 đ", image: thread98, imageFrameId: "3:902", imageNodeId: "3:903", badge: "TIẾT KIỆM 300K", colors: ["#d8d2bf", "#393b3d"], layout: "98%", connection: "3 chế độ kết nối", switch: "Tactile" },
+  { id: "thread-80-pro", nodeId: "3:924", name: "THREAD 80 PRO", variant: "Xám titan · Linear Silver Switch", specs: "TKL 80% / Nhôm CNC / 8.000 Hz", price: 3290000, availability: "Có sẵn · Giao trong 24h", image: thread80Pro, imageFrameId: "3:925", imageNodeId: "3:926", badge: "HIỆU NĂNG CAO", colors: ["#c8c9ca", "#393b3d"], layout: "80% / TKL", connection: "Có dây USB-C", switch: "Linear" },
+  { id: "thread-60-he", nodeId: "3:946", name: "THREAD 60 HE", variant: "Đỏ dung nham · Switch từ tính", specs: "60% / Rapid Trigger / 8.000 Hz", price: 2790000, availability: "Có sẵn · Giao trong 24h", image: thread60He, imageFrameId: "3:947", imageNodeId: "3:948", badge: "MỚI RA MẮT", colors: ["#a82125", "#393b3d"], layout: "60% / 65%", connection: "Có dây USB-C", switch: "Magnetic" },
+  { id: "thread-75-air", nodeId: "3:968", name: "THREAD 75 AIR", variant: "Xanh khói · Low-profile Switch", specs: "75% / Siêu mỏng / Bluetooth 5.3", price: 1990000, availability: "Có sẵn · Giao trong 24h", image: thread75Air, imageFrameId: "3:969", imageNodeId: "3:970", badge: "MỎNG NHẸ", colors: ["#738391", "#c8c9ca"], layout: "75%", connection: "Không dây Bluetooth", switch: "Linear" },
+  { id: "thread-65-lite", nodeId: "3:991", name: "THREAD 65 LITE", variant: "Kem cát · Linear Red Switch", specs: "65% / Gasket mount / Hot-swap", price: 1290000, oldPrice: "1.490.000 đ", image: thread65Lite, imageFrameId: "3:992", imageNodeId: "3:993", badge: "GIÁ TỐT", colors: ["#d8d2bf", "#393b3d"], layout: "65%", connection: "Có dây USB-C", switch: "Linear" },
+  { id: "thread-87", nodeId: "3:1013", name: "THREAD 87", variant: "Đen carbon · Tactile Brown Switch", specs: "TKL 87 phím / RGB / Hot-swap", price: 1690000, availability: "Có sẵn · Giao trong 24h", image: thread87, imageFrameId: "3:1014", imageNodeId: "3:1015", badge: "ĐƯỢC YÊU THÍCH", colors: ["#393b3d", "#c8c9ca"], layout: "80% / TKL", connection: "Có dây USB-C", switch: "Tactile" },
+  { id: "thread-100", nodeId: "3:1035", name: "THREAD 100", variant: "Bạc tinh vân · Linear Red Switch", specs: "100% / Phím số / 3 chế độ", price: 2590000, availability: "Có sẵn · Giao trong 24h", image: thread100, imageFrameId: "3:1036", imageNodeId: "3:1037", badge: "LÀM VIỆC CHUYÊN SÂU", colors: ["#c8c9ca", "#393b3d"], layout: "98% / 100%", connection: "3 chế độ kết nối", switch: "Linear" },
 ];
 
 const filterGroups = [
@@ -54,7 +54,6 @@ export default function ProductList() {
   const [filters, setFilters] = useState([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-  const [page, setPage] = useState(1);
 
   const visibleProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("vi");
@@ -87,7 +86,7 @@ export default function ProductList() {
 
   const toggleFilter = (value) => {
     setFilters((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
-    setPage(1);
+
   };
 
   return (
@@ -106,7 +105,7 @@ export default function ProductList() {
         <div className="pl-tools" data-node-id="3:726">
           <button aria-label="Tìm kiếm" onClick={() => document.querySelector("#product-search")?.focus()}><IconSearch size={20} stroke={1.6} /></button>
           <button className="pl-cart" aria-label={`Giỏ hàng: ${cartCount} sản phẩm`}><IconShoppingBag size={20} stroke={1.6} /><span>{cartCount}</span></button>
-          <button aria-label="Tài khoản"><IconUserRound size={20} stroke={1.6} /></button>
+          <button aria-label="Tài khoản"><IconUser size={20} stroke={1.6} /></button>
         </div>
       </header>
 
@@ -125,10 +124,10 @@ export default function ProductList() {
 
         <section className="pl-catalog" id="products" data-node-id="3:753">
           <aside className="pl-sidebar" data-node-id="3:754">
-            <div className="pl-filter-title" data-node-id="3:755"><IconSlidersHorizontal size={17} data-node-id="3:756" /><span data-node-id="3:758">BỘ LỌC</span></div>
+            <div className="pl-filter-title" data-node-id="3:755"><IconAdjustmentsHorizontal size={17} data-node-id="3:756" /><span data-node-id="3:758">BỘ LỌC</span></div>
             <section className="pl-filter-group pl-category-filter" data-node-id="3:759">
               <h2 data-node-id="3:760">DÒNG BÀN PHÍM</h2>
-              {["Tất cả bàn phím", "Bàn phím cơ", "Bàn phím gaming", "Bàn phím low-profile"].map((item, index) => <button key={item} className={category === item ? "selected" : ""} onClick={() => { setCategory(item); setPage(1); }}><span>{item}</span><small>{["24", "16", "5", "3"][index]}</small></button>)}
+              {["Tất cả bàn phím", "Bàn phím cơ", "Bàn phím gaming", "Bàn phím low-profile"].map((item, index) => <button key={item} className={category === item ? "selected" : ""} onClick={() => setCategory(item)}><span>{item}</span><small>{["24", "16", "5", "3"][index]}</small></button>)}
             </section>
             {filterGroups.map((group, groupIndex) => (
               <fieldset className="pl-filter-group" key={group.key} data-node-id={["3:773", "3:787", "3:804", "3:818"][groupIndex]}>
@@ -136,7 +135,7 @@ export default function ProductList() {
                 {group.options.map((option) => <label key={option} className="pl-check"><input type="checkbox" checked={filters.includes(option)} onChange={() => toggleFilter(option)} /><span>{option}</span></label>)}
               </fieldset>
             ))}
-            <label className="pl-stock" data-node-id="3:832"><input type="checkbox" checked={inStockOnly} onChange={(event) => { setInStockOnly(event.target.checked); setPage(1); }} /><span>Chỉ hiển thị hàng có sẵn</span></label>
+            <label className="pl-stock" data-node-id="3:832"><input type="checkbox" checked={inStockOnly} onChange={(event) => setInStockOnly(event.target.checked)} /><span>Chỉ hiển thị hàng có sẵn</span></label>
             <div className="pl-help" data-node-id="3:835"><h2 data-node-id="3:836">CHƯA BIẾT CHỌN GÌ?</h2><p data-node-id="3:837">Để 8Threads giúp bạn tìm chiếc bàn phím đúng gu, đúng nhu cầu.</p><a href="mailto:hello@8threadtech.vn" data-node-id="3:838">TƯ VẤN CHỌN PHÍM <IconArrowUpRight size={15} data-node-id="3:840" /></a></div>
           </aside>
 
@@ -144,14 +143,14 @@ export default function ProductList() {
             <div className="pl-toolbar" data-node-id="3:843">
               <p data-node-id="3:844">{visibleProducts.length ? `Hiển thị 1–${visibleProducts.length} trong 24 sản phẩm` : "Không tìm thấy sản phẩm phù hợp"}</p>
               <div className="pl-controls" data-node-id="3:845">
-                <label className="pl-search"><IconSearch size={15} data-node-id="3:847" /><input id="product-search" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Tìm bàn phím của bạn..." /></label>
+                <label className="pl-search"><IconSearch size={15} data-node-id="3:847" /><input id="product-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm bàn phím của bạn..." /></label>
                 <label className="pl-sort"><span className="sr-only">Sắp xếp sản phẩm</span><select value={sort} onChange={(event) => setSort(event.target.value)}><option value="featured">Sắp xếp: Bán chạy nhất</option><option value="price-asc">Giá: Thấp đến cao</option><option value="price-desc">Giá: Cao đến thấp</option></select><IconChevronDown size={14} data-node-id="3:852" /></label>
               </div>
             </div>
             {visibleProducts.length ? <div className="pl-grid" data-node-id="3:854">
-              {visibleProducts.map((product, index) => <article className="pl-product" key={product.id} data-node-id={product.nodeId}>
-                <div className="pl-product-image" data-node-id={["3:857", "3:880", "3:902", "3:925", "3:947", "3:969", "3:992", "3:1014", "3:1036"][index]}>
-                  <img src={product.image} alt={product.name} data-node-id={["3:858", "3:881", "3:903", "3:926", "3:948", "3:970", "3:993", "3:1015", "3:1037"][index]} />
+              {visibleProducts.map((product) => <article className="pl-product" key={product.id} data-node-id={product.nodeId}>
+                <div className="pl-product-image" data-node-id={product.imageFrameId}>
+                  <img src={product.image} alt={product.name} data-node-id={product.imageNodeId} />
                   <span className={`pl-badge ${product.badge === "MỚI RA MẮT" ? "is-new" : ""}`}>{product.badge}</span>
                   <small>8THREADS / KEYBOARDS</small>
                 </div>
@@ -163,8 +162,8 @@ export default function ProductList() {
               </article>)}
             </div> : <div className="pl-empty"><span>Không có sản phẩm nào phù hợp với lựa chọn của bạn.</span><button onClick={() => { setFilters([]); setCategory("Tất cả bàn phím"); setQuery(""); setInStockOnly(false); }}>Xóa bộ lọc</button></div>}
             <div className="pl-pagination" data-node-id="3:1057">
-              <p>Bạn đang xem {visibleProducts.length ? `${Math.min((page - 1) * 9 + 1, 24)} / 24` : "0 / 24"} sản phẩm</p>
-              <div><button aria-label="Trang trước" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><IconChevronLeft size={16} /></button><button className="current" aria-current="page" onClick={() => setPage(1)}>1</button><button onClick={() => setPage(2)}>2</button><button onClick={() => setPage(3)}>3</button><button className="next" onClick={() => setPage((current) => current === 3 ? 1 : current + 1)}>Trang sau <IconArrowRight size={15} /></button></div>
+              <p>Bạn đang xem {visibleProducts.length ? `${visibleProducts.length} / 24` : "0 / 24"} sản phẩm</p>
+              <div><button aria-label="Trang trước" disabled><IconChevronLeft size={16} /></button><button className="current" aria-current="page">1</button><button disabled>2</button><button disabled>3</button><button className="next" disabled>Trang sau <IconArrowRight size={15} /></button></div>
             </div>
           </div>
         </section>
