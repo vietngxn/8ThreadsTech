@@ -85,7 +85,7 @@ export default function ProfilePage() {
               <a className="is-active" href="#profile" data-node-id="8:858"><IconUser data-node-id="8:1023" /><span data-node-id="8:860">Hồ sơ cá nhân</span><IconChevronRight /></a>
               <a href="#recent-order" data-node-id="8:862"><IconPackage data-node-id="8:1026" /><span data-node-id="8:864">Đơn hàng của tôi</span></a>
               <a href="/so-dia-chi" data-node-id="8:865"><IconMapPin data-node-id="8:1029" /><span data-node-id="8:867">Sổ địa chỉ</span></a>
-              <a href="#profile" data-node-id="8:868"><IconLock data-node-id="8:1032" /><span data-node-id="8:870">Đổi mật khẩu</span></a>
+              <a href="/doi-mat-khau" data-node-id="8:868"><IconLock data-node-id="8:1032" /><span data-node-id="8:870">Đổi mật khẩu</span></a>
               <a href="/dang-nhap" data-node-id="8:871"><IconLogout data-node-id="8:1035" /><span data-node-id="8:873">Đăng xuất</span></a>
             </nav>
             <div className="profile-sidebar-rule profile-help-rule" data-node-id="8:874" />

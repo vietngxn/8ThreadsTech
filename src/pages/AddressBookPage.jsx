@@ -127,7 +127,7 @@ export default function AddressBookPage() {
               <a href="/ho-so" data-node-id="20:46"><IconUser data-node-id="20:47" /><span data-node-id="20:48">Hồ sơ cá nhân</span></a>
               <a href="/don-hang" data-node-id="20:49"><IconPackage data-node-id="20:50" /><span data-node-id="20:51">Đơn hàng của tôi</span></a>
               <a className="is-active" href="/so-dia-chi" aria-current="page" data-node-id="20:52"><IconMapPin data-node-id="20:53" /><span data-node-id="20:54">Sổ địa chỉ</span><IconChevronRight data-node-id="20:55" /></a>
-              <a href="/ho-so" data-node-id="20:56"><IconLock data-node-id="20:57" /><span data-node-id="20:58">Đổi mật khẩu</span></a>
+              <a href="/doi-mat-khau" data-node-id="20:56"><IconLock data-node-id="20:57" /><span data-node-id="20:58">Đổi mật khẩu</span></a>
               <a href="/dang-nhap" data-node-id="20:59"><IconLogout data-node-id="20:60" /><span data-node-id="20:61">Đăng xuất</span></a>
             </nav>
             <div className="address-sidebar-rule address-help-rule" data-node-id="20:62" />

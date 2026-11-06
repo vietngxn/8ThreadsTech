@@ -9,13 +9,14 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 import OrdersPage from "./pages/OrdersPage.jsx";
 import OrderDetailPage from "./pages/OrderDetailPage.jsx";
 import AddressBookPage from "./pages/AddressBookPage.jsx";
+import ChangePasswordPage from "./pages/ChangePasswordPage.jsx";
 
 export default function App() {
   const pathname = window.location.pathname;
 
   return (
     <Layout>
-      {pathname === "/dang-ky" ? <RegisterPage /> : pathname === "/dang-nhap" ? <LoginPage /> : pathname === "/gio-hang" ? <CartPage /> : pathname === "/thanh-toan" ? <CheckoutPage /> : pathname === "/hoan-tat" ? <OrderCompletePage /> : pathname === "/ho-so" ? <ProfilePage /> : pathname === "/don-hang/chi-tiet" ? <OrderDetailPage /> : pathname === "/don-hang" ? <OrdersPage /> : pathname === "/so-dia-chi" ? <AddressBookPage /> : <ProductList />}
+      {pathname === "/dang-ky" ? <RegisterPage /> : pathname === "/dang-nhap" ? <LoginPage /> : pathname === "/gio-hang" ? <CartPage /> : pathname === "/thanh-toan" ? <CheckoutPage /> : pathname === "/hoan-tat" ? <OrderCompletePage /> : pathname === "/ho-so" ? <ProfilePage /> : pathname === "/don-hang/chi-tiet" ? <OrderDetailPage /> : pathname === "/don-hang" ? <OrdersPage /> : pathname === "/so-dia-chi" ? <AddressBookPage /> : pathname === "/doi-mat-khau" ? <ChangePasswordPage /> : <ProductList />}
     </Layout>
   );
 }
