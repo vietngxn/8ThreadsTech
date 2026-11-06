@@ -110,7 +110,7 @@
 .cart-grand-total small { display: block; margin-top: 6px; color: var(--cart-muted); font-size: 10px; text-align: right; }
 .cart-checkout { width: 100%; height: 52px; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 24px; color: var(--cart-text); border: 0; border-radius: 4px; background: var(--cart-red); font-size: 12px; font-weight: 800; transition: background .18s ease; }
 .cart-checkout:hover:not(:disabled) { background: #d4211c; }
-.cart-checkout:disabled { cursor: default; opacity: .5; }
+.cart-checkout:disabled, .cart-checkout.is-disabled { cursor: default; opacity: .5; pointer-events: none; }
 .cart-checkout svg { width: 18px; height: 18px; }
 .cart-secure { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 14px; color: var(--cart-muted); font-size: 10px; }
 .cart-secure svg { width: 13px; height: 13px; }

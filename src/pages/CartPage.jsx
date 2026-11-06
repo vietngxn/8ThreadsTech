@@ -30,7 +30,7 @@ const initialItems = [
 
 const formatPrice = (price) => `${price.toLocaleString("vi-VN")} ₫`;
 
-function CartFooter() {
+export function CartFooter() {
   return (
     <footer className="cart-footer" data-node-id="3:518">
       <div className="cart-service" data-node-id="3:519">
@@ -118,7 +118,7 @@ export default function CartPage() {
               <div className="cart-costs"><div><span>Tạm tính ({quantity} sản phẩm)</span><strong>{formatPrice(subtotal)}</strong></div><div><span>Giảm giá</span><strong>0 ₫</strong></div><div><span>Phí vận chuyển</span><strong className="free-shipping">Miễn phí</strong></div></div>
               <div className="cart-summary-rule" />
               <div className="cart-grand-total"><div><strong>TỔNG CỘNG</strong><b>{formatPrice(subtotal)}</b></div><small>Đã bao gồm VAT</small></div>
-              <button className="cart-checkout" disabled={!items.length}>TIẾN HÀNH THANH TOÁN <IconArrowRight /></button>
+              <a className={`cart-checkout${items.length ? "" : " is-disabled"}`} aria-disabled={!items.length} href={items.length ? "/thanh-toan" : undefined}>TIẾN HÀNH THANH TOÁN <IconArrowRight /></a>
               <div className="cart-secure"><IconLock />Thông tin thanh toán được bảo mật</div>
             </div>
             <div className="cart-help"><IconHeadphones /><div><span>Cần hỗ trợ trước khi đặt hàng?</span><a href="mailto:hello@8threadtech.vn">NHẮN TIN CHO 8THREADS <IconArrowUpRight /></a></div></div>
