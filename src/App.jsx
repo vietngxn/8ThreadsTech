@@ -5,7 +5,7 @@ import ProductDetailPage from "./pages/ProductDetailPage.jsx";
 export default function App() {
   return (
     <Layout>
-      <ProductDetailPage />
+      <LandingPage />
     </Layout>
   );
 }
