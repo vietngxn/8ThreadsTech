@@ -12,7 +12,7 @@ export default function PageHeader({ onComingSoon }) {
         <a className="active" href="#product">BÀN PHÍM</a>
         <button onClick={() => onComingSoon("Keycap")}>KEYCAP</button>
         <button onClick={() => onComingSoon("Phụ kiện")}>PHỤ KIỆN</button>
-        <button onClick={() => onComingSoon("8Threads Team")}>VỀ 8THREADS TEAM</button>
+        <a href="/ve-8threads-team">VỀ 8THREADS TEAM</a>
       </nav>
       <div className="thread-utilities">
         <button aria-label="Tìm kiếm" onClick={() => onComingSoon("Tìm kiếm")}>
@@ -26,4 +26,3 @@ export default function PageHeader({ onComingSoon }) {
     </header>
   );
 }
-
