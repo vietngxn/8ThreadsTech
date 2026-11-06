@@ -4,13 +4,14 @@ import CheckoutPage from "./pages/CheckoutPage.jsx";
 import ProductList from "./pages/ProductList.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
+import OrderCompletePage from "./pages/OrderCompletePage.jsx";
 
 export default function App() {
   const pathname = window.location.pathname;
 
   return (
     <Layout>
-      {pathname === "/dang-ky" ? <RegisterPage /> : pathname === "/dang-nhap" ? <LoginPage /> : pathname === "/gio-hang" ? <CartPage /> : pathname === "/thanh-toan" ? <CheckoutPage /> : <ProductList />}
+      {pathname === "/dang-ky" ? <RegisterPage /> : pathname === "/dang-nhap" ? <LoginPage /> : pathname === "/gio-hang" ? <CartPage /> : pathname === "/thanh-toan" ? <CheckoutPage /> : pathname === "/hoan-tat" ? <OrderCompletePage /> : <ProductList />}
     </Layout>
   );
 }
