@@ -1,0 +1,63 @@
+/* 8ThreadTech Landing Page Styles */
+
+/* Font import */
+@import '@fontsource-variable/inter';
+
+/* Base styles */
+@import './base.css';
+
+/* Landing page common */
+@import './landing-common.css';
+
+/* Components */
+@import './navbar.css';
+@import './hero.css';
+@import './stats.css';
+@import './design.css';
+@import './sections.css';
+@import './color.css';
+@import './collection.css';
+@import './space-team.css';
+@import './service.css';
+@import './order.css';
+@import './footer.css';
+
+/* Animations */
+@import './animations.css';
+
+/* Other Pages */
+@import './login.css';
+@import './register.css';
+@import './product-list.css';
+@import './cart.css';
+@import './checkout.css';
+@import './orders.css';
+@import './order-detail.css';
+@import './order-complete.css';
+@import './profile.css';
+@import './address-book.css';
+@import './change-password.css';
+@import './team.css';
+
+/* Toast notification (existing) */
+.thread-notice {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 20;
+    background: #1b1b1b;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    box-shadow: 0 8px 30px #0008;
+}
+
+.thread-notice button {
+    border: 0;
+    background: none;
+    color: #f5f5f2;
+}
