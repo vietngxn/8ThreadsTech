@@ -1350,6 +1350,168 @@ summary:focus-visible {
 }
 
 
+/* === GSAP Animation Styles === */
+
+/* Navbar fixed positioning */
+.landing-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(9, 9, 9, 0);
+    transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+    will-change: transform;
+}
+
+/* Adjust body padding for fixed header */
+.landing {
+    padding-top: 104px;
+}
+
+@media (max-width: 760px) {
+    .landing {
+        padding-top: 80px;
+    }
+}
+
+/* Hero title spans for stagger animation */
+.landing-hero h1 span {
+    display: inline-block;
+}
+
+/* Smooth transitions for interactive elements */
+.landing-button,
+.product-price button,
+.landing-swatches button,
+.order-buttons button {
+    transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.landing-button:hover,
+.order-buttons button:first-child:hover {
+    transform: scale(1.05);
+}
+
+.product-price button:hover,
+.landing-swatches button:hover {
+    transform: scale(1.1);
+}
+
+.landing-swatches button.selected {
+    transform: scale(1.15);
+}
+
+/* Product card hover effect */
+.landing-product {
+    transition: transform 0.3s ease;
+}
+
+.landing-product:hover {
+    transform: translateY(-8px);
+}
+
+.landing-product:hover .product-image img {
+    transform: scale(1.05);
+    transition: transform 0.5s ease;
+}
+
+.product-image img {
+    transition: transform 0.3s ease;
+}
+
+/* Wave animation bars */
+.wave i {
+    transition: background 0.3s ease;
+    will-change: height;
+}
+
+/* Prevent layout shift during animations */
+.js-reveal,
+.js-parallax {
+    will-change: transform, opacity;
+}
+
+/* Team infinity continuous animation */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotate(2deg);
+    }
+}
+
+.team-infinity {
+    animation: float 8s ease-in-out infinite;
+}
+
+/* Orbit subtle rotation */
+@keyframes orbit-rotate {
+    from {
+        transform: rotate(-12deg);
+    }
+    to {
+        transform: rotate(348deg);
+    }
+}
+
+.hero-orbit {
+    animation: orbit-rotate 60s linear infinite;
+}
+
+.color-orbit {
+    animation: orbit-rotate 45s linear infinite;
+}
+
+/* Performance optimizations */
+.landing-hero-keyboard,
+.hero-orbit,
+.color-orbit,
+.design-image img {
+    will-change: transform;
+}
+
+/* Reduce animations on mobile for performance */
+@media (max-width: 760px) {
+    .landing-button:hover,
+    .product-price button:hover,
+    .landing-swatches button:hover,
+    .landing-product:hover {
+        transform: none;
+    }
+    
+    .team-infinity {
+        animation: none;
+    }
+}
+
+/* Respect user preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .landing-button:hover,
+    .product-price button:hover,
+    .landing-swatches button:hover,
+    .landing-product:hover,
+    .order-buttons button:hover {
+        transform: none;
+    }
+    
+    .team-infinity,
+    .hero-orbit,
+    .color-orbit {
+        animation: none;
+    }
+}
+
+
 body {
     margin: 0;
     font-family: "Inter Variable", Inter, sans-serif;
