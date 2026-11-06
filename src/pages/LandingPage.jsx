@@ -1,6 +1,6 @@
 import { useState } from "react";
 import NoticeToast from "../components/product-detail/NoticeToast";
-import Navbar from "../components/landing/Navbar";
+import Navbar from "../components/common/Navbar";
 import HeroSection from "../components/landing/HeroSection";
 import StatsSection from "../components/landing/StatsSection";
 import DesignSection from "../components/landing/DesignSection";

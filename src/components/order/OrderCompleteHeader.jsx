@@ -1,25 +1,8 @@
-import { IconCheck, IconChevronRight } from "@tabler/icons-react";
+import { IconChevronRight } from "@tabler/icons-react";
 
 export default function OrderCompleteHeader() {
   return (
     <>
-      <header className="cart-header" data-node-id="5:467">
-        <a className="cart-brand" href="/" aria-label="8ThreadTech trang chủ">
-          <img src="/assets/thread-logo.png" alt="" />
-          <span>8ThreadTech</span>
-        </a>
-        <nav className="cart-nav" aria-label="Danh mục">
-          <a className="active" href="/">BÀN PHÍM</a>
-          <a href="/">KEYCAP</a>
-          <a href="/">PHỤ KIỆN</a>
-          <a href="/">VỀ 8THREADS TEAM</a>
-        </nav>
-        <div className="cart-tools">
-          <button aria-label="Tìm kiếm"><IconSearch /></button>
-          <a className="cart-bag" href="/gio-hang" aria-label="Giỏ hàng"><IconShoppingBag /><span>3</span></a>
-          <a href="/dang-nhap" aria-label="Tài khoản"><IconUser /></a>
-        </div>
-      </header>
       <section className="cart-intro order-intro" data-node-id="5:493">
         <div className="cart-breadcrumb">
           <a href="/">Trang chủ</a>

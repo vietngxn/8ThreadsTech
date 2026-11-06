@@ -61,7 +61,9 @@ export default function OrderDetailMain({ cancelled, onCancelToggle, onConfirmCa
   const savings = orderProducts.reduce((sum, product) => sum + (product.oldPrice ?? product.price) - product.price, 0);
 
   return (
-    <div className="order-detail-main" data-node-id="15:1306">
+    <div className="order-detail-layout" data-node-id="15:1270">
+      <AccountSidebar />
+      <div className="order-detail-main" data-node-id="15:1306">
       <section className="order-status-section" data-node-id="15:1307">
         <a className="order-detail-back" href="/don-hang" data-node-id="15:1308"><IconArrowLeft />QUAY LẠI ĐƠN HÀNG CỦA TÔI</a>
         <div className="order-status-card" data-node-id="15:1311">
@@ -122,11 +124,11 @@ export default function OrderDetailMain({ cancelled, onCancelToggle, onConfirmCa
           </section>
           <div className="order-detail-actions">
             {cancelled ? (
-              <button className="order-detail-action order-detail-action--primary" onClick={() => onConfirmCancel(false)}>
+              <button className="order-support-button" onClick={() => onConfirmCancel(false)}>
                 KHÔI PHỤC ĐƠN HÀNG
               </button>
             ) : (
-              <button className="order-detail-action order-detail-action--danger" onClick={() => onCancelToggle(true)}>
+              <button className="order-cancel-button" onClick={() => onCancelToggle(true)}>
                 HỦY ĐƠN HÀNG
               </button>
             )}
@@ -139,6 +141,7 @@ export default function OrderDetailMain({ cancelled, onCancelToggle, onConfirmCa
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

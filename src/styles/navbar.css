@@ -17,6 +17,10 @@
     will-change: transform;
 }
 
+.navbar-spacer {
+    height: 104px;
+}
+
 .landing-brand {
     display: flex;
     align-items: center;
@@ -40,16 +44,42 @@
 }
 
 .landing-header nav a {
+    position: relative;
     font-size: 11px;
     font-weight: 700;
     color: #9a9a98;
     white-space: nowrap;
     padding: 12px 0;
+    transition: color 0.18s ease;
+}
+
+.landing-header nav a::after {
+    position: absolute;
+    right: 0;
+    bottom: 5px;
+    left: 0;
+    height: 2px;
+    background: #f02b24;
+    content: "";
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.18s ease;
 }
 
 .landing-header nav a.active {
     color: #f5f5f2;
-    border-bottom: 2px solid #f02b24;
+}
+
+.landing-header nav a.active::after {
+    transform: scaleX(1);
+}
+
+.landing-header nav a:hover {
+    color: #f5f5f2;
+}
+
+.landing-header nav a:hover::after {
+    transform: scaleX(1);
 }
 
 .landing-tools {
@@ -69,6 +99,132 @@
     padding: 0;
     font-size: 11px;
     text-decoration: none;
+}
+
+.navbar-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.landing-tools .navbar-search-toggle {
+    position: relative;
+    z-index: 1;
+    justify-content: center;
+}
+
+.navbar-search-form {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 12px);
+    width: 0;
+    max-width: calc(100vw - 140px);
+    height: 42px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: #111;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(12px, -50%);
+    transition: width 0.24s ease, opacity 0.18s ease, transform 0.24s ease, border-color 0.18s ease;
+}
+
+.navbar-search.is-open .navbar-search-form {
+    width: clamp(180px, 30vw, 340px);
+    border-color: #3a3a3a;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(0, -50%);
+}
+
+.navbar-search-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+.navbar-search-form input {
+    width: 0;
+    min-width: 0;
+    flex: 1;
+    height: 100%;
+    padding: 0 12px 0 14px;
+    color: #f5f5f2;
+    color-scheme: dark;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 12px;
+}
+
+.navbar-search-form input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.navbar-search-form input::placeholder {
+    color: #929292;
+}
+
+.landing-tools .navbar-search-form button {
+    width: 40px;
+    height: 100%;
+    flex: 0 0 40px;
+    justify-content: center;
+    color: #f5f5f2;
+    background: #f02b24;
+}
+
+.landing-tools .navbar-search-form .navbar-search-clear {
+    width: 30px;
+    flex: 0 0 30px;
+    color: #fff;
+    background: transparent;
+}
+
+.landing-tools .navbar-search-form .navbar-search-clear:hover {
+    color: #fff;
+    background: transparent;
+    transform: none;
+}
+
+.landing-tools .navbar-search-form button:hover {
+    color: #fff;
+    background: #d4211c;
+}
+
+.landing-tools a[aria-current="page"] {
+    color: #f02b24;
+}
+
+.landing-tools button,
+.landing-tools a {
+    transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.landing-tools button:hover,
+.landing-tools a:hover {
+    color: #f02b24;
+    transform: translateY(-1px);
+}
+
+.landing-tools .navbar-search.is-open .navbar-search-toggle,
+.landing-tools .navbar-search.is-open .navbar-search-toggle:hover {
+    color: #f5f5f2;
+}
+
+.landing-header a:focus-visible,
+.landing-header button:focus-visible {
+    outline: 2px solid #f02b24;
+    outline-offset: 5px;
 }
 
 @media (max-width: 1100px) {
@@ -92,8 +248,8 @@
 
 @media (max-width: 760px) {
     .landing-header {
-        height: auto;
-        min-height: 80px;
+        height: 110px;
+        min-height: 110px;
         flex-wrap: wrap;
         padding: 6px 20px 12px;
         gap: 0;
@@ -111,15 +267,44 @@
     .landing-header nav {
         order: 3;
         width: 100%;
+        height: 34px;
         overflow-x: auto;
         gap: 24px;
     }
 
     .landing-header nav a {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        padding: 0;
         font-size: 10px;
+    }
+
+    .landing-header nav a::after {
+        bottom: 0;
     }
 
     .landing-tools {
         margin-left: auto;
+    }
+
+    .navbar-search-form {
+        max-width: calc(100vw - 120px);
+    }
+
+    .navbar-search.is-open .navbar-search-form {
+        width: clamp(170px, 52vw, 280px);
+    }
+
+    .navbar-spacer {
+        height: 110px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing-header *,
+    .landing-header *::before,
+    .landing-header *::after {
+        transition-duration: 0.01ms !important;
     }
 }

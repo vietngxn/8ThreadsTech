@@ -117,7 +117,7 @@ function OrderCard({ order, onCancel }) {
               <button onClick={() => setConfirmCancel(false)}>Giữ đơn</button>
             </div>
           )}
-          {order.id === initialOrders[0].id ? (
+          {order.status !== "delivered" && order.status !== "cancelled" ? (
             <a className="order-button order-button--secondary" href="/don-hang/chi-tiet">XEM CHI TIẾT</a>
           ) : (
             <button className="order-button order-button--secondary" aria-expanded={detailsOpen} onClick={() => setDetailsOpen((open) => !open)}>
@@ -145,7 +145,9 @@ function OrderCard({ order, onCancel }) {
           </div>
           <p className="order-review-note">Bạn chỉ có thể đánh giá sản phẩm sau khi đơn hàng đã được giao. Đánh giá này dành riêng cho sản phẩm {order.products[0].name} trong đơn {order.id}.</p>
           <div className="review-product">
-            <img src={order.products[0].image} alt={order.products[0].name} />
+            <div className="review-product-image">
+              <img src={order.products[0].image} alt={order.products[0].name} />
+            </div>
             <div>
               <strong>{order.products[0].name}</strong>
               <span>{order.products[0].variant}</span>
@@ -163,7 +165,7 @@ function OrderCard({ order, onCancel }) {
           {reviewSent ? (
             <p className="review-thanks">Cảm ơn bạn đã đánh giá!</p>
           ) : (
-            <button className="review-submit" onClick={() => setReviewSent(true)}>GỬI ĐÁNH GIÁ</button>
+            <button className="order-button order-button--primary review-submit" onClick={() => setReviewSent(true)}>GỬI ĐÁNH GIÁ</button>
           )}
         </section>
       )}
