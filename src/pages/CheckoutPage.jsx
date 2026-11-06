@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import CartHeader from "../components/cart/CartHeader";
 import CartFooter from "../components/cart/CartFooter";
@@ -21,6 +22,7 @@ export default function CheckoutPage() {
   const [coupon, setCoupon] = useState("");
   const [submitted, setSubmitted] = useState(false);
   
+  const navigate = useNavigate();
   const subtotal = items.reduce((sum, item) => sum + item.price, 0);
   const shippingFee = shipping === "express" ? 35000 : 0;
   const total = subtotal + shippingFee;
@@ -28,6 +30,9 @@ export default function CheckoutPage() {
   const submitOrder = (event) => {
     event.preventDefault();
     setSubmitted(true);
+    setTimeout(() => {
+      navigate("/hoan-tat");
+    }, 400);
   };
 
   return (

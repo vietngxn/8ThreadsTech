@@ -1,13 +1,14 @@
+import { Outlet } from "react-router-dom";
+
 /**
- * Layout đơn giản, không dùng Agent Native.
- * Bao toàn bộ trang trong một container giới hạn max-width
- * để nội dung không bị giãn khi zoom in/out.
+ * Layout cửa hàng: giới hạn max-width để không bị giãn khi zoom.
+ * Hỗ trợ cả {children} và <Outlet /> của React Router.
  */
 export function Layout({ children }) {
   return (
     <div className="page-wrapper">
       <div className="page-container">
-        {children}
+        {children || <Outlet />}
       </div>
     </div>
   );

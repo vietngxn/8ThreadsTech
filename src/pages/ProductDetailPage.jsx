@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import PageHeader from "../components/product-detail/PageHeader";
 import HeroSection from "../components/product-detail/HeroSection";
 import PurchaseSection from "../components/product-detail/PurchaseSection";
@@ -7,6 +8,7 @@ import PageFooter from "../components/product-detail/PageFooter";
 import NoticeToast from "../components/product-detail/NoticeToast";
 
 export default function ProductDetailPage() {
+  const { id } = useParams();
   const [color, setColor] = useState(0);
   const [notice, setNotice] = useState("");
   const comingSoon = (name) => setNotice(`${name} đang được hoàn thiện.`);

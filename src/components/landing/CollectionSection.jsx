@@ -52,7 +52,7 @@ export default function CollectionSection({ onComingSoon }) {
           </Label>
           <h2 className="js-reveal">Chất riêng trong từng thao tác</h2>
         </div>
-        <a className="js-reveal" href="#collection">
+        <a className="js-reveal" href="/ban-phim">
           TẤT CẢ BÀN PHÍM <IconArrowUpRight size={19} />
         </a>
       </div>

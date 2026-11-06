@@ -30,12 +30,12 @@ export default function OrderSection({ selectedColor, onComingSoon }) {
             <del>2.790.000 ₫</del>
           </div>
           <div className="order-buttons js-reveal">
-            <button onClick={() => onComingSoon("Mua hàng")}>
+            <a href="/thanh-toan">
               MUA NGAY <IconArrowUpRight size={18} />
-            </button>
-            <button onClick={() => onComingSoon("Giỏ hàng")}>
+            </a>
+            <a href="/gio-hang">
               <IconShoppingBag size={18} /> THÊM VÀO GIỎ
-            </button>
+            </a>
           </div>
           <small className="js-reveal">
             MIỄN PHÍ VẬN CHUYỂN / BẢO HÀNH 24 THÁNG<br />

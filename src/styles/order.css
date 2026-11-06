@@ -58,7 +58,8 @@
     margin: 20px 0;
 }
 
-.order-buttons button {
+.order-buttons button,
+.order-buttons a {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -71,14 +72,19 @@
     font-size: 12px;
     font-weight: 800;
     padding: 0 24px;
+    text-decoration: none;
     transition: transform 0.3s ease;
 }
 
-.order-buttons button:hover {
+.order-buttons button:hover,
+.order-buttons a:hover {
     transform: scale(1.05);
 }
 
-.order-buttons button+button {
+.order-buttons button+button,
+.order-buttons a+a,
+.order-buttons button+a,
+.order-buttons a+button {
     flex: 1;
     background: transparent;
     border-color: #ff9690;

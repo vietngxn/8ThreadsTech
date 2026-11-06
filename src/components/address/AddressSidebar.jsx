@@ -1,4 +1,4 @@
-import { IconArrowUpRight, IconMapPin, IconPackage, IconSearch, IconShoppingBag, IconUser } from "@tabler/icons-react";
+import { IconArrowUpRight, IconChevronRight, IconLock, IconLogout, IconMapPin, IconPackage, IconSearch, IconShoppingBag, IconUser } from "@tabler/icons-react";
 import logo from "../../assets/thread-logo.png";
 
 export default function AddressSidebar() {

@@ -9,7 +9,7 @@ export default function PageHeader({ onComingSoon }) {
         <span>8ThreadTech</span>
       </a>
       <nav className="thread-nav" aria-label="Danh mục">
-        <a className="active" href="#product">BÀN PHÍM</a>
+        <a className="active" href="/ban-phim">BÀN PHÍM</a>
         <button onClick={() => onComingSoon("Keycap")}>KEYCAP</button>
         <button onClick={() => onComingSoon("Phụ kiện")}>PHỤ KIỆN</button>
         <a href="/ve-8threads-team">VỀ 8THREADS TEAM</a>
@@ -18,10 +18,10 @@ export default function PageHeader({ onComingSoon }) {
         <button aria-label="Tìm kiếm" onClick={() => onComingSoon("Tìm kiếm")}>
           <IconSearch size={22} stroke={1.6} />
         </button>
-        <button className="bag-button" aria-label="Giỏ hàng" onClick={() => onComingSoon("Giỏ hàng")}>
+        <a className="bag-button" href="/gio-hang" aria-label="Giỏ hàng">
           <IconShoppingBag size={22} stroke={1.6} />
           <span>0</span>
-        </button>
+        </a>
       </div>
     </header>
   );

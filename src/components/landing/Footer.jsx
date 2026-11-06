@@ -38,10 +38,10 @@ export default function Footer() {
         </div>
         <div>
           <h4>KHÁM PHÁ</h4>
-          <a href="#collection">Bàn phím</a>
+          <a href="/ban-phim">Bàn phím</a>
           <a href="#space">Keycap</a>
           <a href="#space">Phụ kiện</a>
-          <a href="#team">Về 8Threads Team</a>
+          <a href="/ve-8threads-team">Về 8Threads Team</a>
         </div>
         <div>
           <h4>HỖ TRỢ</h4>
