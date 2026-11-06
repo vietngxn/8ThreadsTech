@@ -1,4 +1,5 @@
 import { Layout } from "./layouts/Layout.jsx";
+import CartPage from "./pages/CartPage.jsx";
 import ProductList from "./pages/ProductList.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
@@ -8,7 +9,7 @@ export default function App() {
 
   return (
     <Layout>
-      {pathname === "/dang-ky" ? <RegisterPage /> : pathname === "/dang-nhap" ? <LoginPage /> : <ProductList />}
+      {pathname === "/dang-ky" ? <RegisterPage /> : pathname === "/dang-nhap" ? <LoginPage /> : pathname === "/gio-hang" ? <CartPage /> : <ProductList />}
     </Layout>
   );
 }

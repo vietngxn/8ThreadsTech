@@ -104,7 +104,7 @@ export default function ProductList() {
         </nav>
         <div className="pl-tools" data-node-id="3:726">
           <button aria-label="Tìm kiếm" onClick={() => document.querySelector("#product-search")?.focus()}><IconSearch size={20} stroke={1.6} /></button>
-          <button className="pl-cart" aria-label={`Giỏ hàng: ${cartCount} sản phẩm`}><IconShoppingBag size={20} stroke={1.6} /><span>{cartCount}</span></button>
+          <a className="pl-cart" href="/gio-hang" aria-label={`Giỏ hàng: ${cartCount} sản phẩm`}><IconShoppingBag size={20} stroke={1.6} /><span>{cartCount}</span></a>
           <a href="/dang-nhap" aria-label="Tài khoản"><IconUser size={20} stroke={1.6} /></a>
         </div>
       </header>
