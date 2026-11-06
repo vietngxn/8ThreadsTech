@@ -1,13 +1,14 @@
 import { Layout } from "./layouts/Layout.jsx";
 import ProductList from "./pages/ProductList.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
+import RegisterPage from "./pages/RegisterPage.jsx";
 
 export default function App() {
-  const isLoginPage = window.location.pathname === "/dang-nhap";
+  const pathname = window.location.pathname;
 
   return (
     <Layout>
-      {isLoginPage ? <LoginPage /> : <ProductList />}
+      {pathname === "/dang-ky" ? <RegisterPage /> : pathname === "/dang-nhap" ? <LoginPage /> : <ProductList />}
     </Layout>
   );
 }

@@ -89,7 +89,7 @@ export default function LoginPage() {
           </form>
           <div className="login-divider" data-node-id="3:623"><span data-node-id="3:625" /><small data-node-id="3:626">hoặc tiếp tục với</small><span data-node-id="3:627" /></div>
           <button className="login-google" type="button" onClick={() => setNotice("Đăng nhập bằng Google chưa được kết nối.")} data-node-id="3:628"><strong data-node-id="3:629">G</strong><span data-node-id="3:630">Google</span></button>
-          <p className="login-signup" data-node-id="3:631"><span data-node-id="3:632">Chưa có tài khoản? </span><a href="mailto:hello@8threadtech.vn?subject=T%E1%BA%A1o%20t%C3%A0i%20kho%E1%BA%A3n">Đăng ký ngay <IconArrowUpRight size={13} /></a></p>
+          <p className="login-signup" data-node-id="3:631"><span data-node-id="3:632">Chưa có tài khoản? </span><a href="/dang-ky">Đăng ký ngay <IconArrowUpRight size={13} /></a></p>
         </section>
       </main>
     </div>
