@@ -43,7 +43,7 @@ function AccountSidebar() {
       <nav className="order-detail-account-menu" aria-label="Điều hướng tài khoản">
         <a href="/ho-so"><IconUser /><span>Hồ sơ cá nhân</span></a>
         <a className="is-active" href="/don-hang" aria-current="page"><IconPackage /><span>Đơn hàng của tôi</span><IconChevronRight /></a>
-        <a href="/ho-so#default-address"><IconMapPin /><span>Sổ địa chỉ</span></a>
+        <a href="/so-dia-chi"><IconMapPin /><span>Sổ địa chỉ</span></a>
         <a href="/ho-so"><IconLock /><span>Đổi mật khẩu</span></a>
         <a href="/dang-nhap"><IconLogout /><span>Đăng xuất</span></a>
       </nav>
