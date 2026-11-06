@@ -7,13 +7,14 @@ import RegisterPage from "./pages/RegisterPage.jsx";
 import OrderCompletePage from "./pages/OrderCompletePage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import OrdersPage from "./pages/OrdersPage.jsx";
+import OrderDetailPage from "./pages/OrderDetailPage.jsx";
 
 export default function App() {
   const pathname = window.location.pathname;
 
   return (
     <Layout>
-      {pathname === "/dang-ky" ? <RegisterPage /> : pathname === "/dang-nhap" ? <LoginPage /> : pathname === "/gio-hang" ? <CartPage /> : pathname === "/thanh-toan" ? <CheckoutPage /> : pathname === "/hoan-tat" ? <OrderCompletePage /> : pathname === "/ho-so" ? <ProfilePage /> : pathname === "/don-hang" ? <OrdersPage /> : <ProductList />}
+      {pathname === "/dang-ky" ? <RegisterPage /> : pathname === "/dang-nhap" ? <LoginPage /> : pathname === "/gio-hang" ? <CartPage /> : pathname === "/thanh-toan" ? <CheckoutPage /> : pathname === "/hoan-tat" ? <OrderCompletePage /> : pathname === "/ho-so" ? <ProfilePage /> : pathname === "/don-hang/chi-tiet" ? <OrderDetailPage /> : pathname === "/don-hang" ? <OrdersPage /> : <ProductList />}
     </Layout>
   );
 }
