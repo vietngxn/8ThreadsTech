@@ -14,6 +14,7 @@ import TeamPage from "./pages/TeamPage.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminProductManagement from "./pages/admin/AdminProductManagement.jsx";
 import AdminCategoryManagement from "./pages/admin/AdminCategoryManagement.jsx";
+import AdminOrderManagement from "./pages/admin/AdminOrderManagement.jsx";
 
 export default function App() {
   const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
@@ -21,6 +22,7 @@ export default function App() {
   if (pathname === "/admin" || pathname === "/admin/dashboard") return <AdminDashboard />;
   if (pathname === "/admin/products") return <AdminProductManagement />;
   if (pathname === "/admin/categories") return <AdminCategoryManagement />;
+  if (pathname === "/admin/orders") return <AdminOrderManagement />;
 
   return (
     <Layout>
