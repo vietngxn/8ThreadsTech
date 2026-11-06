@@ -58,7 +58,8 @@
     gap: 24px;
 }
 
-.landing-tools button {
+.landing-tools button,
+.landing-tools a {
     color: #f5f5f2;
     border: 0;
     background: none;
@@ -67,6 +68,7 @@
     gap: 7px;
     padding: 0;
     font-size: 11px;
+    text-decoration: none;
 }
 
 @media (max-width: 1100px) {

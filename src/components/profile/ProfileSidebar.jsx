@@ -1,4 +1,4 @@
-import { IconUser, IconLock, IconMapPin, IconLogout, IconPackage, IconShieldCheck } from "@tabler/icons-react";
+import { IconUser, IconLock, IconMapPin, IconLogout, IconPackage, IconShieldCheck, IconChevronRight, IconArrowUpRight } from "@tabler/icons-react";
 
 const menuItems = [
   { id: "profile", label: "Hồ sơ cá nhân", icon: IconUser, href: "/ho-so" },

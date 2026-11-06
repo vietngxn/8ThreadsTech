@@ -24,11 +24,11 @@ export default function OrderSuccess({ orderId, total }) {
         Thông tin xác nhận sẽ được gửi qua email sau khi đơn được xử lý.
       </p>
       <div className="order-actions">
-        <a className="order-primary-action" href="/">
+        <a className="order-primary-action" href="/ban-phim">
           <span>TIẾP TỤC MUA SẮM</span>
           <IconArrowRight />
         </a>
-        <a className="order-secondary-action" href="#don-hang">
+        <a className="order-secondary-action" href="/don-hang">
           <span>XEM ĐƠN HÀNG</span>
           <IconArrowUpRight />
         </a>

@@ -3,7 +3,6 @@ import CartHeader from "../components/cart/CartHeader";
 import CartFooter from "../components/cart/CartFooter";
 import OrderDetailIntro from "../components/order/OrderDetailIntro";
 import OrderDetailMain from "../components/order/OrderDetailMain";
-import AccountSidebar from "../components/order/AccountSidebar";
 
 export default function OrderDetailPage() {
   const [cancelled, setCancelled] = useState(false);
@@ -25,15 +24,11 @@ export default function OrderDetailPage() {
       
       <main>
         <OrderDetailIntro />
-        
-        <section className="order-detail-layout" data-node-id="15:1273">
-          <AccountSidebar />
-          <OrderDetailMain
-            cancelled={cancelled}
-            onCancelToggle={onCancelToggle}
-            onConfirmCancel={onConfirmCancel}
-          />
-        </section>
+        <OrderDetailMain
+          cancelled={cancelled}
+          onCancelToggle={onCancelToggle}
+          onConfirmCancel={onConfirmCancel}
+        />
       </main>
       
       <CartFooter />

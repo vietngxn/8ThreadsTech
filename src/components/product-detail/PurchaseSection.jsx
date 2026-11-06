@@ -50,12 +50,12 @@ export default function PurchaseSection({ color, onColorChange, onComingSoon }) 
           <del>2.790.000 ₫</del>
         </div>
         <div className="purchase-buttons">
-          <button className="buy-button" onClick={() => onComingSoon("Đặt hàng")}>
+          <a className="buy-button" href="/thanh-toan">
             MUA NGAY <IconArrowUpRight size={18} />
-          </button>
-          <button className="add-button" onClick={() => onComingSoon("Giỏ hàng")}>
+          </a>
+          <a className="add-button" href="/gio-hang">
             <IconShoppingBag size={18} /> THÊM VÀO GIỎ
-          </button>
+          </a>
         </div>
         <p className="stock"><span />Có sẵn · Sẵn sàng giao trong 24h</p>
       </div>

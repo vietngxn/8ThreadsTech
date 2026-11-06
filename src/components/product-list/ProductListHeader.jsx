@@ -4,12 +4,12 @@ import logo from "../../assets/thread-logo.png";
 export default function ProductListHeader({ cartCount }) {
   return (
     <header className="pl-header" data-node-id="3:709">
-      <a className="pl-brand" href="#top" aria-label="8ThreadTech trang chủ" data-node-id="3:710">
+      <a className="pl-brand" href="/" aria-label="8ThreadTech trang chủ" data-node-id="3:710">
         <img src={logo} alt="" data-node-id="3:711" />
         <span data-node-id="3:712">8ThreadTech</span>
       </a>
       <nav className="pl-nav" aria-label="Danh mục" data-node-id="3:713">
-        <a className="active" href="#products" data-node-id="3:714">BÀN PHÍM</a>
+        <a className="active" href="/ban-phim" data-node-id="3:714">BÀN PHÍM</a>
         <a href="#products" data-node-id="3:717">KEYCAP</a>
         <a href="#products" data-node-id="3:720">PHỤ KIỆN</a>
         <a href="/ve-8threads-team" data-node-id="3:723">VỀ 8THREADS TEAM</a>

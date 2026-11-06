@@ -9,10 +9,10 @@ export default function CartHeader({ quantity }) {
         <span>8ThreadTech</span>
       </a>
       <nav className="cart-nav" aria-label="Danh mục" data-node-id="3:346">
-        <a className="active" href="/">BÀN PHÍM</a>
-        <a href="/">KEYCAP</a>
-        <a href="/">PHỤ KIỆN</a>
-        <a href="/">VỀ 8THREADS TEAM</a>
+        <a className="active" href="/ban-phim">BÀN PHÍM</a>
+        <a href="/ban-phim">KEYCAP</a>
+        <a href="/ban-phim">PHỤ KIỆN</a>
+        <a href="/ve-8threads-team">VỀ 8THREADS TEAM</a>
       </nav>
       <div className="cart-tools" data-node-id="3:359">
         <button aria-label="Tìm kiếm">

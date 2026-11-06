@@ -29,6 +29,7 @@
 @import './login.css';
 @import './register.css';
 @import './product-list.css';
+@import './product-detail.css';
 @import './cart.css';
 @import './checkout.css';
 @import './orders.css';

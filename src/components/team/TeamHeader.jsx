@@ -9,9 +9,9 @@ export default function TeamHeader() {
         <span data-node-id="30:1309">8ThreadTech</span>
       </a>
       <nav aria-label="Danh mục" data-node-id="30:1310">
-        <a href="/">BÀN PHÍM</a>
-        <a href="/">KEYCAP</a>
-        <a href="/">PHỤ KIỆN</a>
+        <a href="/ban-phim">BÀN PHÍM</a>
+        <a href="/ban-phim">KEYCAP</a>
+        <a href="/ban-phim">PHỤ KIỆN</a>
         <a className="active" href="/ve-8threads-team">VỀ 8THREADS TEAM</a>
       </nav>
       <div className="team-tools" data-node-id="30:1315">

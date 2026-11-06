@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { IconChevronRight } from "@tabler/icons-react";
 import CartHeader from "../components/cart/CartHeader";
 import CartFooter from "../components/cart/CartFooter";
 import ProfileSidebar from "../components/profile/ProfileSidebar";
