@@ -1,24 +1,50 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { IconArrowUpRight, IconEye, IconEyeOff, IconLock, IconMail, IconUser } from "@tabler/icons-react";
+import { authService } from "../../services/authService";
 
 export default function RegisterForm({ notice, onNotice }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const fullName = formData.get("name")?.trim();
+    const email = formData.get("email")?.trim();
+    const password = formData.get("password");
+    const passwordConfirmation = formData.get("passwordConfirmation");
 
-    if (formData.get("password") !== formData.get("passwordConfirmation")) {
+    if (password !== passwordConfirmation) {
       onNotice("Mật khẩu nhập lại chưa khớp.");
       return;
     }
 
-    onNotice("Tính năng tạo tài khoản chưa được kết nối.");
+    if (password.length < 8) {
+      onNotice("Mật khẩu phải có ít nhất 8 ký tự.");
+      return;
+    }
+
+    setIsLoading(true);
+    onNotice("");
+
+    try {
+      const response = await authService.register({ fullName, email, password });
+      onNotice(response?.message || "Đăng ký thành công! Đang chuyển đến trang xác thực OTP...");
+      setTimeout(() => {
+        navigate("/xac-thuc-otp", { state: { email } });
+      }, 1000);
+    } catch (err) {
+      onNotice(err.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleSignup = () => {
-    onNotice("Đăng ký bằng Google chưa được kết nối.");
+    onNotice("Đăng ký bằng Google đang phát triển.");
   };
 
   return (
@@ -113,8 +139,8 @@ export default function RegisterForm({ notice, onNotice }) {
           </div>
         </div>
         
-        <button className="login-submit" type="submit" data-node-id="3:694">
-          <span data-node-id="3:695">ĐĂNG KÍ</span>
+        <button className="login-submit" type="submit" disabled={isLoading} data-node-id="3:694">
+          <span data-node-id="3:695">{isLoading ? "ĐANG TẠO TÀI KHOẢN..." : "ĐĂNG KÍ"}</span>
           <IconArrowUpRight size={19} data-node-id="3:696" />
         </button>
         

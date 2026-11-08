@@ -7,6 +7,7 @@ import SpaNavigationHandler from "./components/common/SpaNavigationHandler.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
+import OtpPage from "./pages/OtpPage.jsx";
 import ProductListPage from "./pages/ProductList.jsx";
 import ProductDetailPage from "./pages/ProductDetailPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="/doi-mat-khau" element={<ChangePasswordPage />} />
           <Route path="/dang-nhap" element={<LoginPage />} />
           <Route path="/dang-ky" element={<RegisterPage />} />
+          <Route path="/xac-thuc-otp" element={<OtpPage />} />
 
           {/* Về chúng tôi */}
           <Route path="/ve-8threads-team" element={<TeamPage />} />

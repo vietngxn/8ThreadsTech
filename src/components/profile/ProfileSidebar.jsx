@@ -1,4 +1,5 @@
 import { IconUser, IconLock, IconMapPin, IconLogout, IconPackage, IconChevronRight, IconArrowUpRight } from "@tabler/icons-react";
+import { authService } from "../../services/authService";
 
 const menuItems = [
   { id: "profile", label: "Hồ sơ cá nhân", icon: IconUser, href: "/ho-so" },
@@ -8,15 +9,32 @@ const menuItems = [
 ];
 
 export default function ProfileSidebar({ currentPage }) {
+  const currentUser = authService.getCurrentUser();
+  const displayName = currentUser?.fullName || currentUser?.name || "Khách hàng 8Threads";
+  const displayEmail = currentUser?.email || (authService.getToken() ? "Đã đăng nhập" : "Chưa đăng nhập");
+
   const getInitials = (name) => {
-    return name.split(" ").map((part) => part[0]).slice(-2).join("").toUpperCase();
+    if (!name) return "8T";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    window.location.href = "/dang-nhap";
   };
 
   return (
     <aside className="profile-sidebar" data-node-id="8:848">
       <div className="profile-identity" data-node-id="8:849">
-        <div className="profile-avatar" data-node-id="8:850"><span data-node-id="8:851">{getInitials(currentPage)}</span></div>
-        <div className="profile-identity-copy" data-node-id="8:852"><strong data-node-id="8:853">Khách hàng 8Threads</strong><span data-node-id="8:854">Chưa đăng nhập</span></div>
+        <div className="profile-avatar" data-node-id="8:850">
+          <span data-node-id="8:851">{getInitials(displayName)}</span>
+        </div>
+        <div className="profile-identity-copy" data-node-id="8:852">
+          <strong data-node-id="8:853">{displayName}</strong>
+          <span data-node-id="8:854">{displayEmail}</span>
+        </div>
         <small data-node-id="8:855">TÀI KHOẢN NGƯỜI DÙNG</small>
       </div>
       <div className="profile-sidebar-rule" data-node-id="8:856" />
@@ -33,7 +51,7 @@ export default function ProfileSidebar({ currentPage }) {
             <IconChevronRight data-node-id={`8:861`} />
           </a>
         ))}
-        <button className="profile-logout">
+        <button className="profile-logout" type="button" onClick={handleLogout}>
           <IconLogout size={19} />
           Đăng xuất
         </button>
