@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import { IconArrowRight, IconStar } from "@tabler/icons-react";
+import { gsap, useGSAP } from "../../lib/gsap";
 
 const reviews = [
   {
@@ -37,7 +39,7 @@ function RatingCard({ onComingSoon }) {
       </div>
       <div className="rating-breakdown">
         {[92, 24, 8, 3, 1].map((count, index) => (
-          <div key={count}>
+          <div key={count} className="breakdown-row">
             <strong>{5 - index} sao</strong>
             <span>{count} đánh giá</span>
           </div>
@@ -81,9 +83,93 @@ function ReviewCard({ review }) {
 }
 
 export default function ReviewsSection({ onComingSoon }) {
+  const reviewsRef = useRef(null);
+
+  useGSAP(
+    () => {
+      const media = gsap.matchMedia();
+
+      media.add("(prefers-reduced-motion: no-preference)", () => {
+        // Tiêu đề & giới thiệu reviews
+        gsap.from(".section-eyebrow, .reviews h2, .review-intro", {
+          autoAlpha: 0,
+          y: 35,
+          duration: 0.8,
+          stagger: 0.12,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: reviewsRef.current,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        });
+
+        // Cột điểm trung bình Rating Card
+        gsap.from(".rating-card", {
+          autoAlpha: 0,
+          x: -40,
+          duration: 0.9,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: ".review-layout",
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        });
+
+        // Điểm số 4.6 nảy pop
+        gsap.from(".rating-number", {
+          scale: 0.5,
+          autoAlpha: 0,
+          duration: 0.8,
+          ease: "back.out(1.8)",
+          scrollTrigger: {
+            trigger: ".rating-card",
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        });
+
+        // Các dòng phân bổ đánh giá (breakdown)
+        gsap.from(".breakdown-row", {
+          autoAlpha: 0,
+          x: -15,
+          duration: 0.5,
+          stagger: 0.08,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: ".rating-breakdown",
+            start: "top 90%",
+            toggleActions: "play none none reverse",
+          },
+        });
+
+        // Danh sách thẻ nhận xét Review Cards xuất hiện so le
+        gsap.from(".review-card", {
+          autoAlpha: 0,
+          y: 45,
+          duration: 0.8,
+          stagger: 0.18,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: ".review-list",
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        });
+      });
+
+      return () => media.revert();
+    },
+    { scope: reviewsRef }
+  );
+
   return (
-    <section className="reviews" data-node-id="40:3">
-      <div className="section-eyebrow"><span />ĐÁNH GIÁ &amp; BÌNH LUẬN</div>
+    <section ref={reviewsRef} className="reviews" data-node-id="40:3">
+      <div className="section-eyebrow">
+        <span />
+        ĐÁNH GIÁ &amp; BÌNH LUẬN
+      </div>
       <h2>Đánh giá từ người mua</h2>
       <p className="review-intro">
         Chỉ người mua đã nhận hàng mới có thể gửi đánh giá và bình luận. Khách chưa đủ điều kiện
@@ -100,4 +186,3 @@ export default function ReviewsSection({ onComingSoon }) {
     </section>
   );
 }
-
