@@ -7,7 +7,7 @@ export default function ProductListToolbar({ query, sort, visibleCount, onQueryC
         {visibleCount ? `Hiển thị 1–${visibleCount} trong 24 sản phẩm` : "Không tìm thấy sản phẩm phù hợp"}
       </p>
       <div className="pl-controls" data-node-id="3:845">
-        <label className="pl-search">
+        <label className="pl-search" htmlFor="product-search">
           <IconSearch size={15} data-node-id="3:847" />
           <input 
             id="product-search" 
@@ -16,9 +16,13 @@ export default function ProductListToolbar({ query, sort, visibleCount, onQueryC
             placeholder="Tìm bàn phím của bạn..." 
           />
         </label>
-        <label className="pl-sort">
+        <label className="pl-sort" htmlFor="product-sort">
           <span className="sr-only">Sắp xếp sản phẩm</span>
-          <select value={sort} onChange={(event) => onSortChange(event.target.value)}>
+          <select 
+            id="product-sort"
+            value={sort} 
+            onChange={(event) => onSortChange(event.target.value)}
+          >
             <option value="featured">Sắp xếp: Bán chạy nhất</option>
             <option value="price-asc">Giá: Thấp đến cao</option>
             <option value="price-desc">Giá: Cao đến thấp</option>
