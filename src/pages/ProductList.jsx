@@ -92,10 +92,10 @@ export default function ProductList() {
           document.querySelector("#products")?.scrollIntoView({ behavior: "smooth" });
         }}
       />
-      
+
       <main id="top">
         <ProductListIntro />
-        
+
         <section className="pl-catalog" id="products" data-node-id="3:753">
           <ProductListSidebar
             category={category}
@@ -105,7 +105,7 @@ export default function ProductList() {
             onFilterToggle={toggleFilter}
             onStockToggle={setInStockOnly}
           />
-          
+
           <div className="pl-results" data-node-id="3:842">
             <ProductListToolbar
               query={query}
@@ -114,7 +114,7 @@ export default function ProductList() {
               onQueryChange={setQuery}
               onSortChange={setSort}
             />
-            
+
             {visibleProducts.length ? (
               <>
                 <ProductListGrid products={visibleProducts} onAddToCart={handleAddToCart} />
@@ -126,7 +126,7 @@ export default function ProductList() {
           </div>
         </section>
       </main>
-      
+
       <ProductListFooter />
     </div>
   );

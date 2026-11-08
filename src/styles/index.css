@@ -28,6 +28,7 @@
 /* Other Pages */
 @import './login.css';
 @import './register.css';
+@import './otp.css';
 @import './product-list.css';
 @import './product-detail.css';
 @import './cart.css';

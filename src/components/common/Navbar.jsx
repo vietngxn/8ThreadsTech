@@ -4,6 +4,7 @@ import { IconArrowRight, IconSearch, IconShoppingBag, IconUser, IconX } from "@t
 import { useNavbar } from "../../hooks/useNavbar";
 import logo from "../../assets/thread-logo.png";
 import NoticeToast from "../product-detail/NoticeToast";
+import { authService } from "../../services/authService";
 
 export default function Navbar({ quantity = 0, onComingSoon, onSearch }) {
   const navRef = useNavbar();
@@ -13,6 +14,8 @@ export default function Navbar({ quantity = 0, onComingSoon, onSearch }) {
   const [notice, setNotice] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const isLoggedIn = Boolean(authService.getToken());
+  const accountUrl = isLoggedIn ? "/ho-so" : "/dang-nhap";
   const isProductPage =
     pathname === "/ban-phim" ||
     pathname.startsWith("/ban-phim/") ||
@@ -129,7 +132,7 @@ export default function Navbar({ quantity = 0, onComingSoon, onSearch }) {
             <IconShoppingBag size={22} />
             <span>{quantity}</span>
           </a>
-          <a href="/dang-nhap" aria-label="Tài khoản" aria-current={isAccountPage ? "page" : undefined}>
+          <a href={accountUrl} aria-label={isLoggedIn ? "Hồ sơ cá nhân" : "Đăng nhập"} aria-current={isAccountPage ? "page" : undefined}>
             <IconUser size={22} />
           </a>
         </div>

@@ -1,16 +1,43 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { IconArrowUpRight, IconEye, IconEyeOff, IconLock, IconMail } from "@tabler/icons-react";
+import { authService } from "../../services/authService";
 
 export default function LoginForm({ notice, onNotice }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    onNotice("Đăng nhập chưa được kết nối. Vui lòng liên hệ hello@8threadtech.vn để được hỗ trợ.");
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email");
+    const password = formData.get("password");
+
+    setIsLoading(true);
+    onNotice("");
+
+    try {
+      const response = await authService.login({ email, password });
+      onNotice(response?.message || "Đăng nhập thành công!");
+      setTimeout(() => {
+        // Nếu là role ADMIN có thể qua /admin, hoặc mặc định về trang chủ
+        const user = response?.data?.user;
+        if (user?.role === "ADMIN" || user?.roleName === "ADMIN") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+      }, 800);
+    } catch (err) {
+      onNotice(err.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
-    onNotice("Đăng nhập bằng Google chưa được kết nối.");
+    onNotice("Đăng nhập bằng Google đang phát triển.");
   };
 
   return (
@@ -72,8 +99,8 @@ export default function LoginForm({ notice, onNotice }) {
           </a>
         </div>
         
-        <button className="login-submit" type="submit" data-node-id="3:619">
-          <span data-node-id="3:620">ĐĂNG NHẬP</span>
+        <button className="login-submit" type="submit" disabled={isLoading} data-node-id="3:619">
+          <span data-node-id="3:620">{isLoading ? "ĐANG ĐĂNG NHẬP..." : "ĐĂNG NHẬP"}</span>
           <IconArrowUpRight size={19} data-node-id="3:621" />
         </button>
         
