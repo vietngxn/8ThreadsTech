@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import ChatBot from "../components/common/ChatBot.jsx";
 
 /**
  * Layout cửa hàng: giới hạn max-width để không bị giãn khi zoom.
@@ -10,6 +11,7 @@ export function Layout({ children }) {
       <div className="page-container">
         {children || <Outlet />}
       </div>
+      <ChatBot />
     </div>
   );
 }

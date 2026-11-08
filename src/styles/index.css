@@ -40,12 +40,13 @@
 @import './address-book.css';
 @import './change-password.css';
 @import './team.css';
+@import './chatbot.css';
 
 /* Toast notification (existing) */
 .thread-notice {
     position: fixed;
     right: 24px;
-    bottom: 24px;
+    bottom: 96px;
     z-index: 20;
     background: #1b1b1b;
     border: 1px solid #3a3a3a;
