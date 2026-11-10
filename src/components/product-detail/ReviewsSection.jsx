@@ -60,13 +60,13 @@ function RatingCard({ onComingSoon }) {
   );
 }
 
-function ReviewCard({ review }) {
+function ReviewCard({ review, productName = "THREAD 75" }) {
   return (
     <article className="review-card">
       <div className="review-top">
         <div>
           <strong>{review.name}</strong>
-          <p>Đã mua THREAD 75 · {review.date}</p>
+          <p>Đã mua {productName} · {review.date}</p>
         </div>
         <span className="review-score">
           <IconStar size={16} /> {review.rating}
@@ -82,7 +82,7 @@ function ReviewCard({ review }) {
   );
 }
 
-export default function ReviewsSection({ onComingSoon }) {
+export default function ReviewsSection({ onComingSoon, product = null }) {
   const reviewsRef = useRef(null);
 
   useGSAP(
@@ -179,7 +179,7 @@ export default function ReviewsSection({ onComingSoon }) {
         <RatingCard onComingSoon={onComingSoon} />
         <div className="review-list">
           {reviews.map((review) => (
-            <ReviewCard key={review.name} review={review} />
+            <ReviewCard key={review.name} review={review} productName={product?.name || "THREAD 75"} />
           ))}
         </div>
       </div>

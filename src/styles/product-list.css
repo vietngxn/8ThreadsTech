@@ -3,3 +3,71 @@
 @media(max-width:760px){.pl-header{height:auto;min-height:76px;flex-wrap:wrap;padding:4px 20px 10px;gap:0}.pl-brand{font-size:20px;height:58px}.pl-brand img{width:58px;height:58px;margin-right:6px}.pl-tools{margin-left:auto;gap:18px}.pl-nav{order:3;width:100%;height:34px;overflow-x:auto;gap:25px}.pl-nav a{height:34px;font-size:9px}.pl-nav a.active:after{bottom:0}.pl-category{padding-inline:20px}.pl-breadcrumb{height:40px}.pl-intro{min-height:unset;padding:14px 0 22px;display:block}.pl-title-row{gap:9px}.pl-title-row h1{font-size:clamp(44px,12vw,64px)}.pl-title-row>span{font-size:9px}.pl-message{width:auto;padding:18px 0 0}.pl-message h2{font-size:12px}.pl-message p{font-size:11px;margin-top:6px}.pl-catalog{padding:0 20px;display:flex;flex-direction:column;gap:18px;margin-top:0}.pl-sidebar{display:grid;grid-template-columns:1fr 1fr;column-gap:20px;align-items:start}.pl-filter-title{grid-column:1/-1;height:44px;border-bottom:1px solid var(--pl-border)}.pl-category-filter{grid-column:1/-1}.pl-filter-group{padding:16px 0 12px}.pl-stock,.pl-help{grid-column:1/-1}.pl-help{padding:16px 0}.pl-help h2{font-size:14px}.pl-toolbar{height:auto;min-height:74px;align-items:flex-start;flex-direction:column;justify-content:center;gap:10px}.pl-controls{width:100%;gap:8px}.pl-search{flex:1;width:auto}.pl-sort{width:min(175px,48%);padding:0}.pl-sort select{font-size:9px;padding:0 24px 0 8px}.pl-sort svg{right:8px}.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:14px;row-gap:24px;padding-top:10px}.pl-product-image{aspect-ratio:1.2}.pl-product-image>img{width:calc(100% - 10px)}.pl-badge{top:8px;left:8px;font-size:6px;padding:4px 5px}.pl-product-image>small{left:8px;bottom:5px;font-size:6px}.pl-product-info{padding-top:9px}.pl-product-title h2{font-size:clamp(14px,4vw,18px)}.pl-product-info>p{font-size:9px}.pl-specs{font-size:8px}.pl-price-row{margin-top:7px}.pl-price-row strong{font-size:14px}.pl-price-row button{width:32px;height:32px}.pl-swatches{gap:3px}.pl-swatches span{width:7px;height:7px}.pl-pagination{height:60px;margin-top:18px;align-items:center}.pl-pagination>p{font-size:9px;padding-bottom:0}.pl-pagination>div{gap:4px}.pl-pagination button{min-width:31px;height:32px}.pl-pagination button.next{padding:0 8px}.pl-service{padding:18px 20px;align-items:flex-start;flex-direction:column;gap:15px}.pl-service>div{width:100%;gap:12px;justify-content:space-between;flex-wrap:wrap}.pl-service>div span{font-size:9px}.pl-footer-main{padding:28px 20px;grid-template-columns:1fr 1fr;gap:28px 18px}.pl-about>strong{font-size:21px}.pl-copyright{padding:0 20px;height:auto;min-height:58px;gap:12px;font-size:8px}.pl-copyright span:last-child{text-align:right}}
 @media(max-width:390px){.pl-grid{column-gap:10px}.pl-product-title h2{font-size:13px}.pl-swatches span{width:6px;height:6px}.pl-price-row strong{font-size:12px}.pl-price-row button{width:28px;height:28px}}
 @media(prefers-reduced-motion:reduce){.product-list *{scroll-behavior:auto}}
+
+/* ─── Skeleton Loading (Product List) ──────────────────── */
+@keyframes pl-shimmer {
+  0% { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.pl-skeleton-block,
+.pl-skeleton-line,
+.pl-skeleton-swatch,
+.pl-skeleton-btn {
+  background: linear-gradient(
+    90deg,
+    var(--pl-panel) 25%,
+    #1f1f1f 50%,
+    var(--pl-panel) 75%
+  );
+  background-size: 1200px 100%;
+  animation: pl-shimmer 1.6s infinite linear;
+  border-radius: 3px;
+}
+
+/* Vùng ảnh skeleton */
+.pl-skeleton .pl-product-image {
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pl-skeleton-image {
+  position: relative;
+}
+
+.pl-skeleton-image .pl-skeleton-block {
+  width: 70%;
+  aspect-ratio: 1.8;
+  border-radius: 4px;
+}
+
+/* Dòng text placeholder */
+.pl-skeleton-line {
+  display: block;
+  border-radius: 4px;
+}
+
+/* Chấm tròn swatch */
+.pl-skeleton-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Nút giỏ hàng placeholder */
+.pl-skeleton-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  flex: none;
+}
+
+/* Tắt hover effect trên skeleton card */
+.pl-skeleton {
+  pointer-events: none;
+}
+.pl-skeleton:hover {
+  transform: none !important;
+}

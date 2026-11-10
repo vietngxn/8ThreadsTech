@@ -6,6 +6,7 @@ import keyboard60 from '../../assets/landing-60.png';
 
 const products = [
   { 
+    id: "thread-65",
     name: "THREAD 65", 
     tag: "NHỎ GỌN", 
     variant: "Đen nguyên bản · Linear Switch", 
@@ -14,6 +15,7 @@ const products = [
     image: keyboard65 
   },
   { 
+    id: "thread-98",
     name: "THREAD 98", 
     tag: "ĐẦY ĐỦ", 
     variant: "Trắng sương · Tactile Brown Switch", 
@@ -22,6 +24,7 @@ const products = [
     image: keyboard98 
   },
   { 
+    id: "thread-60-he",
     name: "THREAD 60 HE", 
     tag: "TỪ TÍNH", 
     variant: "Đỏ dung nham · Switch từ tính", 
@@ -61,12 +64,20 @@ export default function CollectionSection({ onComingSoon }) {
           <article className="landing-product js-reveal" key={product.name}>
             <div className="product-image">
               <span>{product.tag}</span>
-              <img src={product.image} alt={product.name} />
+              <a href={`/ban-phim/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
+                <img src={product.image} alt={product.name} />
+              </a>
               <small>8THREADS / KEYBOARDS</small>
             </div>
             <div className="product-name">
-              <h3>{product.name}</h3>
-              <IconArrowUpRight size={20} />
+              <h3>
+                <a href={`/ban-phim/${product.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                  {product.name}
+                </a>
+              </h3>
+              <a href={`/ban-phim/${product.id}`} aria-label={`Xem chi tiết ${product.name}`} style={{ color: "inherit" }}>
+                <IconArrowUpRight size={20} />
+              </a>
             </div>
             <p>{product.variant}</p>
             <small>{product.specs}</small>

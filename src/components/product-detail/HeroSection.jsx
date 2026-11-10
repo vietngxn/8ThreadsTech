@@ -3,6 +3,7 @@ import { gsap, useGSAP } from "../../lib/gsap";
 import defaultKeyboard from "../../assets/thread-keyboard.png";
 
 export default function HeroSection({
+  product = null,
   color = 0,
   onColorChange = () => {},
   colors = [],
@@ -15,13 +16,18 @@ export default function HeroSection({
   // Fallback defaults if colors prop is empty
   const currentColorData = colors[color] || {
     name: "Bạc ánh trăng",
-    image: defaultKeyboard,
-    tagline: "GÕ CHẤT. CHƠI KHÁC.",
+    image: product?.image || defaultKeyboard,
+    tagline: product?.tagline || "GÕ CHẤT. CHƠI KHÁC.",
     glow: "rgba(240, 43, 36, 0.2)",
   };
 
   const [displayedIndex, setDisplayedIndex] = useState(color);
   const displayedColorData = colors[displayedIndex] || currentColorData;
+
+  // Cập nhật lại displayedIndex khi đổi sản phẩm
+  useEffect(() => {
+    setDisplayedIndex(color);
+  }, [product?.id, color]);
 
   // Timeline & ScrollTrigger animations
   useGSAP(
@@ -242,9 +248,13 @@ export default function HeroSection({
     });
   };
 
-  const totalColors = Math.max(colors.length, 3);
+  const totalColors = colors.length || 1;
   const currentCount = String(color + 1).padStart(2, "0");
   const totalCount = String(totalColors).padStart(2, "0");
+
+  const heroWord = product?.heroWord || "Thread";
+  const heroNumber = product?.heroNumber || "75";
+  const isLongHeroNumber = heroNumber.length > 3;
 
   return (
     <section
@@ -270,8 +280,13 @@ export default function HeroSection({
         <path d="M-80 480 C 220 525, 320 10, 650 65 S 890 430, 1135 300 S 1400 100, 1520 20" />
       </svg>
 
-      <div className="hero-word">Thread</div>
-      <div className="hero-number">75</div>
+      <div className="hero-word">{heroWord}</div>
+      <div
+        className="hero-number"
+        style={isLongHeroNumber ? { fontSize: "clamp(54px, 8.5vw, 115px)", top: "115px" } : undefined}
+      >
+        {heroNumber}
+      </div>
 
       {/* Vùng hiển thị bàn phím với hiệu ứng GSAP */}
       <div className="hero-keyboard-wrap">
@@ -285,22 +300,22 @@ export default function HeroSection({
         <img
           ref={imageRef}
           className="hero-keyboard"
-          src={displayedColorData.image || defaultKeyboard}
-          alt={`Bàn phím cơ THREAD 75 - ${displayedColorData.name}`}
+          src={displayedColorData.image || product?.image || defaultKeyboard}
+          alt={`Bàn phím cơ ${product?.name || "THREAD 75"} - ${displayedColorData.name || "Màu sắc"}`}
           data-node-id="3:1157"
         />
       </div>
 
-      <p className="hero-tagline">{displayedColorData.tagline || "GÕ CHẤT. CHƠI KHÁC."}</p>
+      <p className="hero-tagline">{displayedColorData.tagline || product?.tagline || "GÕ CHẤT. CHƠI KHÁC."}</p>
 
       <div className="hero-stat">
-        <strong>1.000 Hz</strong>
-        <span>KHÔNG DÂY. KHÔNG ĐỘ TRỄ.</span>
+        <strong>{product?.statValue || "1.000 Hz"}</strong>
+        <span>{product?.statLabel || "KHÔNG DÂY. KHÔNG ĐỘ TRỄ."}</span>
       </div>
 
       {/* Bộ chọn chấm tròn điều hướng màu */}
       <div className="hero-dots" aria-label="Bộ chọn màu sắc">
-        {(colors.length > 0 ? colors : [0, 1, 2]).map((item, index) => (
+        {colors.map((item, index) => (
           <button
             key={item.name || index}
             type="button"

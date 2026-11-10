@@ -122,7 +122,7 @@ export default function PurchaseSection({
           ))}
         </div>
         <strong ref={colorNameRef}>{currentColor.name}</strong>
-        <p ref={colorDescRef}>{currentColor.switchDesc || "Linear Red Switch · Êm & mượt"}</p>
+        <p ref={colorDescRef}>{currentColor.switchDesc || product?.variant || "Linear Red Switch · Êm & mượt"}</p>
       </div>
 
       {/* Thông tin sản phẩm */}
@@ -136,9 +136,9 @@ export default function PurchaseSection({
             "Từng phím gõ, một nhịp cảm hứng. Thiết kế 75% gọn gàng, hoàn thiện cho cả làm việc lẫn cuộc chơi."}
         </p>
         <div className="features">
-          <span>Nhôm CNC</span>
-          <span>Hot-swap</span>
-          <span>3 chế độ kết nối</span>
+          {(product?.features || ["Nhôm CNC", "Hot-swap", "3 chế độ kết nối"]).map((feat, i) => (
+            <span key={i}>{feat}</span>
+          ))}
         </div>
       </div>
 
