@@ -1,156 +1,209 @@
 /**
- * Service xử lý gọi API lấy danh sách và chi tiết sản phẩm
- * Endpoint: GET /api/products
+ * Service gọi API sản phẩm (dữ liệu hoàn toàn từ backend, không còn dữ liệu tĩnh)
  */
-import { PRODUCTS, getProductById as getStaticProductById } from "../data/products";
-
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const DEFAULT_TAGLINE = "GÕ CHẤT. CHƠI KHÁC.";
+const DEFAULT_GLOW = "rgba(200, 201, 202, 0.22)";
+const DEFAULT_FEATURES = ["3 chế độ kết nối", "Khung hoàn thiện cao cấp", "Hot-swap linh hoạt"];
 
-/**
- * Hàm adapter chuyển đổi cấu trúc 1 sản phẩm từ Backend API sang cấu trúc Frontend yêu cầu
- * @param {Object} apiProduct - Đối tượng sản phẩm trả về từ API
- * @returns {Object} Đối tượng sản phẩm tương thích với toàn bộ components trong app
- */
-export function mapApiProductToFrontend(apiProduct) {
-  if (!apiProduct) return null;
+const toNumber = (v) => (v != null ? Number(v) : undefined);
+const formatVnd = (n) => `${Number(n).toLocaleString("vi-VN")} ₫`;
 
-  const specs = apiProduct.specifications || {};
-  const variants = Array.isArray(apiProduct.variants) ? apiProduct.variants : [];
-  const firstVariant = variants[0] || {};
-  const images = Array.isArray(apiProduct.images) ? apiProduct.images : [];
+// Suy ra loại switch/kết nối để bộ lọc ở trang danh sách hoạt động
+function deriveSwitchType(switchName = "") {
+  if (/magnetic|\bHE\b/i.test(switchName)) return "Magnetic";
+  if (/tactile|brown/i.test(switchName)) return "Tactile";
+  return "Linear";
+}
 
-  // Lấy ảnh đại diện (ưu tiên isPrimary = true, nếu không lấy ảnh đầu tiên)
-  const primaryImgObj = images.find((img) => img.isPrimary) || images[0];
-  const primaryImg = primaryImgObj?.imageUrl || "";
+function deriveConnection(highlights = []) {
+  const text = highlights.join(" ");
+  if (/3 chế độ/i.test(text)) return "3 chế độ kết nối";
+  if (/bluetooth|không dây/i.test(text)) return "Không dây Bluetooth";
+  if (/có dây|usb/i.test(text)) return "Có dây USB-C";
+  return "3 chế độ kết nối";
+}
 
-  // Map danh sách biến thể (variants) sang mảng colors mà UI cần
-  const colors = variants.map((v, index) => {
-    const attrs = v.attributes || {};
-    return {
-      name: v.name || attrs.color || `Màu ${index + 1}`,
-      color: attrs.colorHex || "#393b3d",
-      switchDesc: attrs.switchDesc || (attrs.switch ? `${attrs.switch} · Êm & mượt` : ""),
-      tagline: attrs.tagline || specs.tagline || "GÕ CHẤT. CHƠI KHÁC.",
-      glow: attrs.glow || "rgba(200, 201, 202, 0.22)",
-      image: images[index]?.imageUrl || primaryImg,
-      sku: v.sku,
-      price: v.price != null ? Number(v.price) : undefined,
-      compareAtPrice: v.compareAtPrice != null ? Number(v.compareAtPrice) : undefined,
-      stockQuantity: v.stockQuantity,
-    };
-  });
+/** Adapter DANH SÁCH: ProductCardResponse -> cấu trúc UI */
+export function mapCardToFrontend(card) {
+  if (!card) return null;
 
-  const price = firstVariant.price != null ? Number(firstVariant.price) : 0;
-  const compareAtPrice = firstVariant.compareAtPrice != null ? Number(firstVariant.compareAtPrice) : null;
-  const oldPriceFormatted = compareAtPrice ? `${compareAtPrice.toLocaleString("vi-VN")} ₫` : null;
+  const highlights = Array.isArray(card.highlights) ? card.highlights : [];
+  const apiColors = Array.isArray(card.colors) ? card.colors : [];
+  const image = card.primaryImageUrl || "";
+  const compareAtPrice = card.compareAtPrice != null ? Number(card.compareAtPrice) : null;
 
-  const variantSummary = firstVariant.attributes?.color
-    ? `${firstVariant.attributes.color}${firstVariant.attributes.switch ? ` · ${firstVariant.attributes.switch}` : ""}`
-    : firstVariant.name || "";
-
-  const inStock = variants.length > 0 ? variants.some((v) => (v.stockQuantity ?? 0) > 0) : true;
+  const colors = apiColors.map((c, i) => ({
+    variantId: c.variantId,
+    name: c.name || `Màu ${i + 1}`,
+    color: c.hex || "#393b3d",
+    switchDesc: c.switchName ? `${c.switchName} · Êm & mượt` : "",
+    tagline: DEFAULT_TAGLINE,
+    glow: DEFAULT_GLOW,
+    image,
+    price: toNumber(c.price),
+    compareAtPrice: toNumber(c.compareAtPrice),
+  }));
 
   return {
-    // Dùng slug làm id để giữ đồng bộ với URL routing hiện tại (/ban-phim/thread-75)
-    id: apiProduct.slug || String(apiProduct.id),
-    numericId: apiProduct.id,
-    slug: apiProduct.slug,
-    name: apiProduct.name,
-    heroWord: specs.heroWord || "Thread",
-    heroNumber: specs.heroNumber || (apiProduct.name.replace(/[^0-9A-Za-z]/g, "").slice(6) || "75"),
-    badge: specs.badge || (apiProduct.viewCount > 2000 ? "BÁN CHẠY" : "MỚI RA MẮT"),
-    variant: variantSummary,
-    specs: specs.specs || apiProduct.shortDescription || "",
-    features:
-      Array.isArray(specs.features) && specs.features.length > 0
-        ? specs.features
-        : ["3 chế độ kết nối", "Khung hoàn thiện cao cấp", "Hot-swap linh hoạt"],
-    price: price,
-    oldPrice: oldPriceFormatted,
-    image: primaryImg,
-    images: images.map((img) => img.imageUrl),
+    id: card.slug || String(card.id),
+    numericId: card.id,
+    slug: card.slug,
+    name: card.name,
+    heroWord: "Thread",
+    heroNumber: card.name?.match(/\d+/)?.[0] || "75",
+    badge: card.badge || "MỚI RA MẮT",
+    variant: card.subtitle || "",
+    specs: highlights.join(" · "),
+    features: highlights.length > 0 ? highlights : DEFAULT_FEATURES,
+    price: card.price != null ? Number(card.price) : 0,
+    oldPrice: compareAtPrice ? formatVnd(compareAtPrice) : null,
+    image,
+    images: image ? [image] : [],
+    inStock: !!card.inStock,
+    availability: card.inStock ? "Có sẵn · Giao trong 24h" : "Tạm hết hàng",
+    layout: card.layout || "",
+    connection: card.connectionType || "",
+    switch: card.switchType || "",
+    description: "",
+    tagline: DEFAULT_TAGLINE,
+    statValue: "1.000 Hz",
+    statLabel: "KHÔNG DÂY · KHÔNG ĐỘ TRỄ",
+    colors,
+    rawVariants: apiColors.map((c) => ({
+      id: c.variantId,
+      name: c.name,
+      price: toNumber(c.price),
+      compareAtPrice: toNumber(c.compareAtPrice),
+      attributes: { color: c.name, colorHex: c.hex, switch: c.switchName },
+    })),
+    defaultVariantId: card.defaultVariantId,
+    status: card.status,
+    categoryName: card.categoryName,
+    brandName: card.brandName,
+  };
+}
+
+/** Adapter CHI TIẾT: ProductDetailResponse (GET /api/products/slug/{slug}) -> cấu trúc UI */
+export function mapDetailToFrontend(d) {
+  if (!d) return null;
+
+  const variants = Array.isArray(d.variants) ? d.variants : [];
+  const hero = d.hero || {};
+  const slides = Array.isArray(hero.slides) ? hero.slides : [];
+  const def = variants.find((v) => v.id === d.defaultVariantId) || variants[0] || {};
+  const image = slides[0] || def.images?.[0] || "";
+  const compareAtPrice = def.compareAtPrice != null ? Number(def.compareAtPrice) : null;
+  const inStock = variants.some((v) => v.inStock);
+  const number = d.name?.match(/\d+/)?.[0];
+
+  const colors = variants.map((v, i) => ({
+    variantId: v.id,
+    name: v.color || `Màu ${i + 1}`,
+    color: v.colorHex || "#393b3d",
+    switchDesc: v.switchDesc || (v.switchName ? `${v.switchName} · Êm & mượt` : ""),
+    tagline: v.tagline || DEFAULT_TAGLINE,
+    glow: v.glow || DEFAULT_GLOW,
+    image: v.images?.[0] || image,
+    images: v.images || [],
+    inStock: v.inStock,
+    price: toNumber(v.price),
+    compareAtPrice: toNumber(v.compareAtPrice),
+  }));
+
+  return {
+    id: d.slug,
+    numericId: d.id,
+    slug: d.slug,
+    name: d.name,
+    heroWord: hero.titleMain || "Thread",
+    heroNumber: hero.titleAccent || number || "75",
+    badge: d.badge || "MỚI RA MẮT",
+    variant: def.color ? `${def.color}${def.switchName ? ` · ${def.switchName}` : ""}` : "",
+    specs: d.shortDescription || "",
+    features: d.features?.length ? d.features : DEFAULT_FEATURES,
+    price: def.price != null ? Number(def.price) : 0,
+    oldPrice: compareAtPrice ? formatVnd(compareAtPrice) : null,
+    image,
+    images: slides,
+    inStock,
     availability: inStock ? "Có sẵn · Giao trong 24h" : "Tạm hết hàng",
-    layout: specs.layout || "75%",
-    connection: specs.connection || "3 chế độ kết nối",
-    switch: specs.switchType || "Linear",
-    description: apiProduct.description || "",
-    tagline: specs.tagline || firstVariant.attributes?.tagline || "GÕ CHẤT. CHƠI KHÁC.",
-    statValue: specs.statValue || "1.000 Hz",
-    statLabel: specs.statLabel || "KHÔNG DÂY · KHÔNG ĐỘ TRỄ",
-    colors:
-      colors.length > 0
-        ? colors
-        : [
-          {
-            name: "Mặc định",
-            color: "#c8c9ca",
-            switchDesc: "Linear Red Switch · Êm & mượt",
-            tagline: specs.tagline || "GÕ CHẤT. CHƠI KHÁC.",
-            image: primaryImg,
-            glow: "rgba(200, 201, 202, 0.22)",
-          },
-        ],
+    layout: number ? `${number}%` : "",
+    connection: "3 chế độ kết nối",
+    switch: deriveSwitchType(def.switchName),
+    description: d.description || "",
+    tagline: def.tagline || DEFAULT_TAGLINE,
+    statValue: hero.statValue || "1.000 Hz",
+    statLabel: hero.statLabel || "KHÔNG DÂY · KHÔNG ĐỘ TRỄ",
+    colors,
     rawVariants: variants,
-    categoryId: apiProduct.categoryId,
-    categoryName: apiProduct.categoryName,
-    brandId: apiProduct.brandId,
-    brandName: apiProduct.brandName,
+    defaultVariantId: d.defaultVariantId,
+    reviews: d.reviews || null, // { summary, items, hasNext }
+    categoryName: d.categoryName,
+    brandName: d.brandName,
   };
 }
 
 export const productService = {
-  /**
-   * Lấy danh sách sản phẩm từ backend API (GET /api/products)
-   * Trả về danh sách đã được format phù hợp với UI.
-   * Nếu không gọi được API, tự động fallback về static PRODUCTS để web không bị gián đoạn.
-   */
+  /** Danh sách sản phẩm. Lỗi mạng thì trả danh sách rỗng kèm error. */
+  
   async getProducts(params = {}) {
     try {
-      const queryParams = new URLSearchParams();
-      if (params.pageNumber != null) queryParams.append("page", params.pageNumber);
-      if (params.pageSize != null) queryParams.append("size", params.pageSize);
-      if (params.search) queryParams.append("search", params.search);
+      const q = new URLSearchParams();
 
-      const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : "";
-      const response = await fetch(`${BASE_URL}/api/products${queryStr}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const paramMap = {
+        pageNumber: "page",
+        pageSize: "size",
+        sortBy: "sortBy",
+        sortDirection: "sortDirection",
+        search: "search",
+        categoryId: "categoryId",
+        minPrice: "minPrice",
+        maxPrice: "maxPrice",
+        layout: "layout",
+        connectionType: "connectionType",
+        switchType: "switchType",
+        inStock: "inStock",
+      };
+
+      Object.entries(paramMap).forEach(([key, apiKey]) => {
+        const value = params[key];
+
+        if (value !== undefined && value !== null && value !== "") {
+          q.append(apiKey, String(value));
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
+      const res = await fetch(
+        `${BASE_URL}/api/products?${q.toString()}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error: ${res.status}`);
       }
 
-      const resJson = await response.json();
+      const json = await res.json();
 
-      // Hỗ trợ cấu trúc phân trang: { success: true, data: { content: [...] } }
-      let rawList = [];
-      if (Array.isArray(resJson)) {
-        rawList = resJson;
-      } else if (Array.isArray(resJson?.data?.content)) {
-        rawList = resJson.data.content;
-      } else if (Array.isArray(resJson?.data)) {
-        rawList = resJson.data;
-      } else if (Array.isArray(resJson?.content)) {
-        rawList = resJson.content;
-      }
+      const pageData = json?.data || {};
+      const list = Array.isArray(pageData.content)
+        ? pageData.content
+        : [];
 
-      if (rawList.length > 0) {
-        const mappedProducts = rawList.map(mapApiProductToFrontend);
-        return {
-          products: mappedProducts,
-          pageInfo: resJson?.data || null,
-          isLive: true,
-        };
-      }
-
-      return { products: PRODUCTS, pageInfo: null, isLive: false };
-    } catch (error) {
-      console.warn("Lưu ý: Không thể fetch từ backend API (http://localhost:8080/api/products), sử dụng fallback data:", error.message);
       return {
-        products: PRODUCTS,
+        products: list.map(mapCardToFrontend).filter(Boolean),
+        pageInfo: pageData,
+        isLive: true,
+      };
+    } catch (error) {
+      console.warn("Không thể tải danh sách sản phẩm:", error.message);
+
+      return {
+        products: [],
         pageInfo: null,
         isLive: false,
         error: error.message,
@@ -158,30 +211,19 @@ export const productService = {
     }
   },
 
-  /**
-   * Lấy chi tiết 1 sản phẩm theo slug hoặc id
-   */
-  async getProductById(idOrSlug) {
-    if (!idOrSlug) return PRODUCTS[0];
 
+  /** Chi tiết theo slug. Trả null nếu không tìm thấy hoặc lỗi. */
+  async getProductBySlug(slug) {
+    if (!slug) return null;
     try {
-      const response = await fetch(`${BASE_URL}/api/products/${idOrSlug}`, {
-        method: "GET",
+      const res = await fetch(`${BASE_URL}/api/products/slug/${encodeURIComponent(slug)}`, {
         headers: { "Content-Type": "application/json" },
       });
-
-      if (response.ok) {
-        const resJson = await response.json();
-        const raw = resJson?.data || resJson;
-        if (raw && (raw.name || raw.id)) {
-          return mapApiProductToFrontend(raw);
-        }
-      }
+      if (!res.ok) return null;
+      const json = await res.json();
+      return mapDetailToFrontend(json?.data);
     } catch {
-      // Fallback bên dưới
+      return null;
     }
-
-    // Fallback: Tìm trong static PRODUCTS
-    return getStaticProductById(idOrSlug);
   },
 };

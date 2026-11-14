@@ -6,60 +6,58 @@ import PurchaseSection from "../components/product-detail/PurchaseSection";
 import ReviewsSection from "../components/product-detail/ReviewsSection";
 import PageFooter from "../components/product-detail/PageFooter";
 import NoticeToast from "../components/product-detail/NoticeToast";
-import { getProductById } from "../data/products";
+import { productService } from "../services/productService";
 import { productStore } from "../services/productStore";
 
 export default function ProductDetailPage() {
-  const { id } = useParams();
+  const { id } = useParams(); // id là slug
   const [color, setColor] = useState(0);
   const [notice, setNotice] = useState("");
+  const [product, setProduct] = useState(() => productStore.findById(id) || null);
+  const [notFound, setNotFound] = useState(false);
 
   const comingSoon = (name) => setNotice(`${name} đang được hoàn thiện.`);
 
-  // Ưu tiên tìm trong in-memory store (đã fetch từ danh sách), fallback về static data
-  const productInfo = productStore.findById(id) || getProductById(id);
-
-  // Reset màu khi chuyển sản phẩm
   useEffect(() => {
+    let alive = true;
     setColor(0);
+    setNotFound(false);
+    // Hiển thị ngay bản rút gọn từ danh sách (nếu có), rồi thay bằng bản đầy đủ từ BE
+    setProduct(productStore.findById(id) || null);
+
+    productService.getProductBySlug(id).then((detail) => {
+      if (!alive) return;
+      if (detail) setProduct(detail);
+      else if (!productStore.findById(id)) setNotFound(true);
+    });
+
+    return () => { alive = false; };
   }, [id]);
 
   useEffect(() => {
-    if (productInfo?.name) {
-      document.title = `${productInfo.name} | 8Threads Keyboard`;
-    }
-  }, [productInfo]);
+    if (product?.name) document.title = `${product.name} | 8Threads Keyboard`;
+  }, [product]);
 
-  const activeColors = productInfo?.colors || [];
+  if (!product) {
+    return (
+      <main className="thread-page">
+        <Navbar onComingSoon={comingSoon} />
+        <p style={{ padding: "120px 24px", textAlign: "center" }}>
+          {notFound ? "Không tìm thấy sản phẩm." : "Đang tải sản phẩm..."}
+        </p>
+      </main>
+    );
+  }
+
+  const activeColors = product.colors || [];
 
   return (
     <main className="thread-page" data-node-id="3:1120">
       <Navbar onComingSoon={comingSoon} />
-
-      {/* Hero Section với animation GSAP, tên sản phẩm (hero-word & hero-number) và hình ảnh */}
-      <HeroSection
-        product={productInfo}
-        color={color}
-        onColorChange={setColor}
-        colors={activeColors}
-      />
-
-      {/* Khu vực đặt hàng & bộ chọn màu sắc tương tác */}
-      <PurchaseSection
-        product={productInfo}
-        color={color}
-        onColorChange={setColor}
-        colors={activeColors}
-        onComingSoon={comingSoon}
-      />
-
-      {/* Đánh giá & nhận xét */}
-      <ReviewsSection product={productInfo} onComingSoon={comingSoon} />
-
-      {/* Footer */}
+      <HeroSection product={product} color={color} onColorChange={setColor} colors={activeColors} />
+      <PurchaseSection product={product} color={color} onColorChange={setColor} colors={activeColors} onComingSoon={comingSoon} />
+      <ReviewsSection product={product} onComingSoon={comingSoon} />
       <PageFooter />
-
-      {/* Toast thông báo */}
       <NoticeToast message={notice} onClose={() => setNotice("")} />
     </main>
   );
