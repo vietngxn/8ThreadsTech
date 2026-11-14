@@ -1,72 +1,149 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { productService } from "../services/productService";
-import { productStore } from "../services/productStore";
 
-/**
- * Hook fetch danh sách sản phẩm với in-memory cache.
- * - Lần đầu vào trang: gọi API, lưu vào store.
- * - Quay lại trang: đọc từ cache, KHÔNG gọi lại API.
- */
 export function useProducts(params = {}) {
-  const hasCached = productStore.hasCache();
+  const {
+    pageNumber = 0,
+    pageSize = 9,
+    sortBy = "viewCount",
+    sortDirection = "desc",
+    search = "",
+    categoryId = null,
+    minPrice = null,
+    maxPrice = null,
+    layout = null,
+    connectionType = null,
+    switchType = null,
+    inStock = null,
+  } = params;
 
-  // Nếu đã có cache → hiển thị ngay, không cần loading
-  const [products, setProducts] = useState(() =>
-    hasCached ? productStore.getAll() : []
-  );
-  const [loading, setLoading] = useState(!hasCached);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isLive, pageInfo: cachedPageInfo } = productStore.getMeta();
-  const [isLiveState, setIsLiveState] = useState(isLive);
-  const [pageInfo, setPageInfo] = useState(cachedPageInfo);
+  const [pageInfo, setPageInfo] = useState(null);
+  const [isLive, setIsLive] = useState(false);
+  const [reload, setReload] = useState(0);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
+    setError(null);
+
     try {
-      const result = await productService.getProducts(params);
-      const list = result.products || [];
-      productStore.set(list, { isLive: result.isLive, pageInfo: result.pageInfo });
-      setProducts(list);
-      setIsLiveState(result.isLive);
+      const result = await productService.getProducts({
+        pageNumber,
+        pageSize,
+        sortBy,
+        sortDirection,
+        search,
+        categoryId,
+        minPrice,
+        maxPrice,
+        layout,
+        connectionType,
+        switchType,
+        inStock,
+      });
+
+      setProducts(result.products || []);
       setPageInfo(result.pageInfo);
+      setIsLive(result.isLive);
       setError(result.error || null);
     } catch (err) {
+      setProducts([]);
+      setPageInfo(null);
+      setIsLive(false);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    pageNumber,
+    pageSize,
+    sortBy,
+    sortDirection,
+    search,
+    categoryId,
+    minPrice,
+    maxPrice,
+    layout,
+    connectionType,
+    switchType,
+    inStock,
+  ]);
 
   useEffect(() => {
-    // Nếu đã có cache thì bỏ qua, không gọi lại API
-    if (productStore.hasCache()) return;
+    let cancelled = false;
 
-    let isMounted = true;
-    setLoading(true);
+    const load = async () => {
+      setLoading(true);
+      setError(null);
 
-    productService.getProducts(params).then((result) => {
-      if (!isMounted) return;
-      const list = result.products || [];
-      productStore.set(list, { isLive: result.isLive, pageInfo: result.pageInfo });
-      setProducts(list);
-      setIsLiveState(result.isLive);
-      setPageInfo(result.pageInfo);
-      setError(result.error || null);
-      setLoading(false);
-    });
+      try {
+        const result = await productService.getProducts({
+          pageNumber,
+          pageSize,
+          sortBy,
+          sortDirection,
+          search,
+          categoryId,
+          minPrice,
+          maxPrice,
+          layout,
+          connectionType,
+          switchType,
+          inStock,
+        });
+
+        if (cancelled) return;
+
+        setProducts(result.products || []);
+        setPageInfo(result.pageInfo);
+        setIsLive(result.isLive);
+        setError(result.error || null);
+      } catch (err) {
+        if (cancelled) return;
+
+        setProducts([]);
+        setPageInfo(null);
+        setIsLive(false);
+        setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
 
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
-    // Chỉ chạy khi params phân trang thay đổi (không phụ thuộc vào cache)
-  }, [params.pageNumber, params.pageSize, params.search]);
+  }, [
+    pageNumber,
+    pageSize,
+    sortBy,
+    sortDirection,
+    search,
+    categoryId,
+    minPrice,
+    maxPrice,
+    layout,
+    connectionType,
+    switchType,
+    inStock,
+    reload,
+  ]);
+
+  const refetch = useCallback(() => {
+    setReload((value) => value + 1);
+  }, []);
 
   return {
     products,
     loading,
     error,
-    isLive: isLiveState,
+    isLive,
     pageInfo,
-    refetch: fetchProducts,
+    refetch,
   };
 }

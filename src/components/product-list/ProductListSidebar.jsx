@@ -1,11 +1,7 @@
 import { IconAdjustmentsHorizontal, IconMinus, IconArrowUpRight } from "@tabler/icons-react";
+import { FILTER_GROUPS } from "../../constants/productFilters";
 
-const filterGroups = [
-  { key: "price", title: "KHOẢNG GIÁ", options: ["Dưới 1.500.000 đ", "1.500.000 – 2.500.000 đ", "Trên 2.500.000 đ"] },
-  { key: "layout", title: "LAYOUT", options: ["60% / 65% — Nhỏ gọn", "75% — Cân bằng", "80% / TKL — Linh hoạt", "98% / 100% — Đầy đủ"] },
-  { key: "connection", title: "KẾT NỐI", options: ["3 chế độ kết nối", "Không dây Bluetooth", "Có dây USB-C"] },
-  { key: "switch", title: "LOẠI SWITCH", options: ["Linear — Êm & mượt", "Tactile — Phản hồi rõ", "Magnetic — Từ tính"] },
-];
+const filterGroups = FILTER_GROUPS;
 
 export default function ProductListSidebar({ category, filters, inStockOnly, onCategoryChange, onFilterToggle, onStockToggle }) {
   return (
