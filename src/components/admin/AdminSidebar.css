@@ -217,8 +217,16 @@
   }
 
   .admin-sidebar .admin-nav-label,
-  .admin-sidebar-bottom {
+  .admin-sidebar-bottom > :not(.admin-settings-link) {
     display: none;
+  }
+
+  .admin-sidebar-bottom {
+    padding-top: 8px;
+  }
+
+  .admin-sidebar .admin-settings-link {
+    height: 38px;
   }
 
   .admin-sidebar .admin-nav-item {
