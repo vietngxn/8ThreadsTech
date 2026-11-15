@@ -1,15 +1,20 @@
 /* Admin Sidebar Component */
 .admin-sidebar {
+  position: sticky;
+  top: 0;
   width: 224px;
   min-width: 224px;
   flex: 0 0 224px;
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
   background: #0b0f14;
   border-right: 1px solid #1e293b;
-  padding: 24px 16px 20px;
+  padding: 20px 14px 16px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  overflow: hidden;
+  z-index: 100;
 }
 
 .admin-sidebar h1,
@@ -19,10 +24,11 @@
 }
 
 .admin-sidebar .admin-brand {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 8px 24px;
+  margin: 0 8px 20px;
   white-space: nowrap;
   font-size: 21px;
   font-weight: 900;
@@ -42,6 +48,29 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+/* Custom scrollbar thanh mảnh cho phần danh sách menu khi màn hình thấp */
+.admin-sidebar nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.admin-sidebar nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar nav::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+.admin-sidebar nav::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }
 
 .admin-sidebar .admin-nav-label {
@@ -52,10 +81,11 @@
   margin: 0 8px 6px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  flex-shrink: 0;
 }
 
 .admin-sidebar .admin-nav-item {
-  height: 44px;
+  height: 42px;
   padding: 0 12px;
   display: flex;
   align-items: center;
@@ -66,6 +96,7 @@
   text-decoration: none;
   transition: background 0.15s ease, color 0.15s ease;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .admin-sidebar .admin-nav-item svg {
@@ -114,7 +145,8 @@
 
 .admin-sidebar-bottom {
   margin-top: auto;
-  padding-top: 16px;
+  flex-shrink: 0;
+  padding-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -124,7 +156,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 42px;
+  height: 40px;
   padding: 0 12px;
   border: 1px solid #222a36;
   border-radius: 8px;
@@ -134,6 +166,7 @@
   text-decoration: none;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
 }
 
 .admin-sidebar .admin-support:hover {
@@ -147,9 +180,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 8px 0;
+  padding: 12px 8px 0;
   font-size: 13px;
-  margin-top: 6px;
+  margin-top: 4px;
+  flex-shrink: 0;
 }
 
 .admin-sidebar .admin-avatar {
@@ -176,7 +210,7 @@
 }
 
 .admin-sidebar .admin-account small {
-  margin-top: 3px;
+  margin-top: 2px;
   color: #929292;
   font-size: 11px;
 }
@@ -189,13 +223,17 @@
 /* Responsive cho màn hình nhỏ */
 @media (max-width: 700px) {
   .admin-sidebar {
+    position: static;
     width: 100%;
     min-width: 100%;
+    height: auto;
+    max-height: none;
     min-height: 0;
     flex: 0 0 auto;
     padding: 12px 16px;
     border-right: none;
     border-bottom: 1px solid #1e293b;
+    overflow: visible;
   }
 
   .admin-sidebar .admin-brand {
@@ -210,10 +248,12 @@
 
   .admin-sidebar nav {
     overflow-x: auto;
+    overflow-y: hidden;
     display: flex;
     flex-direction: row;
     gap: 6px;
     padding-bottom: 4px;
+    max-height: none;
   }
 
   .admin-sidebar .admin-nav-label,
