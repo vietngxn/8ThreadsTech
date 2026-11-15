@@ -1,0 +1,70 @@
+/* GSAP Animation Styles */
+
+/* Prevent layout shift during animations */
+.js-reveal,
+.js-parallax {
+    will-change: transform, opacity;
+}
+
+/* Smooth transitions for interactive elements */
+.landing-button,
+.product-price button,
+.landing-swatches button,
+.order-buttons button {
+    transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.landing-button:hover {
+    transform: scale(1.05);
+}
+
+/* Performance optimizations */
+.landing-hero-keyboard,
+.hero-orbit,
+.color-orbit,
+.design-image img {
+    will-change: transform;
+}
+
+/* Reduce animations on mobile for performance */
+@media (max-width: 760px) {
+    .landing-button:hover,
+    .product-price button:hover,
+    .landing-swatches button:hover {
+        transform: none;
+    }
+    
+    .team-infinity {
+        animation: none;
+    }
+    
+    .hero-orbit,
+    .color-orbit {
+        animation: none;
+    }
+}
+
+/* Respect user preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .landing-button:hover,
+    .product-price button:hover,
+    .landing-swatches button:hover,
+    .landing-product:hover,
+    .order-buttons button:hover {
+        transform: none;
+    }
+    
+    .team-infinity,
+    .hero-orbit,
+    .color-orbit {
+        animation: none;
+    }
+}

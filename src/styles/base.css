@@ -1,0 +1,49 @@
+/* Base styles */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background: #090909;
+    font-family: 'Inter Variable', Inter, sans-serif;
+}
+
+button,
+a {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+    outline: 2px solid #f02b24;
+    outline-offset: 4px;
+}
+
+.page-wrapper {
+    width: 100%;
+    background: #090909;
+    display: flex;
+    justify-content: center;
+}
+
+.page-container {
+    width: 100%;
+    max-width: 1440px;
+    min-height: 100vh;
+    overflow: hidden;
+}
