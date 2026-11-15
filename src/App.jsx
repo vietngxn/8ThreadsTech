@@ -55,7 +55,11 @@ export default function App() {
 
           {/* Sản phẩm & Chi tiết */}
           <Route path="/ban-phim" element={<ProductListPage />} />
+          <Route path="/keycap" element={<ProductListPage />} />
+          <Route path="/phu-kien" element={<ProductListPage />} />
+
           <Route path="/san-pham" element={<ProductListPage />} />
+
           <Route path="/ban-phim/:id" element={<ProductDetailPage />} />
           <Route path="/san-pham/:id" element={<ProductDetailPage />} />
 

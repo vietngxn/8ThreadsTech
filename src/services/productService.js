@@ -1,7 +1,7 @@
 /**
  * Service gọi API sản phẩm (dữ liệu hoàn toàn từ backend, không còn dữ liệu tĩnh)
  */
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+import api from "./api";
 const DEFAULT_TAGLINE = "GÕ CHẤT. CHƠI KHÁC.";
 const DEFAULT_GLOW = "rgba(200, 201, 202, 0.22)";
 const DEFAULT_FEATURES = ["3 chế độ kết nối", "Khung hoàn thiện cao cấp", "Hot-swap linh hoạt"];
@@ -144,13 +144,14 @@ export function mapDetailToFrontend(d) {
   };
 }
 
+
 export const productService = {
-  /** Danh sách sản phẩm. Lỗi mạng thì trả danh sách rỗng kèm error. */
-  
+  /**
+   * Danh sách sản phẩm
+   * Lỗi API thì trả danh sách rỗng kèm error
+   */
   async getProducts(params = {}) {
     try {
-      const q = new URLSearchParams();
-
       const paramMap = {
         pageNumber: "page",
         pageSize: "size",
@@ -166,30 +167,21 @@ export const productService = {
         inStock: "inStock",
       };
 
+      const queryParams = {};
+
       Object.entries(paramMap).forEach(([key, apiKey]) => {
         const value = params[key];
 
         if (value !== undefined && value !== null && value !== "") {
-          q.append(apiKey, String(value));
+          queryParams[apiKey] = value;
         }
       });
 
-      const res = await fetch(
-        `${BASE_URL}/api/products?${q.toString()}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await api.get("/api/products", {
+        params: queryParams,
+      });
 
-      if (!res.ok) {
-        throw new Error(`HTTP error: ${res.status}`);
-      }
-
-      const json = await res.json();
-
-      const pageData = json?.data || {};
+      const pageData = response.data?.data || {};
       const list = Array.isArray(pageData.content)
         ? pageData.content
         : [];
@@ -200,7 +192,10 @@ export const productService = {
         isLive: true,
       };
     } catch (error) {
-      console.warn("Không thể tải danh sách sản phẩm:", error.message);
+      console.warn(
+        "Không thể tải danh sách sản phẩm:",
+        error.message
+      );
 
       return {
         products: [],
@@ -211,18 +206,25 @@ export const productService = {
     }
   },
 
-
-  /** Chi tiết theo slug. Trả null nếu không tìm thấy hoặc lỗi. */
+  /**
+   * Chi tiết sản phẩm theo slug
+   * Trả null nếu không tìm thấy hoặc có lỗi
+   */
   async getProductBySlug(slug) {
     if (!slug) return null;
+
     try {
-      const res = await fetch(`${BASE_URL}/api/products/slug/${encodeURIComponent(slug)}`, {
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) return null;
-      const json = await res.json();
-      return mapDetailToFrontend(json?.data);
-    } catch {
+      const response = await api.get(
+        `/api/products/slug/${encodeURIComponent(slug)}`
+      );
+
+      return mapDetailToFrontend(response.data?.data);
+    } catch (error) {
+      console.warn(
+        "Không thể tải chi tiết sản phẩm:",
+        error.message
+      );
+
       return null;
     }
   },

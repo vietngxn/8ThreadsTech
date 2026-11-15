@@ -1,27 +1,66 @@
+
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { IconArrowRight, IconSearch, IconShoppingBag, IconUser, IconX } from "@tabler/icons-react";
+import {
+  useLocation,
+  useNavigate,
+  Link,
+  useSearchParams,
+} from "react-router-dom";
+
+import {
+  IconArrowRight,
+  IconSearch,
+  IconShoppingBag,
+  IconUser,
+  IconX,
+} from "@tabler/icons-react";
+
 import { useNavbar } from "../../hooks/useNavbar";
 import logo from "../../assets/thread-logo.png";
 import NoticeToast from "../product-detail/NoticeToast";
 import { authService } from "../../services/authService";
+import { categoryService } from "../../services/categoryService";
 
-export default function Navbar({ quantity = 0, onComingSoon, onSearch }) {
+export default function Navbar({ quantity = 0, onSearch }) {
   const navRef = useNavbar();
   const searchInputRef = useRef(null);
+
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
   const [notice, setNotice] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Danh sách danh mục lấy từ Backend
+  const [categories, setCategories] = useState(() =>
+    categoryService.getCachedParentCategories()
+  );
+
+  useEffect(() => {
+    categoryService.getParentCategories()
+      .then(setCategories)
+      .catch(console.error);
+  }, []);
+
+  // Xác định danh mục đang được chọn theo URL slug
+  const isActiveCategory = (slug) => {
+    return pathname === `/${slug}` ||
+      pathname.startsWith(`/${slug}/`);
+  };
+
   const isLoggedIn = Boolean(authService.getToken());
   const accountUrl = isLoggedIn ? "/ho-so" : "/dang-nhap";
+
   const isProductPage =
     pathname === "/ban-phim" ||
     pathname.startsWith("/ban-phim/") ||
     pathname === "/san-pham" ||
     pathname.startsWith("/san-pham/");
+
   const isTeamPage = pathname === "/ve-8threads-team";
+
   const isAccountPage =
     pathname === "/ho-so" ||
     pathname === "/so-dia-chi" ||
@@ -30,54 +69,92 @@ export default function Navbar({ quantity = 0, onComingSoon, onSearch }) {
     pathname.startsWith("/don-hang/") ||
     pathname === "/dang-nhap" ||
     pathname === "/dang-ky";
+
   const isCartPage =
     pathname === "/gio-hang" ||
     pathname === "/thanh-toan" ||
     pathname === "/hoan-tat";
 
-  const showComingSoon = (name) => {
-    if (onComingSoon) onComingSoon(name);
-    else setNotice(`${name} đang được hoàn thiện.`);
-  };
-  const handleCategoryClick = (event, name) => {
-    event.preventDefault();
-    if (pathname === "/ban-phim") {
-      document.querySelector("#products")?.scrollIntoView({ behavior: "smooth" });
-      return;
-    }
-    showComingSoon(name);
-  };
+  // Lấy danh mục cha từ Backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await categoryService.getParentCategories();
+        setCategories(data);
+      } catch (error) {
+        console.error("Không thể tải danh mục:", error);
+        setNotice("Không thể tải danh sách danh mục.");
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Tìm kiếm sản phẩm
   const submitSearch = (event) => {
     event.preventDefault();
+
     const query = searchQuery.trim();
+
     if (!query) {
       searchInputRef.current?.focus();
       return;
     }
 
-    if (onSearch) onSearch(query);
-    else navigate(`/ban-phim?q=${encodeURIComponent(query)}`);
+    if (onSearch) {
+      onSearch(query);
+    } else {
+      navigate(`/ban-phim?q=${encodeURIComponent(query)}`);
+    }
+
     setSearchQuery("");
     setSearchOpen(false);
   };
 
+  // Tự động focus ô tìm kiếm
   useEffect(() => {
-    if (searchOpen) searchInputRef.current?.focus();
+    if (searchOpen) {
+      searchInputRef.current?.focus();
+    }
   }, [searchOpen]);
 
   return (
     <>
       <header ref={navRef} className="landing-header">
-        <a className="landing-brand" href="/" aria-label="8ThreadTech trang chủ">
+        <a
+          className="landing-brand"
+          href="/"
+          aria-label="8ThreadTech trang chủ"
+        >
           <img src={logo} alt="" />
           <span>8ThreadTech</span>
         </a>
+
         <nav aria-label="Danh mục">
-          <a className={isProductPage ? "active" : ""} href="/ban-phim" aria-current={isProductPage ? "page" : undefined}>BÀN PHÍM</a>
-          <a href="#space" onClick={(event) => handleCategoryClick(event, "Keycap")}>KEYCAP</a>
-          <a href="#space" onClick={(event) => handleCategoryClick(event, "Phụ kiện")}>PHỤ KIỆN</a>
-          <a className={isTeamPage ? "active" : ""} href="/ve-8threads-team" aria-current={isTeamPage ? "page" : undefined}>VỀ 8THREADS TEAM</a>
+          {categories.map((category) => {
+            const isActive = isActiveCategory(category.slug);
+
+            return (
+              <Link
+                key={category.id}
+                className={isActive ? "active" : ""}
+                to={`/${category.slug}`}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {category.name.toUpperCase()}
+              </Link>
+            );
+          })}
+
+          <a
+            className={isTeamPage ? "active" : ""}
+            href="/ve-8threads-team"
+            aria-current={isTeamPage ? "page" : undefined}
+          >
+            VỀ 8THREADS TEAM
+          </a>
         </nav>
+
         <div className="landing-tools">
           <div className={`navbar-search${searchOpen ? " is-open" : ""}`}>
             <form
@@ -86,10 +163,18 @@ export default function Navbar({ quantity = 0, onComingSoon, onSearch }) {
               aria-hidden={!searchOpen}
               onSubmit={submitSearch}
               onKeyDown={(event) => {
-                if (event.key === "Escape") setSearchOpen(false);
+                if (event.key === "Escape") {
+                  setSearchOpen(false);
+                }
               }}
             >
-              <label className="navbar-search-label" htmlFor="navbar-search-input">Tìm kiếm sản phẩm</label>
+              <label
+                className="navbar-search-label"
+                htmlFor="navbar-search-input"
+              >
+                Tìm kiếm sản phẩm
+              </label>
+
               <input
                 ref={searchInputRef}
                 id="navbar-search-input"
@@ -100,6 +185,7 @@ export default function Navbar({ quantity = 0, onComingSoon, onSearch }) {
                 tabIndex={searchOpen ? 0 : -1}
                 disabled={!searchOpen}
               />
+
               {searchQuery && (
                 <button
                   type="button"
@@ -113,10 +199,16 @@ export default function Navbar({ quantity = 0, onComingSoon, onSearch }) {
                   <IconX size={15} />
                 </button>
               )}
-              <button type="submit" aria-label="Tìm kiếm" disabled={!searchOpen}>
+
+              <button
+                type="submit"
+                aria-label="Tìm kiếm"
+                disabled={!searchOpen}
+              >
                 <IconArrowRight size={18} />
               </button>
             </form>
+
             <button
               type="button"
               className="navbar-search-toggle"
@@ -125,20 +217,39 @@ export default function Navbar({ quantity = 0, onComingSoon, onSearch }) {
               aria-controls="navbar-search-input"
               onClick={() => setSearchOpen((open) => !open)}
             >
-              {searchOpen ? <IconX size={22} /> : <IconSearch size={22} />}
+              {searchOpen ? (
+                <IconX size={22} />
+              ) : (
+                <IconSearch size={22} />
+              )}
             </button>
           </div>
-          <a href="/gio-hang" aria-label={`Giỏ hàng: ${quantity} sản phẩm`} aria-current={isCartPage ? "page" : undefined}>
+
+          <a
+            href="/gio-hang"
+            aria-label={`Giỏ hàng: ${quantity} sản phẩm`}
+            aria-current={isCartPage ? "page" : undefined}
+          >
             <IconShoppingBag size={22} />
             <span>{quantity}</span>
           </a>
-          <a href={accountUrl} aria-label={isLoggedIn ? "Hồ sơ cá nhân" : "Đăng nhập"} aria-current={isAccountPage ? "page" : undefined}>
+
+          <a
+            href={accountUrl}
+            aria-label={isLoggedIn ? "Hồ sơ cá nhân" : "Đăng nhập"}
+            aria-current={isAccountPage ? "page" : undefined}
+          >
             <IconUser size={22} />
           </a>
         </div>
       </header>
+
       <div className="navbar-spacer" aria-hidden="true" />
-      <NoticeToast message={notice} onClose={() => setNotice("")} />
+
+      <NoticeToast
+        message={notice}
+        onClose={() => setNotice("")}
+      />
     </>
   );
 }
