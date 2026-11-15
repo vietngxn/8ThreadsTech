@@ -30,6 +30,7 @@ import AdminStatistics from "./pages/admin/AdminStatistics.jsx";
 import AdminJournal from "./pages/admin/AdminJournal.jsx";
 import AdminSettings from "./pages/admin/AdminSettings.jsx";
 import AdminHelp from "./pages/admin/AdminHelp.jsx";
+import AdminProfile from "./pages/admin/AdminProfile.jsx";
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="/admin/logs" element={<AdminJournal />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
         <Route path="/admin/help" element={<AdminHelp />} />
+        <Route path="/admin/profile" element={<AdminProfile />} />
 
         {/* === NHÓM CỬA HÀNG KHÁCH HÀNG (Bọc trong Storefront Layout) === */}
         <Route element={<Layout />}>
