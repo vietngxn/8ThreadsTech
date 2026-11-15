@@ -25,6 +25,7 @@ import AdminProductManagement from "./pages/admin/AdminProductManagement.jsx";
 import AdminCategoryManagement from "./pages/admin/AdminCategoryManagement.jsx";
 import AdminOrderManagement from "./pages/admin/AdminOrderManagement.jsx";
 import AdminCustomerManagement from "./pages/admin/AdminCustomerManagement.jsx";
+import AdminStatistics from "./pages/admin/AdminStatistics.jsx";
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/admin/categories" element={<AdminCategoryManagement />} />
         <Route path="/admin/orders" element={<AdminOrderManagement />} />
         <Route path="/admin/customers" element={<AdminCustomerManagement />} />
+        <Route path="/admin/statistics" element={<AdminStatistics />} />
 
         {/* === NHÓM CỬA HÀNG KHÁCH HÀNG (Bọc trong Storefront Layout) === */}
         <Route element={<Layout />}>
