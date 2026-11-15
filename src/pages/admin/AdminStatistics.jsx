@@ -1,28 +1,17 @@
 import { useMemo, useState } from 'react';
 import {
-  IconArrowsLeftRight, IconCalendar, IconChartLine, IconChevronDown,
-  IconFileDownload, IconFileText, IconFolder, IconHelpCircle, IconLayoutDashboard,
-  IconMinus, IconPackage, IconReceipt, IconSettings, IconShoppingBag, IconTicket,
-  IconTrendingUp, IconUsers, IconWallet,
+  IconArrowsLeftRight, IconCalendar, IconChevronDown,
+  IconFileDownload,
+  IconMinus, IconPackage, IconReceipt, IconShoppingBag,
+  IconTrendingUp, IconWallet,
 } from '@tabler/icons-react';
-import logo from '../../assets/thread-logo.png';
+import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
 import keyboard75 from '../../assets/list-thread-75.png';
 import keyboard80 from '../../assets/list-thread-80-pro.png';
 import keyboard65 from '../../assets/list-thread-65.png';
 import keyboard98 from '../../assets/list-thread-98.png';
 import keyboard60 from '../../assets/list-thread-60-he.png';
 import './AdminStatistics.css';
-
-const navigation = [
-  [IconLayoutDashboard, 'Tổng quan', '/admin'],
-  [IconPackage, 'Sản phẩm', '/admin/products'],
-  [IconFolder, 'Danh mục', '/admin/categories'],
-  [IconShoppingBag, 'Đơn hàng', '/admin/orders', '12'],
-  [IconUsers, 'Khách hàng'],
-  [IconTicket, 'Khuyến mãi'],
-  [IconChartLine, 'Thống kê', '/admin/statistics'],
-  [IconFileText, 'Nhật kí'],
-];
 
 const products = [
   { image: keyboard75, name: 'THREAD 75', variant: 'Bạc ánh trăng • Linear Red Switch', category: 'Bàn phím', units: 12, price: '2.490.000 ₫', revenue: '29.880.000 ₫', revenueValue: 29880000, share: 23.3, growth: '+20,0%' },
@@ -36,24 +25,6 @@ const revenueByDay = [14.4, 18.8, 16.2, 22.6, 17.6, 24.8, 14.0];
 const ordersByDay = [24, 32, 27, 36, 29, 42, 24];
 const dates = ['19/10', '20/10', '21/10', '22/10', '23/10', '24/10', '25/10'];
 const points = revenueByDay.map((value, index) => `${44 + index * 86},${180 - value * 6}`).join(' ');
-
-function Sidebar() {
-  return <aside className="stats-sidebar" data-node-id="64:2028">
-    <a className="stats-brand" href="/admin" aria-label="8ThreadTech - trang quản trị" data-node-id="64:2029"><img src={logo} alt="" /><strong>8ThreadTech</strong></a>
-    <nav aria-label="Quản lý cửa hàng" data-node-id="64:2032"><span className="stats-nav-label">QUẢN LÝ</span>
-      {navigation.map(([Icon, label, href, count], index) => {
-        const active = label === 'Thống kê';
-        const content = <><Icon size={18} stroke={1.5} /><span>{label}</span>{count && <b>{count}</b>}</>;
-        return href ? <a key={label} className={`stats-nav-item${active ? ' active' : ''}`} href={href} aria-current={active ? 'page' : undefined} data-node-id={`64:${2034 + index * 4}`}>{content}</a> : <div key={label} className="stats-nav-item">{content}</div>;
-      })}
-    </nav>
-    <div className="stats-sidebar-bottom">
-      <div className="stats-support"><IconHelpCircle size={18} stroke={1.5} />Trung tâm trợ giúp</div>
-      <div className="stats-support"><IconSettings size={18} stroke={1.5} />Cài đặt</div>
-      <div className="stats-account"><span className="stats-avatar">MA</span><span><strong>Minh Anh</strong><small>Quản trị viên</small></span><IconChevronDown size={14} /></div>
-    </div>
-  </aside>;
-}
 
 function RevenueChart() {
   return <section className="stats-panel stats-revenue" data-node-id="64:2154">
@@ -107,7 +78,7 @@ export default function AdminStatistics() {
   };
 
   return <div className="stats-dashboard" data-node-id="64:2027">
-    <Sidebar />
+    <AdminSidebar />
     <main className="stats-main" data-node-id="64:2086">
       <header className="stats-topbar" data-node-id="64:2087"><span>8ThreadTech</span><span className="stats-slash">/</span><strong>Thống kê</strong></header>
       <div className="stats-content" data-node-id="64:2091">

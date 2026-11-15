@@ -23,14 +23,14 @@ const MENU_ITEMS = [
   { id: "orders", label: "Đơn hàng", href: "/admin/orders", icon: IconShoppingBag, defaultBadge: "12" },
   { id: "customers", label: "Khách hàng", href: "/admin/customers", icon: IconUsers },
   { id: "promotions", label: "Khuyến mãi", href: "/admin/promotions", icon: IconTicket },
-  { id: "stats", label: "Thống kê", href: null, icon: IconChartLine },
+  { id: "stats", label: "Thống kê", href: "/admin/statistics", icon: IconChartLine },
   { id: "logs", label: "Nhật kí", href: null, icon: IconFileText },
 ];
 
 /**
  * Component Sidebar dùng chung cho toàn bộ các màn hình Quản trị Admin.
  *
- * @param {string} [props.active] - Key của menu item đang active ('dashboard' | 'products' | 'categories' | 'orders' | 'customers' | 'promotions').
+ * @param {string} [props.active] - Key của menu item đang active ('dashboard' | 'products' | 'categories' | 'orders' | 'customers' | 'promotions' | 'stats').
  *                                  Nếu không truyền, component tự động nhận diện theo URL hiện tại.
  * @param {Object} [props.badgeCounts] - Tuỳ chỉnh số đếm badge (mặc định: { orders: "12" }).
  * @param {string} [props.className] - ClassName bổ sung cho thẻ aside.
@@ -48,6 +48,7 @@ export default function AdminSidebar({ active, badgeCounts = {}, className = "" 
     if (pathname.startsWith("/admin/orders")) return "orders";
     if (pathname.startsWith("/admin/customers")) return "customers";
     if (pathname.startsWith("/admin/promotions")) return "promotions";
+    if (pathname.startsWith("/admin/statistics")) return "stats";
     return "";
   };
 
