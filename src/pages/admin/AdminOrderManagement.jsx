@@ -30,7 +30,7 @@ function Sidebar() {
   const items = [
     [IconLayoutDashboard, 'Tổng quan', '/admin'], [IconPackage, 'Sản phẩm', '/admin/products'],
     [IconFolder, 'Danh mục', '/admin/categories'], [IconShoppingBag, 'Đơn hàng', '/admin/orders'],
-    [IconUsers, 'Khách hàng'], [IconTicket, 'Khuyến mãi'], [IconChartLine, 'Thống kê'], [IconFileText, 'Nhật kí'],
+    [IconUsers, 'Khách hàng'], [IconTicket, 'Khuyến mãi', '/admin/promotions'], [IconChartLine, 'Thống kê'], [IconFileText, 'Nhật kí'],
   ];
   return <aside className="om-sidebar" data-node-id="58:481">
     <a className="om-brand" href="/admin" data-node-id="58:482"><img src={logo} alt="" /><strong>8ThreadTech</strong></a>

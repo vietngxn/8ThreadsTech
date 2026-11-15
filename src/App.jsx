@@ -26,6 +26,7 @@ import AdminProductManagement from "./pages/admin/AdminProductManagement.jsx";
 import AdminCategoryManagement from "./pages/admin/AdminCategoryManagement.jsx";
 import AdminOrderManagement from "./pages/admin/AdminOrderManagement.jsx";
 import AdminCustomerManagement from "./pages/admin/AdminCustomerManagement.jsx";
+import AdminPromotionManagement from "./pages/admin/AdminPromotionManagement.jsx";
 
 export default function App() {
   return (
@@ -34,14 +35,12 @@ export default function App() {
       <ScrollToTop />
       <SpaNavigationHandler />
 
-      <Routes>
-        {/* === NHÓM QUẢN TRỊ ADMIN (Không dùng Storefront Layout) === */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/products" element={<AdminProductManagement />} />
-        <Route path="/admin/categories" element={<AdminCategoryManagement />} />
-        <Route path="/admin/orders" element={<AdminOrderManagement />} />
-        <Route path="/admin/customers" element={<AdminCustomerManagement />} />
+  if (pathname === "/admin" || pathname === "/admin/dashboard") return <AdminDashboard />;
+  if (pathname === "/admin/products") return <AdminProductManagement />;
+  if (pathname === "/admin/categories") return <AdminCategoryManagement />;
+  if (pathname === "/admin/orders") return <AdminOrderManagement />;
+  if (pathname === "/admin/customers") return <AdminCustomerManagement />;
+  if (pathname === "/admin/promotions") return <AdminPromotionManagement />;
 
         {/* === NHÓM CỬA HÀNG KHÁCH HÀNG (Bọc trong Storefront Layout) === */}
         <Route element={<Layout />}>
