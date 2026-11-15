@@ -115,14 +115,14 @@ export default function AdminSidebar({ active, badgeCounts = {}, className = "" 
           <IconSettings size={18} stroke={1.5} />
           <span>Cài đặt</span>
         </Link>
-        <div className="admin-account">
+        <Link to="/admin/profile" className="admin-account" aria-label="Sửa hồ sơ quản trị viên">
           <span className="admin-avatar">MA</span>
           <span>
             <strong>Minh Anh</strong>
             <small>Quản trị viên</small>
           </span>
           <IconChevronDown size={14} />
-        </div>
+        </Link>
       </div>
     </aside>
   );
