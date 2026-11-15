@@ -107,10 +107,10 @@ export default function AdminSidebar({ active, badgeCounts = {}, className = "" 
           <IconArrowLeft size={18} stroke={1.5} />
           <span>Về cửa hàng</span>
         </Link>
-        <div className="admin-support" role="button" tabIndex={0}>
+        <Link to="/admin/help" className={`admin-support admin-help-link ${pathname === "/admin/help" ? "active" : ""}`} aria-current={pathname === "/admin/help" ? "page" : undefined}>
           <IconHelpCircle size={18} stroke={1.5} />
-          <span>Trợ giúp</span>
-        </div>
+          <span>Trung tâm trợ giúp</span>
+        </Link>
         <Link to="/admin/settings" className={`admin-support admin-settings-link ${pathname === "/admin/settings" ? "active" : ""}`} aria-current={pathname === "/admin/settings" ? "page" : undefined}>
           <IconSettings size={18} stroke={1.5} />
           <span>Cài đặt</span>
