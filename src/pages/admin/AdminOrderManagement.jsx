@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
 import {
-  IconAdjustments, IconChartLine, IconChevronDown, IconChevronLeft, IconChevronRight,
-  IconClockHour3, IconColumns3, IconDots, IconDownload, IconEye, IconFileText,
-  IconFolder, IconHelpCircle, IconLayoutDashboard, IconPackage, IconSearch,
-  IconSettings, IconShoppingBag, IconTicket, IconTruck, IconUsers, IconWallet, IconX,
+  IconAdjustments, IconChevronDown, IconChevronLeft, IconChevronRight,
+  IconClockHour3, IconColumns3, IconDots, IconDownload, IconEye,
+  IconSearch, IconShoppingBag, IconTruck, IconWallet, IconX,
 } from '@tabler/icons-react';
-import logo from '../../assets/thread-logo.png';
+import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
 import './AdminOrderManagement.css';
 
 const orders = [
@@ -25,27 +24,6 @@ const tabs = [
   ['Đang giao', 'Đang giao', 26], ['Đã giao', 'Đã giao', 64], ['Đã hủy', 'Đã hủy', 4],
 ];
 const formatPrice = (price) => `${price.toLocaleString('vi-VN')} ₫`;
-
-function Sidebar() {
-  const items = [
-    [IconLayoutDashboard, 'Tổng quan', '/admin'], [IconPackage, 'Sản phẩm', '/admin/products'],
-    [IconFolder, 'Danh mục', '/admin/categories'], [IconShoppingBag, 'Đơn hàng', '/admin/orders'],
-    [IconUsers, 'Khách hàng'], [IconTicket, 'Khuyến mãi', '/admin/promotions'], [IconChartLine, 'Thống kê'], [IconFileText, 'Nhật kí'],
-  ];
-  return <aside className="om-sidebar" data-node-id="58:481">
-    <a className="om-brand" href="/admin" data-node-id="58:482"><img src={logo} alt="" /><strong>8ThreadTech</strong></a>
-    <nav aria-label="Quản lý cửa hàng"><span className="om-nav-label">QUẢN LÝ</span>
-      {items.map(([Icon, label, href]) => {
-        const active = label === 'Đơn hàng';
-        const content = <><Icon size={18} stroke={1.5} /><span>{label}</span>{active && <b>12</b>}</>;
-        return href ? <a key={label} className={`om-nav-item${active ? ' active' : ''}`} href={href} aria-current={active ? 'page' : undefined}>{content}</a> : <div key={label} className="om-nav-item">{content}</div>;
-      })}
-    </nav>
-    <div className="om-sidebar-bottom"><div className="om-support"><IconHelpCircle size={18} />Trung tâm trợ giúp</div><div className="om-support"><IconSettings size={18} />Cài đặt</div>
-      <div className="om-account"><span className="om-avatar">MA</span><span><strong>Minh Anh</strong><small>Quản trị viên</small></span><IconChevronDown size={14} /></div>
-    </div>
-  </aside>;
-}
 
 function StatusBadge({ value, type }) {
   const statusClass = value === 'Đã thanh toán' || value === 'Đã giao' ? 'success'
@@ -109,7 +87,7 @@ export default function AdminOrderManagement() {
     { label: 'Doanh thu đã thu', value: '186.420.000 ₫', note: 'Từ các đơn đã thanh toán', Icon: IconWallet },
   ];
 
-  return <div className="om-dashboard" data-node-id="58:480"><Sidebar /><main className="om-main">
+  return <div className="om-dashboard" data-node-id="58:480"><AdminSidebar /><main className="om-main">
     <header className="om-topbar" data-node-id="58:540"><span>8ThreadTech</span><span className="om-slash">/</span><strong>Đơn hàng</strong></header>
     <div className="om-content" data-node-id="58:544">
       <section className="om-overview" data-node-id="58:545">
@@ -132,7 +110,7 @@ export default function AdminOrderManagement() {
       <p className="om-updated">Cập nhật lần cuối lúc 23:59, 25/10/2026 • Múi giờ Việt Nam (GMT+7)</p>
     </div>
   </main>
-  {selectedOrder && <OrderDialog order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
-  {notice && <div className="om-toast" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo"><IconX size={15} /></button></div>}
+    {selectedOrder && <OrderDialog order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
+    {notice && <div className="om-toast" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo"><IconX size={15} /></button></div>}
   </div>;
 }

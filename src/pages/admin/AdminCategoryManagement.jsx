@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import {
-  IconAdjustments, IconChartLine, IconChevronDown, IconChevronLeft, IconChevronRight,
-  IconDots, IconEye, IconEyeOff, IconFileText, IconFolder, IconHelpCircle,
-  IconLayoutDashboard, IconPackage, IconPencil, IconPlus, IconSearch,
-  IconSettings, IconShoppingBag, IconTicket, IconUsers, IconX,
+  IconAdjustments, IconChevronDown, IconChevronLeft, IconChevronRight,
+  IconDots, IconEye, IconEyeOff, IconFolder,
+  IconPackage, IconPencil, IconPlus, IconSearch,
+  IconX,
 } from '@tabler/icons-react';
-import logo from '../../assets/thread-logo.png';
+import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
 import './AdminCategoryManagement.css';
 
 const initialCategories = [
@@ -15,35 +15,6 @@ const initialCategories = [
 ];
 
 const slugify = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLocaleLowerCase('vi').trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-function Sidebar() {
-  const items = [
-    [IconLayoutDashboard, 'Dashboard', '/admin', '55:461'],
-    [IconPackage, 'Sản phẩm', '/admin/products', '55:465'],
-    [IconFolder, 'Danh mục', '/admin/categories', '55:469'],
-    [IconShoppingBag, 'Đơn hàng', null, '55:473', '12'],
-    [IconUsers, 'Khách hàng', null, '55:479'],
-    [IconTicket, 'Khuyến mãi', '/admin/promotions', '55:483'],
-    [IconChartLine, 'Thống kê', null, '55:487'],
-    [IconFileText, 'Nhật kí', null, '55:491'],
-  ];
-
-  return <aside className="cm-sidebar" data-node-id="55:455">
-    <a className="cm-brand" href="/admin" data-node-id="55:456"><img src={logo} alt="" /><strong>8ThreadTech</strong></a>
-    <nav aria-label="Quản lý cửa hàng"><span className="cm-nav-label">QUẢN LÝ</span>
-      {items.map(([Icon, label, href, nodeId, count]) => {
-        const active = label === 'Danh mục';
-        const content = <><Icon size={18} stroke={1.5} /><span>{label}</span>{count && <b>{count}</b>}</>;
-        return href ? <a key={label} className={`cm-nav-item${active ? ' active' : ''}`} href={href} aria-current={active ? 'page' : undefined} data-node-id={nodeId}>{content}</a> : <div key={label} className="cm-nav-item" data-node-id={nodeId}>{content}</div>;
-      })}
-    </nav>
-    <div className="cm-sidebar-bottom">
-      <div className="cm-support"><IconHelpCircle size={18} />Trung tâm trợ giúp</div>
-      <div className="cm-support"><IconSettings size={18} />Cài đặt</div>
-      <div className="cm-account"><span className="cm-avatar">MA</span><span><strong>Minh Anh</strong><small>Admin</small></span><IconChevronDown size={14} /></div>
-    </div>
-  </aside>;
-}
 
 function CategoryDialog({ category, onClose, onSave }) {
   const [form, setForm] = useState(category || { name: '', description: '', slug: '', products: 0, published: true });
@@ -124,7 +95,7 @@ export default function AdminCategoryManagement() {
   const allVisibleSelected = visibleCategories.length > 0 && visibleCategories.every((category) => selectedIds.includes(category.id));
   const toggleAllVisible = () => setSelectedIds((current) => allVisibleSelected ? current.filter((id) => !visibleCategories.some((category) => category.id === id)) : [...new Set([...current, ...visibleCategories.map((category) => category.id)])]);
 
-  return <div className="cm-dashboard" data-node-id="55:454"><Sidebar /><main className="cm-main" data-node-id="55:511">
+  return <div className="cm-dashboard" data-node-id="55:454"><AdminSidebar /><main className="cm-main" data-node-id="55:511">
     <header className="cm-topbar" data-node-id="55:512"><span>8ThreadTech</span><span className="cm-slash">/</span><strong>Danh mục</strong></header>
     <div className="cm-content" data-node-id="55:516">
       <section className="cm-overview" data-node-id="55:517">
@@ -146,7 +117,7 @@ export default function AdminCategoryManagement() {
       <p className="cm-updated" data-node-id="55:658">Cập nhật lần cuối lúc 23:59, 25/10/2026 • Múi giờ Việt Nam (GMT+7)</p>
     </div>
   </main>
-  {dialogOpen && <CategoryDialog category={dialogCategory} onClose={() => setDialogOpen(false)} onSave={saveCategory} />}
-  {notice && <div className="cm-toast" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo"><IconX size={15} /></button></div>}
+    {dialogOpen && <CategoryDialog category={dialogCategory} onClose={() => setDialogOpen(false)} onSave={saveCategory} />}
+    {notice && <div className="cm-toast" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo"><IconX size={15} /></button></div>}
   </div>;
 }

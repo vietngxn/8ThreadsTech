@@ -1,22 +1,16 @@
 import {
-  IconArrowRight, IconArrowUpRight, IconCalendar, IconChartLine, IconChevronDown,
-  IconChevronRight, IconClockHour3, IconFileText, IconFolder, IconHelpCircle,
-  IconLayoutDashboard, IconPackage, IconReceipt,
-  IconSettings, IconShoppingBag, IconTicket, IconTrendingUp, IconUsers, IconWallet,
+  IconArrowRight, IconArrowUpRight, IconCalendar, IconChevronDown,
+  IconChevronRight, IconClockHour3, IconPackage, IconReceipt,
+  IconShoppingBag, IconTrendingUp, IconWallet,
 } from '@tabler/icons-react';
-import logo from '../../assets/thread-logo.png';
 import keyboard75 from '../../assets/list-thread-75.png';
 import keyboard65 from '../../assets/list-thread-65.png';
 import keyboard98 from '../../assets/list-thread-98.png';
 import keyboard80 from '../../assets/list-thread-80-pro.png';
 import keyboard60 from '../../assets/list-thread-60-he.png';
+import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
 import './AdminDashboard.css';
 
-const navigation = [
-  [IconLayoutDashboard, 'Dashboard'], [IconPackage, 'Sản phẩm'], [IconFolder, 'Danh mục'],
-  [IconShoppingBag, 'Đơn hàng', '12'], [IconUsers, 'Khách hàng'], [IconTicket, 'Khuyến mãi'],
-  [IconChartLine, 'Thống kê'], [IconFileText, 'Nhật kí'],
-];
 const metrics = [
   ['Doanh thu', '128.400.000 ₫', '12,8%', IconWallet],
   ['Đơn hàng', '214', '8,1%', IconShoppingBag],
@@ -43,18 +37,6 @@ const products = [
   [keyboard60, 'THREAD 60 HE', 'Đỏ dung nham / Switch từ tính · 2.790.000 ₫', '28', '77.820.000 ₫'],
 ];
 
-function Sidebar() {
-  return <aside className="admin-sidebar" data-node-id="45:2219">
-    <a className="admin-brand" href="/" aria-label="8ThreadTech - về cửa hàng"><img src={logo} alt="" /><strong>8ThreadTech</strong></a>
-    <nav aria-label="Quản lý"><div className="admin-nav-label">QUẢN LÝ</div>
-      {navigation.map(([Icon, label, count], index) => { const content = <><Icon size={19} stroke={1.5} /><span>{label}</span>{count && <b>{count}</b>}</>; return index === 0 ? <a className="admin-nav-item active" href="/admin" key={label} aria-current="page">{content}</a> : index === 1 ? <a className="admin-nav-item" href="/admin/products" key={label}>{content}</a> : index === 2 ? <a className="admin-nav-item" href="/admin/categories" key={label}>{content}</a> : index === 5 ? <a className="admin-nav-item" href="/admin/promotions" key={label}>{content}</a> : <div className="admin-nav-item" key={label}>{content}</div>; })}
-    </nav>
-    <div className="admin-sidebar-bottom"><div className="admin-support"><IconHelpCircle size={19} stroke={1.5} />Trung tâm trợ giúp</div><div className="admin-support"><IconSettings size={19} stroke={1.5} />Cài đặt</div>
-      <div className="admin-account"><span className="admin-avatar">MA</span><span><strong>Minh Anh</strong><small>Admin</small></span><IconChevronDown size={14} /></div>
-    </div>
-  </aside>;
-}
-
 function RevenueChart() {
   return <section className="admin-panel admin-chart" data-node-id="45:2337">
     <div className="admin-panel-heading"><div><h2>Doanh thu theo ngày</h2><p>19 – 25/10/2026 • Đơn vị: triệu đồng</p></div><span className="admin-period">Theo ngày <IconChevronDown size={13} /></span></div>
@@ -64,7 +46,7 @@ function RevenueChart() {
 }
 
 export default function AdminDashboard() {
-  return <div className="admin-dashboard" data-node-id="45:2218"><Sidebar /><main className="admin-main"><header className="admin-topbar"><span>8ThreadTech</span><span className="admin-slash">/</span><strong>Dashboard</strong></header>
+  return <div className="admin-dashboard" data-node-id="45:2218"><AdminSidebar /><main className="admin-main"><header className="admin-topbar"><span>8ThreadTech</span><span className="admin-slash">/</span><strong>Dashboard</strong></header>
     <div className="admin-content"><div className="admin-title-row"><h1>Tổng quan kinh doanh</h1><div className="admin-date"><IconCalendar size={16} stroke={1.5} />19/10 – 25/10/2026</div></div>
       <div className="admin-metrics" data-node-id="45:2299">{metrics.map(([label, value, change, Icon]) => <div className="admin-metric" key={label}><div className="admin-metric-label">{label}<Icon size={17} stroke={1.4} /></div><strong>{value}</strong><div className="admin-comparison"><IconTrendingUp size={13} /><span>{change}</span><small>so với tuần trước</small></div></div>)}</div>
       <div className="admin-grid"><RevenueChart /><section className="admin-panel admin-tasks" data-node-id="45:2373"><div className="admin-panel-heading"><div><h2>Cần xử lý</h2><p>Ưu tiên để vận hành trơn tru hơn.</p></div></div><div className="admin-task-list">{tasks.map(([Icon, title, description, count], index) => <div className="admin-task" key={title}><span className={`admin-task-icon ${index === 0 ? 'urgent' : ''}`}><Icon size={17} stroke={1.5} /></span><div><strong>{title}</strong><small>{description}</small></div><b>{count}</b><IconChevronRight size={14}/></div>)}</div><span className="admin-red-link">Quản lý đơn hàng <IconArrowRight size={14}/></span></section>
