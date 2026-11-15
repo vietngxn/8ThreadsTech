@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 
 import Navbar from "../components/common/Navbar";
 import ProductListIntro from "../components/product-list/ProductListIntro";
@@ -11,6 +11,8 @@ import ProductListEmpty from "../components/product-list/ProductListEmpty";
 import ProductListPagination from "../components/product-list/ProductListPagination";
 import ProductListFooter from "../components/product-list/ProductListFooter";
 import ProductListGridSkeleton from "../components/product-list/ProductListGridSkeleton";
+
+import { categoryService } from "../services/categoryService";
 
 import { useProducts } from "../hooks/useProducts";
 import {
@@ -23,6 +25,26 @@ const PAGE_SIZE = 9;
 
 export default function ProductList() {
   const [searchParams] = useSearchParams();
+  const { pathname } = useLocation();
+
+  // Lấy slug danh mục từ URL
+  const categorySlug = pathname.split("/")[1];
+
+  // Danh sách danh mục cha từ Backend
+  const [parentCategories, setParentCategories] = useState(() =>
+    categoryService.getCachedParentCategories()
+  );
+
+  useEffect(() => {
+    categoryService.getParentCategories()
+      .then(setParentCategories)
+      .catch(console.error);
+  }, []);
+
+  // Tìm danh mục đang truy cập
+  const currentCategory = parentCategories.find(
+    (item) => item.slug === categorySlug
+  );
 
   const [query, setQuery] = useState(
     () => searchParams.get("q") || ""
@@ -34,6 +56,14 @@ export default function ProductList() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    setPage(0);
+    setFilters([]);
+    setInStockOnly(false);
+    setSort("featured");
+    setCategory("Tất cả bàn phím");
+  }, [categorySlug]);
 
   // Chuyển lựa chọn sắp xếp thành tham số Backend
   const sortParams = {
@@ -56,12 +86,26 @@ export default function ProductList() {
   // Chuyển bộ lọc giao diện thành query params
   const filterParams = convertFiltersToParams(filters);
 
+  // Nếu người dùng chọn danh mục con ở Sidebar thì ưu tiên danh mục đó.
+  // Nếu không, sử dụng danh mục cha lấy từ URL.
+  const isKeyboardCategory = categorySlug === "ban-phim";
+
+  const selectedCategoryId = isKeyboardCategory
+    ? category !== "Tất cả bàn phím"
+      ? CATEGORY_MAP[category]
+      : currentCategory?.id
+    : currentCategory?.id ?? (
+      categorySlug === "san-pham"
+        ? CATEGORY_MAP[category]
+        : undefined
+    );
+
   const params = {
     pageNumber: page,
     pageSize: PAGE_SIZE,
 
     search: query.trim() || null,
-    categoryId: CATEGORY_MAP[category],
+    categoryId: selectedCategoryId,
 
     ...selectedSort,
     ...filterParams,
