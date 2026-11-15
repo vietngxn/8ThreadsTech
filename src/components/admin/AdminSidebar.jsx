@@ -24,7 +24,7 @@ const MENU_ITEMS = [
   { id: "customers", label: "Khách hàng", href: "/admin/customers", icon: IconUsers },
   { id: "promotions", label: "Khuyến mãi", href: "/admin/promotions", icon: IconTicket },
   { id: "stats", label: "Thống kê", href: "/admin/statistics", icon: IconChartLine },
-  { id: "logs", label: "Nhật kí", href: null, icon: IconFileText },
+  { id: "logs", label: "Nhật kí", href: "/admin/logs", icon: IconFileText },
 ];
 
 /**
@@ -49,6 +49,7 @@ export default function AdminSidebar({ active, badgeCounts = {}, className = "" 
     if (pathname.startsWith("/admin/customers")) return "customers";
     if (pathname.startsWith("/admin/promotions")) return "promotions";
     if (pathname.startsWith("/admin/statistics")) return "stats";
+    if (pathname.startsWith("/admin/logs")) return "logs";
     return "";
   };
 
