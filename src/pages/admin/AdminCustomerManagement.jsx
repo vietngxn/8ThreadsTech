@@ -27,7 +27,7 @@ function CustomerSidebar() {
   const items = [
     [IconLayoutDashboard, 'Tổng quan', '/admin'], [IconPackage, 'Sản phẩm', '/admin/products'],
     [IconFolder, 'Danh mục', '/admin/categories'], [IconShoppingBag, 'Đơn hàng', '/admin/orders'],
-    [IconUsers, 'Khách hàng', '/admin/customers'], [IconTicket, 'Khuyến mãi'],
+    [IconUsers, 'Khách hàng', '/admin/customers'], [IconTicket, 'Khuyến mãi', '/admin/promotions'],
     [IconChartLine, 'Thống kê'], [IconFileText, 'Nhật kí'],
   ];
   return <aside className="om-sidebar" data-node-id="60:949">

@@ -23,7 +23,7 @@ function Sidebar() {
     [IconFolder, 'Danh mục', '/admin/categories', '55:469'],
     [IconShoppingBag, 'Đơn hàng', null, '55:473', '12'],
     [IconUsers, 'Khách hàng', null, '55:479'],
-    [IconTicket, 'Khuyến mãi', null, '55:483'],
+    [IconTicket, 'Khuyến mãi', '/admin/promotions', '55:483'],
     [IconChartLine, 'Thống kê', null, '55:487'],
     [IconFileText, 'Nhật kí', null, '55:491'],
   ];

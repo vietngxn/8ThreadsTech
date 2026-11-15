@@ -36,7 +36,7 @@ function Sidebar() {
   const items = [
     [IconLayoutDashboard, 'Dashboard', '/admin'], [IconPackage, 'Sản phẩm', '/admin/products'],
     [IconFolder, 'Danh mục', '/admin/categories'], [IconShoppingBag, 'Đơn hàng', undefined, '12'], [IconUsers, 'Khách hàng'],
-    [IconTicket, 'Khuyến mãi'], [IconChartLine, 'Thống kê'], [IconAdjustments, 'Nhật kí'],
+    [IconTicket, 'Khuyến mãi', '/admin/promotions'], [IconChartLine, 'Thống kê'], [IconAdjustments, 'Nhật kí'],
   ];
   return <aside className="pm-sidebar" data-node-id="52:490">
     <a className="pm-brand" href="/admin" data-node-id="52:491"><img src={logo} alt="" /><strong>8ThreadTech</strong></a>
