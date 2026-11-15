@@ -7,7 +7,6 @@ import SpaNavigationHandler from "./components/common/SpaNavigationHandler.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
-import OtpPage from "./pages/OtpPage.jsx";
 import ProductListPage from "./pages/ProductList.jsx";
 import ProductDetailPage from "./pages/ProductDetailPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
@@ -26,7 +25,6 @@ import AdminProductManagement from "./pages/admin/AdminProductManagement.jsx";
 import AdminCategoryManagement from "./pages/admin/AdminCategoryManagement.jsx";
 import AdminOrderManagement from "./pages/admin/AdminOrderManagement.jsx";
 import AdminCustomerManagement from "./pages/admin/AdminCustomerManagement.jsx";
-import AdminPromotionManagement from "./pages/admin/AdminPromotionManagement.jsx";
 
 export default function App() {
   return (
@@ -35,12 +33,14 @@ export default function App() {
       <ScrollToTop />
       <SpaNavigationHandler />
 
-  if (pathname === "/admin" || pathname === "/admin/dashboard") return <AdminDashboard />;
-  if (pathname === "/admin/products") return <AdminProductManagement />;
-  if (pathname === "/admin/categories") return <AdminCategoryManagement />;
-  if (pathname === "/admin/orders") return <AdminOrderManagement />;
-  if (pathname === "/admin/customers") return <AdminCustomerManagement />;
-  if (pathname === "/admin/promotions") return <AdminPromotionManagement />;
+      <Routes>
+        {/* === NHÓM QUẢN TRỊ ADMIN (Không dùng Storefront Layout) === */}
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/products" element={<AdminProductManagement />} />
+        <Route path="/admin/categories" element={<AdminCategoryManagement />} />
+        <Route path="/admin/orders" element={<AdminOrderManagement />} />
+        <Route path="/admin/customers" element={<AdminCustomerManagement />} />
 
         {/* === NHÓM CỬA HÀNG KHÁCH HÀNG (Bọc trong Storefront Layout) === */}
         <Route element={<Layout />}>
@@ -69,7 +69,6 @@ export default function App() {
           <Route path="/doi-mat-khau" element={<ChangePasswordPage />} />
           <Route path="/dang-nhap" element={<LoginPage />} />
           <Route path="/dang-ky" element={<RegisterPage />} />
-          <Route path="/xac-thuc-otp" element={<OtpPage />} />
 
           {/* Về chúng tôi */}
           <Route path="/ve-8threads-team" element={<TeamPage />} />

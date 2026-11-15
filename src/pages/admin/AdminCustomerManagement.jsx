@@ -119,7 +119,7 @@ export default function AdminCustomerManagement() {
       <p className="om-updated">Cập nhật lần cuối lúc 23:59, 25/10/2026 • Múi giờ Việt Nam (GMT+7)</p>
     </div>
   </main>
-  {selectedCustomer && <CustomerDialog customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />}
-  {notice && <div className="om-toast" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo"><IconX size={15} /></button></div>}
+    {selectedCustomer && <CustomerDialog customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />}
+    {notice && <div className="om-toast" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo"><IconX size={15} /></button></div>}
   </div>;
 }
