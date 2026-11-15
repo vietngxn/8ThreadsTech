@@ -1,0 +1,127 @@
+import { useLocation, Link } from "react-router-dom";
+import {
+  IconArrowLeft,
+  IconChartLine,
+  IconChevronDown,
+  IconFileText,
+  IconFolder,
+  IconHelpCircle,
+  IconLayoutDashboard,
+  IconPackage,
+  IconSettings,
+  IconShoppingBag,
+  IconTicket,
+  IconUsers,
+} from "@tabler/icons-react";
+import logo from "../../assets/thread-logo.png";
+import "./AdminSidebar.css";
+
+const MENU_ITEMS = [
+  { id: "dashboard", label: "Tổng quan", href: "/admin", icon: IconLayoutDashboard },
+  { id: "products", label: "Sản phẩm", href: "/admin/products", icon: IconPackage },
+  { id: "categories", label: "Danh mục", href: "/admin/categories", icon: IconFolder },
+  { id: "orders", label: "Đơn hàng", href: "/admin/orders", icon: IconShoppingBag, defaultBadge: "12" },
+  { id: "customers", label: "Khách hàng", href: "/admin/customers", icon: IconUsers },
+  { id: "promotions", label: "Khuyến mãi", href: "/admin/promotions", icon: IconTicket },
+  { id: "stats", label: "Thống kê", href: null, icon: IconChartLine },
+  { id: "logs", label: "Nhật kí", href: null, icon: IconFileText },
+];
+
+/**
+ * Component Sidebar dùng chung cho toàn bộ các màn hình Quản trị Admin.
+ *
+ * @param {string} [props.active] - Key của menu item đang active ('dashboard' | 'products' | 'categories' | 'orders' | 'customers' | 'promotions').
+ *                                  Nếu không truyền, component tự động nhận diện theo URL hiện tại.
+ * @param {Object} [props.badgeCounts] - Tuỳ chỉnh số đếm badge (mặc định: { orders: "12" }).
+ * @param {string} [props.className] - ClassName bổ sung cho thẻ aside.
+ */
+export default function AdminSidebar({ active, badgeCounts = {}, className = "" }) {
+  const location = useLocation();
+  const pathname = location.pathname;
+
+  // Tự động nhận diện tab active dựa vào pathname nếu không truyền prop `active`
+  const getActiveTab = () => {
+    if (active) return active;
+    if (pathname === "/admin" || pathname === "/admin/dashboard") return "dashboard";
+    if (pathname.startsWith("/admin/products")) return "products";
+    if (pathname.startsWith("/admin/categories")) return "categories";
+    if (pathname.startsWith("/admin/orders")) return "orders";
+    if (pathname.startsWith("/admin/customers")) return "customers";
+    if (pathname.startsWith("/admin/promotions")) return "promotions";
+    return "";
+  };
+
+  const currentActive = getActiveTab();
+
+  return (
+    <aside className={`admin-sidebar ${className}`.trim()} aria-label="Thanh điều hướng quản trị">
+      <Link className="admin-brand" to="/admin" aria-label="8ThreadTech - Trang quản trị">
+        <img src={logo} alt="8ThreadTech Logo" />
+        <strong>8ThreadTech</strong>
+      </Link>
+
+      <nav aria-label="Quản lý cửa hàng">
+        <span className="admin-nav-label">QUẢN LÝ</span>
+        {MENU_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentActive === item.id;
+          const badge = badgeCounts[item.id] !== undefined ? badgeCounts[item.id] : item.defaultBadge;
+
+          const innerContent = (
+            <>
+              <Icon size={19} stroke={1.5} />
+              <span>{item.label}</span>
+              {badge && <b>{badge}</b>}
+            </>
+          );
+
+          if (!item.href) {
+            return (
+              <div
+                key={item.id}
+                className="admin-nav-item admin-nav-item-disabled"
+                title="Tính năng đang được hoàn thiện"
+              >
+                {innerContent}
+              </div>
+            );
+          }
+
+          return (
+            <Link
+              key={item.id}
+              to={item.href}
+              className={`admin-nav-item ${isActive ? "active" : ""}`}
+              aria-current={isActive ? "page" : undefined}
+            >
+              {innerContent}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="admin-sidebar-bottom">
+        <Link to="/" className="admin-support" title="Quay lại giao diện cửa hàng">
+          <IconArrowLeft size={18} stroke={1.5} />
+          <span>Về cửa hàng</span>
+        </Link>
+        <div className="admin-support" role="button" tabIndex={0}>
+          <IconHelpCircle size={18} stroke={1.5} />
+          <span>Trợ giúp</span>
+        </div>
+        <div className="admin-support" role="button" tabIndex={0}>
+          <IconSettings size={18} stroke={1.5} />
+          <span>Cài đặt</span>
+        </div>
+        <div className="admin-account">
+          <span className="admin-avatar">MA</span>
+          <span>
+            <strong>Minh Anh</strong>
+            <small>Quản trị viên</small>
+          </span>
+          <IconChevronDown size={14} />
+        </div>
+      </div>
+    </aside>
+  );
+}

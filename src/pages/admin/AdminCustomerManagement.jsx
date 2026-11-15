@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import {
-  IconCalendar, IconChartLine, IconChevronDown, IconChevronLeft, IconChevronRight,
-  IconColumns3, IconCrown, IconDots, IconDownload, IconEye, IconFileText, IconFolder,
-  IconHelpCircle, IconLayoutDashboard, IconPackage, IconRepeat, IconSearch, IconSettings,
-  IconShoppingBag, IconTicket, IconUserPlus, IconUsers, IconX,
+  IconCalendar, IconChevronDown, IconChevronLeft, IconChevronRight,
+  IconColumns3, IconCrown, IconDots, IconDownload, IconEye,
+  IconRepeat, IconSearch,
+  IconUserPlus, IconUsers, IconX,
 } from '@tabler/icons-react';
-import logo from '../../assets/thread-logo.png';
+import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
 import './AdminOrderManagement.css';
 import './AdminCustomerManagement.css';
 
@@ -22,28 +22,6 @@ const customers = [
 ];
 
 const formatPrice = (price) => `${price.toLocaleString('vi-VN')} ₫`;
-
-function CustomerSidebar() {
-  const items = [
-    [IconLayoutDashboard, 'Tổng quan', '/admin'], [IconPackage, 'Sản phẩm', '/admin/products'],
-    [IconFolder, 'Danh mục', '/admin/categories'], [IconShoppingBag, 'Đơn hàng', '/admin/orders'],
-    [IconUsers, 'Khách hàng', '/admin/customers'], [IconTicket, 'Khuyến mãi', '/admin/promotions'],
-    [IconChartLine, 'Thống kê'], [IconFileText, 'Nhật kí'],
-  ];
-  return <aside className="om-sidebar" data-node-id="60:949">
-    <a className="om-brand" href="/admin" data-node-id="60:950"><img src={logo} alt="" /><strong>8ThreadTech</strong></a>
-    <nav aria-label="Quản lý cửa hàng"><span className="om-nav-label">QUẢN LÝ</span>
-      {items.map(([Icon, label, href]) => {
-        const active = label === 'Khách hàng';
-        const content = <><Icon size={18} stroke={1.5} /><span>{label}</span>{label === 'Đơn hàng' && <b>12</b>}</>;
-        return href ? <a key={label} className={`om-nav-item${active ? ' active' : ''}`} href={href} aria-current={active ? 'page' : undefined}>{content}</a> : <div key={label} className="om-nav-item">{content}</div>;
-      })}
-    </nav>
-    <div className="om-sidebar-bottom"><div className="om-support"><IconHelpCircle size={18} />Trung tâm trợ giúp</div><div className="om-support"><IconSettings size={18} />Cài đặt</div>
-      <div className="om-account"><span className="om-avatar">MA</span><span><strong>Minh Anh</strong><small>Quản trị viên</small></span><IconChevronDown size={14} /></div>
-    </div>
-  </aside>;
-}
 
 function CustomerDialog({ customer, onClose }) {
   return <div className="om-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
@@ -96,7 +74,7 @@ export default function AdminCustomerManagement() {
     { label: 'Khách hàng VIP', value: '48', note: 'Tổng chi tiêu từ 10.000.000 ₫', Icon: IconCrown },
   ];
 
-  return <div className="om-dashboard cm-dashboard" data-node-id="60:948"><CustomerSidebar /><main className="om-main">
+  return <div className="om-dashboard cm-dashboard" data-node-id="60:948"><AdminSidebar /><main className="om-main">
     <header className="om-topbar" data-node-id="60:1008"><span>8ThreadTech</span><span className="om-slash">/</span><strong>Khách hàng</strong></header>
     <div className="om-content cm-content" data-node-id="60:1012">
       <section className="om-overview" data-node-id="60:1013">

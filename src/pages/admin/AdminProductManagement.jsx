@@ -1,11 +1,11 @@
 import { useMemo, useRef, useState } from 'react';
 import {
-  IconAdjustments, IconChartLine, IconChevronDown, IconChevronLeft, IconChevronRight,
-  IconDots, IconDownload, IconEye, IconFileImport, IconFolder, IconHelpCircle,
-  IconLayoutDashboard, IconPackage, IconPackages, IconPackageOff, IconPlus,
-  IconSearch, IconSettings, IconShoppingBag, IconTicket, IconUsers, IconX,
+  IconAdjustments, IconChevronDown, IconChevronLeft, IconChevronRight,
+  IconDots, IconDownload, IconEye, IconFileImport,
+  IconPackage, IconPackages, IconPlus,
+  IconSearch, IconX,
 } from '@tabler/icons-react';
-import logo from '../../assets/thread-logo.png';
+import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
 import thread75 from '../../assets/list-thread-75.png';
 import thread65 from '../../assets/list-thread-65.png';
 import thread98 from '../../assets/list-thread-98.png';
@@ -31,29 +31,6 @@ const initialProducts = [
 
 const formatPrice = (price) => `${Number(price).toLocaleString('vi-VN')} ₫`;
 const stockState = (stock) => stock === 0 ? 'out' : stock < 10 ? 'low' : 'available';
-
-function Sidebar() {
-  const items = [
-    [IconLayoutDashboard, 'Dashboard', '/admin'], [IconPackage, 'Sản phẩm', '/admin/products'],
-    [IconFolder, 'Danh mục', '/admin/categories'], [IconShoppingBag, 'Đơn hàng', undefined, '12'], [IconUsers, 'Khách hàng'],
-    [IconTicket, 'Khuyến mãi', '/admin/promotions'], [IconChartLine, 'Thống kê'], [IconAdjustments, 'Nhật kí'],
-  ];
-  return <aside className="pm-sidebar" data-node-id="52:490">
-    <a className="pm-brand" href="/admin" data-node-id="52:491"><img src={logo} alt="" /><strong>8ThreadTech</strong></a>
-    <nav aria-label="Quản lý cửa hàng"><span className="pm-nav-label">QUẢN LÝ</span>
-      {items.map(([Icon, label, href, count]) => {
-        const active = label === 'Sản phẩm';
-        const content = <><Icon size={18} stroke={1.6} /><span>{label}</span>{count && <b>{count}</b>}</>;
-        return href ? <a key={label} className={`pm-nav-item${active ? ' active' : ''}`} href={href} aria-current={active ? 'page' : undefined} data-node-id={active ? '52:500' : '52:496'}>{content}</a> : <div key={label} className="pm-nav-item">{content}</div>;
-      })}
-    </nav>
-    <div className="pm-sidebar-bottom">
-      <div className="pm-support"><IconHelpCircle size={18} />Trung tâm trợ giúp</div>
-      <div className="pm-support"><IconSettings size={18} />Cài đặt</div>
-      <div className="pm-account"><span className="pm-avatar">MA</span><span><strong>Minh Anh</strong><small>Admin</small></span><IconChevronDown size={14} /></div>
-    </div>
-  </aside>;
-}
 
 function ProductDialog({ product, onClose, onSave }) {
   const [form, setForm] = useState(product || { name: '', variant: '', sku: '', category: 'Bàn phím cơ', price: '', stock: 0 });
@@ -153,7 +130,7 @@ export default function AdminProductManagement() {
     event.target.value = '';
   };
 
-  return <div className="pm-dashboard" data-node-id="52:489"><Sidebar /><main className="pm-main" data-node-id="52:548">
+  return <div className="pm-dashboard" data-node-id="52:489"><AdminSidebar /><main className="pm-main" data-node-id="52:548">
     <header className="pm-topbar" data-node-id="52:549"><span>8ThreadTech</span><span className="pm-slash">/</span><strong>Sản phẩm</strong></header>
     <div className="pm-content" data-node-id="52:553">
       <div className="pm-title-row" data-node-id="52:555"><h1 data-node-id="52:557">Quản lý sản phẩm</h1><div className="pm-actions">
@@ -179,7 +156,7 @@ export default function AdminProductManagement() {
       <p className="pm-updated">Cập nhật lần cuối lúc 23:59, 25/10/2026 • Múi giờ Việt Nam (GMT+7)</p>
     </div>
   </main>
-  {dialogOpen && <ProductDialog product={dialogProduct} onClose={() => setDialogOpen(false)} onSave={saveProduct} />}
-  {notice && <div className="pm-toast" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo"><IconX size={15} /></button></div>}
+    {dialogOpen && <ProductDialog product={dialogProduct} onClose={() => setDialogOpen(false)} onSave={saveProduct} />}
+    {notice && <div className="pm-toast" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo"><IconX size={15} /></button></div>}
   </div>;
 }
