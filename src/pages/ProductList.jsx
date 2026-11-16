@@ -13,6 +13,7 @@ import ProductListFooter from "../components/product-list/ProductListFooter";
 import ProductListGridSkeleton from "../components/product-list/ProductListGridSkeleton";
 
 import { categoryService } from "../services/categoryService";
+import { productService } from "../services/productService";
 
 import { useProducts } from "../hooks/useProducts";
 import {
@@ -46,6 +47,8 @@ export default function ProductList() {
     (item) => item.slug === categorySlug
   );
 
+  const categoryName = currentCategory?.name ?? "Bàn phím";
+
   const [query, setQuery] = useState(
     () => searchParams.get("q") || ""
   );
@@ -64,6 +67,27 @@ export default function ProductList() {
     setSort("featured");
     setCategory("Tất cả bàn phím");
   }, [categorySlug]);
+
+  // Danh mục con + số sản phẩm thật từ backend
+  const [filterCategories, setFilterCategories] = useState({ total: null, items: [] });
+
+  useEffect(() => {
+    // Trang danh mục: chờ danh mục cha tải xong rồi mới hỏi BE
+    if (categorySlug !== "san-pham" && !currentCategory) return undefined;
+
+    let alive = true;
+    productService.getCategoryFilters(currentCategory?.id).then((data) => {
+      if (alive) setFilterCategories(data);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [currentCategory?.id, categorySlug]);
+
+  // Tra id danh mục con theo tên (thay CATEGORY_MAP cứng)
+  const categoryIdByName = Object.fromEntries(
+    filterCategories.items.map((item) => [item.name, item.id])
+  );
 
   // Chuyển lựa chọn sắp xếp thành tham số Backend
   const sortParams = {
@@ -92,11 +116,11 @@ export default function ProductList() {
 
   const selectedCategoryId = isKeyboardCategory
     ? category !== "Tất cả bàn phím"
-      ? CATEGORY_MAP[category]
+      ? categoryIdByName[category] ?? CATEGORY_MAP[category]
       : currentCategory?.id
     : currentCategory?.id ?? (
       categorySlug === "san-pham"
-        ? CATEGORY_MAP[category]
+        ? categoryIdByName[category] ?? CATEGORY_MAP[category]
         : undefined
     );
 
@@ -194,7 +218,10 @@ export default function ProductList() {
       />
 
       <main id="top">
-        <ProductListIntro />
+        <ProductListIntro
+          total={filterCategories.total}
+          name={categoryName}
+        />
 
         <section
           className="pl-catalog"
@@ -202,6 +229,10 @@ export default function ProductList() {
           data-node-id="3:753"
         >
           <ProductListSidebar
+            categoryTitle={`DÒNG ${categoryName.toUpperCase()}`}
+            allLabel={`Tất cả ${categoryName.toLowerCase()}`}
+            categories={filterCategories.items}
+            totalCount={filterCategories.total}
             category={category}
             filters={filters}
             inStockOnly={inStockOnly}
