@@ -228,4 +228,22 @@ export const productService = {
       return null;
     }
   },
+
+  async getCategoryFilters(parentId) {
+    try {
+      const response = await api.get("/api/products/category-filters", {
+        params: parentId != null ? { parentId } : {},
+      });
+
+      const data = response.data?.data || {};
+
+      return {
+        total: data.total ?? null,
+        items: Array.isArray(data.items) ? data.items : [],
+      };
+    } catch (error) {
+      console.warn("Không thể tải bộ lọc danh mục:", error.message);
+      return { total: null, items: [] };
+    }
+  },
 };

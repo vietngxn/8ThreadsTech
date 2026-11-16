@@ -1,12 +1,12 @@
 import { IconChevronRight } from "@tabler/icons-react";
 
-export default function ProductListIntro() {
+export default function ProductListIntro({ total = null, name = "Bàn phím" }) {
   return (
     <section className="pl-category" data-node-id="3:735">
       <div className="pl-breadcrumb" data-node-id="3:736">
         <a href="#top" data-node-id="3:737">Trang chủ</a>
         <IconChevronRight size={12} />
-        <span data-node-id="3:740">Bàn phím</span>
+        <span data-node-id="3:740">{name}</span>
       </div>
       <div className="pl-intro" data-node-id="3:741">
         <div className="pl-heading" data-node-id="3:742">
@@ -15,8 +15,8 @@ export default function ProductListIntro() {
             <span data-node-id="3:745">8THREADS - "FEEL" NHỊP GÕ CỦA BẠN.</span>
           </div>
           <div className="pl-title-row" data-node-id="3:746">
-            <h1 data-node-id="3:747">BÀN PHÍM</h1>
-            <span data-node-id="3:748">/ 24 SẢN PHẨM</span>
+            <h1 data-node-id="3:747">{name.toUpperCase()}</h1>
+            <span data-node-id="3:748">{total != null ? `/ ${total} SẢN PHẨM` : "/ SẢN PHẨM"}</span>
           </div>
         </div>
         <div className="pl-message" data-node-id="3:749">
