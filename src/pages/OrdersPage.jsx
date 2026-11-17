@@ -14,6 +14,7 @@ import {
   IconPackage,
   IconUser,
 } from "@tabler/icons-react";
+import { authService } from "../services/authService";
 
 const initialOrders = [
   {
@@ -94,7 +95,14 @@ function OrdersSidebar() {
         </a>
         <a href="/so-dia-chi"><IconMapPin /><span>Sổ địa chỉ</span></a>
         <a href="/doi-mat-khau"><IconLock /><span>Đổi mật khẩu</span></a>
-        <a href="/dang-nhap"><IconLogout /><span>Đăng xuất</span></a>
+        <button
+          type="button"
+          className="profile-logout"
+          onClick={() => authService.logout("/dang-nhap")}
+        >
+          <IconLogout />
+          <span>Đăng xuất</span>
+        </button>
       </nav>
       <div className="orders-sidebar-rule orders-help-rule" />
       <div className="orders-help">

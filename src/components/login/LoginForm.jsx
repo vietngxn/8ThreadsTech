@@ -6,6 +6,7 @@ import { authService } from "../../services/authService";
 export default function LoginForm({ notice, onNotice }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
@@ -30,7 +31,12 @@ export default function LoginForm({ notice, onNotice }) {
         }
       }, 800);
     } catch (err) {
-      onNotice(err.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+      const msg = err.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+      onNotice(msg);
+      if (msg.toLowerCase().includes("kích hoạt") || msg.toLowerCase().includes("otp")) {
+        setUnverifiedEmail(email);
+        sessionStorage.setItem("pending_otp_email", email);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -107,6 +113,25 @@ export default function LoginForm({ notice, onNotice }) {
         <p className="login-notice" role="status" aria-live="polite">
           {notice}
         </p>
+
+        {unverifiedEmail && (
+          <div style={{ marginTop: 12 }}>
+            <button
+              type="button"
+              className="login-submit"
+              style={{
+                background: "transparent",
+                border: "1px solid var(--accent, #3b82f6)",
+                color: "var(--accent, #3b82f6)",
+                cursor: "pointer",
+              }}
+              onClick={() => navigate("/xac-thuc-otp", { state: { email: unverifiedEmail } })}
+            >
+              <span>XÁC THỰC MÃ OTP NGAY</span>
+              <IconArrowUpRight size={18} />
+            </button>
+          </div>
+        )}
       </form>
       
       <div className="login-divider" data-node-id="3:623">

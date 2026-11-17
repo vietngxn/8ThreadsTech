@@ -2,6 +2,7 @@ import { IconArrowLeft, IconArrowUpRight, IconCheck, IconChevronRight, IconCredi
 import thread75 from "../../assets/list-thread-75.png";
 import thread65 from "../../assets/list-thread-65.png";
 import thread98 from "../../assets/list-thread-98.png";
+import { authService } from "../../services/authService";
 
 const orderProducts = [
   { name: "THREAD 75", variant: "Bạc ánh trăng / Linear Red Switch", price: 2490000, oldPrice: 2790000, image: thread75 },
@@ -26,7 +27,14 @@ function AccountSidebar() {
         <a className="is-active" href="/don-hang" aria-current="page"><IconPackage /><span>Đơn hàng của tôi</span><IconChevronRight /></a>
         <a href="/so-dia-chi"><IconMapPin /><span>Sổ địa chỉ</span></a>
         <a href="/ho-so"><IconLock /><span>Đổi mật khẩu</span></a>
-        <a href="/dang-nhap"><IconLogout /><span>Đăng xuất</span></a>
+        <button
+          type="button"
+          className="profile-logout"
+          onClick={() => authService.logout("/dang-nhap")}
+        >
+          <IconLogout />
+          <span>Đăng xuất</span>
+        </button>
       </nav>
       <div className="order-detail-sidebar-rule order-detail-help-rule" />
       <div className="order-detail-help"><p>Cần hỗ trợ về tài khoản của bạn?</p><a href="mailto:hello@8threadtech.vn">NHẮN TIN CHO 8THREADS <IconArrowUpRight /></a></div>

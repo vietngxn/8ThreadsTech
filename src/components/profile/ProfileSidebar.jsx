@@ -21,8 +21,7 @@ export default function ProfileSidebar({ currentPage }) {
   };
 
   const handleLogout = () => {
-    authService.logout();
-    window.location.href = "/dang-nhap";
+    authService.logout("/dang-nhap");
   };
 
   return (

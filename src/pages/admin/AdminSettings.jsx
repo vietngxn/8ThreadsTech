@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { IconLogout } from '@tabler/icons-react';
 import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
+import { authService } from '../../services/authService.js';
 import './AdminSettings.css';
 
 const defaults = { language: 'vi', currency: 'vnd', timezone: 'gmt7', orders: true, inventory: true, report: false };
@@ -64,6 +66,36 @@ export default function AdminSettings() {
             <div><strong>{item.title}</strong><p>{item.description}</p></div>
             <button type="button" role="switch" aria-label={item.title} aria-checked={settings[item.key]} className={`settings-switch ${settings[item.key] ? 'on' : ''}`} onClick={() => change(item.key, !settings[item.key])}><span /></button>
           </div>)}</div>
+        </section>
+
+        <section className="settings-panel settings-account-logout">
+          <h2>Tài khoản &amp; Phiên đăng nhập</h2>
+          <p>Quản lý phiên làm việc quản trị viên trên trình duyệt này.</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid var(--admin-border, #27272a)' }}>
+            <div>
+              <strong>Đăng xuất tài khoản quản trị</strong>
+              <p style={{ margin: '4px 0 0', fontSize: 13, color: '#a1a1aa' }}>Kết thúc phiên đăng nhập và xóa token truy cập an toàn.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => authService.logout("/dang-nhap")}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 6,
+                background: '#ef4444',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <IconLogout size={16} />
+              Đăng xuất
+            </button>
+          </div>
         </section>
         <div className="settings-save-bar" data-node-id="216:357">
           <div><strong>Cài đặt trên trình duyệt</strong><p>Bản xem trước, chưa áp dụng cho cửa hàng hoặc gửi thông báo.</p></div>

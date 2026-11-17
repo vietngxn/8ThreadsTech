@@ -32,6 +32,7 @@ export default function RegisterForm({ notice, onNotice }) {
 
     try {
       const response = await authService.register({ fullName, email, password });
+      sessionStorage.setItem("pending_otp_email", email);
       onNotice(response?.message || "Đăng ký thành công! Đang chuyển đến trang xác thực OTP...");
       setTimeout(() => {
         navigate("/xac-thuc-otp", { state: { email } });

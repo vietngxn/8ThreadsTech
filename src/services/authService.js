@@ -32,6 +32,17 @@ export const authService = {
   },
 
   /**
+   * Gửi lại mã OTP qua email
+   */
+  async resendOtp(email) {
+    const response = await api.post("/api/auth/resend-otp", {
+      email,
+    });
+
+    return response.data;
+  },
+
+  /**
    * Đăng nhập (UC02)
    */
   async login({ email, password }) {
@@ -79,9 +90,20 @@ export const authService = {
   /**
    * Đăng xuất
    */
-  logout() {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("tokenType");
-    localStorage.removeItem("currentUser");
+  async logout(redirectTo = null) {
+    try {
+      await api.post("/api/auth/logout");
+    } catch {
+      // Bỏ qua lỗi mạng khi logout để luôn dọn dẹp local state
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("tokenType");
+      localStorage.removeItem("currentUser");
+      sessionStorage.removeItem("pending_otp_email");
+      window.dispatchEvent(new Event("auth:state-change"));
+      if (redirectTo) {
+        window.location.href = redirectTo;
+      }
+    }
   },
 };
