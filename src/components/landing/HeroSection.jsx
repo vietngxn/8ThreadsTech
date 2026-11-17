@@ -22,7 +22,7 @@ export default function HeroSection() {
       <div className="hero-copy js-hero-copy">
         <h2>THREAD 75</h2>
         <p>Từng phím gõ, một nhịp cảm hứng. Chất riêng bắt đầu từ bàn phím của bạn.</p>
-        <a className="landing-button" href="#design">
+        <a className="landing-button" href="/ban-phim/thread-75t">
           KHÁM PHÁ THREAD 75
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M7 7h10v10M7 17L17 7" />

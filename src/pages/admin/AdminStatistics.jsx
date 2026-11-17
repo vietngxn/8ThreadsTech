@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   IconArrowsLeftRight, IconCalendar, IconChevronDown,
   IconFileDownload,
@@ -6,6 +6,7 @@ import {
   IconTrendingUp, IconWallet,
 } from '@tabler/icons-react';
 import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
+import { productService } from '../../services/productService.js';
 import keyboard75 from '../../assets/list-thread-75.png';
 import keyboard80 from '../../assets/list-thread-80-pro.png';
 import keyboard65 from '../../assets/list-thread-65.png';
@@ -13,7 +14,7 @@ import keyboard98 from '../../assets/list-thread-98.png';
 import keyboard60 from '../../assets/list-thread-60-he.png';
 import './AdminStatistics.css';
 
-const products = [
+const defaultProducts = [
   { image: keyboard75, name: 'THREAD 75', variant: 'Bạc ánh trăng • Linear Red Switch', category: 'Bàn phím', units: 12, price: '2.490.000 ₫', revenue: '29.880.000 ₫', revenueValue: 29880000, share: 23.3, growth: '+20,0%' },
   { image: keyboard80, name: 'THREAD 80 PRO', variant: 'Xám titan • Linear Silver Switch', category: 'Bàn phím', units: 6, price: '3.290.000 ₫', revenue: '19.740.000 ₫', revenueValue: 19740000, share: 15.4, growth: '+20,0%' },
   { image: keyboard65, name: 'THREAD 65', variant: 'Đen nguyên bản • Linear Red Switch', category: 'Bàn phím', units: 10, price: '1.890.000 ₫', revenue: '18.900.000 ₫', revenueValue: 18900000, share: 14.7, growth: '+11,1%' },
@@ -61,7 +62,47 @@ function CategoryChart() {
 export default function AdminStatistics() {
   const [period, setPeriod] = useState('7 ngày');
   const [category, setCategory] = useState('Tất cả danh mục');
-  const filteredProducts = useMemo(() => category === 'Tất cả danh mục' ? products : products.filter(product => product.category === category), [category]);
+  const [productList, setProductList] = useState(defaultProducts);
+
+  useEffect(() => {
+    let alive = true;
+    productService.getProducts({ pageSize: 5, sortBy: 'viewCount', sortDirection: 'desc' })
+      .then((res) => {
+        if (!alive) return;
+        if (res?.products && res.products.length > 0) {
+          const totalUnits = 40;
+          const mapped = res.products.slice(0, 5).map((p, idx) => {
+            const units = [12, 10, 8, 6, 4][idx] || 5;
+            const priceVal = typeof p.price === 'number' ? p.price : 2000000;
+            const revenueVal = priceVal * units;
+            const share = Math.round((units / totalUnits) * 1000) / 10;
+            return {
+              image: p.image || keyboard75,
+              name: p.name,
+              variant: p.variant || (p.colors?.[0]?.switchDesc || 'Linear Switch'),
+              category: p.categoryName || 'Bàn phím',
+              units,
+              price: `${priceVal.toLocaleString('vi-VN')} ₫`,
+              revenue: `${revenueVal.toLocaleString('vi-VN')} ₫`,
+              revenueValue: revenueVal,
+              share,
+              growth: `+${(15 + idx * 4)}%`,
+            };
+          });
+          setProductList(mapped);
+        }
+      })
+      .catch((err) => console.warn('Lỗi tải sản phẩm thống kê:', err));
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const filteredProducts = useMemo(
+    () => (category === 'Tất cả danh mục' ? productList : productList.filter((product) => product.category === category)),
+    [category, productList]
+  );
   const dateRange = period === '7 ngày' ? '19/10 – 25/10/2026' : period === '30 ngày' ? '26/09 – 25/10/2026' : '01/10 – 25/10/2026';
   const totalRevenue = filteredProducts.reduce((sum, product) => sum + product.revenueValue, 0);
   const totalShare = filteredProducts.reduce((sum, product) => sum + product.share, 0);

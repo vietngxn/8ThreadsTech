@@ -1,9 +1,16 @@
 import { IconArrowUpRight, IconCalendar, IconCheck, IconChevronRight, IconLock, IconShieldCheck } from "@tabler/icons-react";
 
-export default function ProfileForm({ profile, onUpdate, onReset, saved }) {
+export default function ProfileForm({ profile, onUpdate, onReset, onSave, saved, loading }) {
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (onSave) {
+      onSave();
+    }
+  };
+
   return (
     <div className="profile-main" data-node-id="8:880">
-      <form className="profile-card" id="profile" onSubmit={(event) => { event.preventDefault(); }} data-node-id="8:881">
+      <form className="profile-card" id="profile" onSubmit={handleSubmit} data-node-id="8:881">
         <div className="profile-card-heading" data-node-id="8:882">
           <div>
             <h2 data-node-id="8:884">THÔNG TIN CÁ NHÂN</h2>
@@ -57,7 +64,10 @@ export default function ProfileForm({ profile, onUpdate, onReset, saved }) {
           <p className="profile-privacy" data-node-id="8:933"><IconShieldCheck data-node-id="8:1044" />Thông tin cá nhân của bạn được bảo mật.</p>
           <div className="profile-action-buttons" data-node-id="8:936">
             <button type="button" className="profile-cancel" onClick={onReset} data-node-id="8:937">Hủy thay đổi</button>
-            <button type="submit" className="profile-save" data-node-id="8:939">LƯU THAY ĐỔI<IconArrowUpRight data-node-id="8:941" /></button>
+            <button type="submit" className="profile-save" disabled={loading} data-node-id="8:939">
+              {loading ? "ĐANG LƯU..." : saved ? "ĐÃ LƯU ✓" : "LƯU THAY ĐỔI"}
+              <IconArrowUpRight data-node-id="8:941" />
+            </button>
           </div>
         </div>
         {saved && <p className="profile-saved" role="status">Thông tin hồ sơ đã được cập nhật.</p>}

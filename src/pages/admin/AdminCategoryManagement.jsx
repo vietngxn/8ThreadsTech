@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   IconAdjustments, IconChevronDown, IconChevronLeft, IconChevronRight,
   IconDots, IconEye, IconEyeOff, IconFolder,
@@ -6,6 +6,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
+import { categoryService } from '../../services/categoryService.js';
 import './AdminCategoryManagement.css';
 
 const initialCategories = [
@@ -37,6 +38,7 @@ function CategoryDialog({ category, onClose, onSave }) {
 
 export default function AdminCategoryManagement() {
   const [categories, setCategories] = useState(initialCategories);
+  const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('all');
   const [sort, setSort] = useState('name-asc');
@@ -48,6 +50,33 @@ export default function AdminCategoryManagement() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [notice, setNotice] = useState('');
+
+  const loadCategories = () => {
+    setLoading(true);
+    categoryService.getAllCategories()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((item) => ({
+            id: item.id,
+            parentId: item.parentId,
+            name: item.name,
+            slug: item.slug,
+            description: item.description || '',
+            products: item.productCount || 0,
+            published: item.status !== 'INACTIVE',
+          }));
+          setCategories(mapped);
+        }
+      })
+      .catch((err) => {
+        console.warn('Lỗi tải danh mục:', err);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   const filteredCategories = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('vi');
@@ -71,24 +100,54 @@ export default function AdminCategoryManagement() {
     { label: 'Tổng danh mục', value: categories.length, note: 'Cơ · Gaming · Low-profile', Icon: IconFolder, nodeId: '55:526' },
     { label: 'Đang hiển thị', value: counts.published, note: 'Hiển thị trên cửa hàng', Icon: IconEye, nodeId: '55:532' },
     { label: 'Đang ẩn', value: counts.hidden, note: counts.hidden ? 'Không hiển thị trên cửa hàng' : 'Không có danh mục bị ẩn', Icon: IconEyeOff, nodeId: '55:538' },
-    { label: 'Tổng sản phẩm', value: categories.reduce((total, category) => total + category.products, 0), note: `${categories.reduce((total, category) => total + category.products, 0)} sản phẩm đã xuất bản`, Icon: IconPackage, nodeId: '55:544' },
+    { label: 'Tổng sản phẩm', value: categories.reduce((total, category) => total + (category.products || 0), 0), note: `${categories.reduce((total, category) => total + (category.products || 0), 0)} sản phẩm đã xuất bản`, Icon: IconPackage, nodeId: '55:544' },
   ];
 
-  const saveCategory = (category) => {
-    if (category.id) {
-      setCategories((current) => current.map((item) => item.id === category.id ? { ...item, ...category } : item));
-      setNotice('Đã cập nhật danh mục.');
-    } else {
-      setCategories((current) => [...current, { ...category, id: Date.now(), products: 0, published: true }]);
-      setNotice('Đã thêm danh mục mới.');
+  const saveCategory = async (catData) => {
+    try {
+      if (catData.id) {
+        await categoryService.updateCategory(catData.id, {
+          name: catData.name,
+          slug: catData.slug,
+          description: catData.description,
+          status: catData.published ? 'ACTIVE' : 'INACTIVE',
+        });
+        setNotice('Đã cập nhật danh mục trên máy chủ.');
+      } else {
+        await categoryService.createCategory({
+          name: catData.name,
+          slug: catData.slug,
+          description: catData.description,
+          status: 'ACTIVE',
+        });
+        setNotice('Đã thêm danh mục mới vào máy chủ.');
+      }
+      loadCategories();
+    } catch (err) {
+      setNotice(err.message || 'Lỗi khi lưu danh mục.');
     }
     setDialogOpen(false);
   };
 
-  const toggleVisibility = (category) => {
-    setCategories((current) => current.map((item) => item.id === category.id ? { ...item, published: !item.published } : item));
+  const toggleVisibility = async (category) => {
+    try {
+      const nextPublished = !category.published;
+      await categoryService.updateCategory(category.id, {
+        name: category.name,
+        slug: category.slug,
+        description: category.description,
+        status: nextPublished ? 'ACTIVE' : 'INACTIVE',
+      });
+      setCategories((current) =>
+        current.map((item) =>
+          item.id === category.id ? { ...item, published: nextPublished } : item
+        )
+      );
+      setNotice(category.published ? 'Đã ẩn danh mục.' : 'Đã hiển thị danh mục.');
+    } catch (err) {
+      setNotice(err.message || 'Lỗi khi đổi trạng thái danh mục.');
+    }
     setActiveMenu(null);
-    setNotice(category.published ? 'Đã ẩn danh mục.' : 'Đã hiển thị danh mục.');
   };
 
   const toggleSelected = (id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);

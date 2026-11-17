@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IconAdjustments, IconChevronDown, IconChevronLeft, IconChevronRight,
   IconDownload, IconEye, IconEyeOff, IconFileImport,
@@ -6,6 +6,8 @@ import {
   IconSearch, IconTrash, IconX,
 } from '@tabler/icons-react';
 import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
+import { productService } from '../../services/productService.js';
+import { categoryService } from '../../services/categoryService.js';
 import thread75 from '../../assets/list-thread-75.png';
 import thread65 from '../../assets/list-thread-65.png';
 import thread98 from '../../assets/list-thread-98.png';
@@ -32,9 +34,9 @@ const initialProducts = [
 const formatPrice = (price) => `${Number(price).toLocaleString('vi-VN')} ₫`;
 const stockState = (stock) => stock === 0 ? 'out' : stock < 10 ? 'low' : 'available';
 
-function ProductDialog({ product, onClose, onSave }) {
+function ProductDialog({ product, onClose, onSave, categories = [] }) {
   const [form, setForm] = useState(
-    product || { name: '', variant: '', sku: '', category: 'Bàn phím cơ', price: '', stock: 0 }
+    product || { name: '', variant: '', sku: '', category: categories[0]?.name || 'Bàn phím cơ', price: '', stock: 0 }
   );
   const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
   const submit = (event) => {
@@ -66,9 +68,19 @@ function ProductDialog({ product, onClose, onSave }) {
           <label>
             Danh mục
             <select value={form.category} onChange={update('category')}>
-              <option>Bàn phím cơ</option>
-              <option>Bàn phím gaming</option>
-              <option>Bàn phím low-profile</option>
+              {categories.length > 0 ? (
+                categories.map((c) => (
+                  <option key={c.id || c.name} value={c.name}>
+                    {c.name}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option>Bàn phím cơ</option>
+                  <option>Bàn phím gaming</option>
+                  <option>Bàn phím low-profile</option>
+                </>
+              )}
             </select>
           </label>
         </div>
@@ -93,6 +105,8 @@ function ProductDialog({ product, onClose, onSave }) {
 
 export default function AdminProductManagement() {
   const [products, setProducts] = useState(initialProducts);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [status, setStatus] = useState('all');
@@ -105,6 +119,44 @@ export default function AdminProductManagement() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [notice, setNotice] = useState('');
   const fileInput = useRef(null);
+
+  const loadData = () => {
+    setLoading(true);
+    Promise.all([
+      productService.getProducts({ pageSize: 100 }),
+      categoryService.getAllCategories(),
+    ])
+      .then(([prodRes, catList]) => {
+        if (prodRes?.products && prodRes.products.length > 0) {
+          const mapped = prodRes.products.map((p) => {
+            const firstVariant = p.rawVariants?.[0] || {};
+            return {
+              id: p.numericId || p.id,
+              name: p.name,
+              variant: p.variant || (p.colors?.[0]?.switchDesc || ''),
+              sku: firstVariant.sku || `TH-${p.numericId || p.id}`,
+              category: p.categoryName || 'Bàn phím cơ',
+              categoryId: p.categoryId,
+              price: p.price || 0,
+              stock: p.inStock ? 35 : 0,
+              image: p.image || thread75,
+              published: p.status !== 'INACTIVE',
+              slug: p.slug,
+            };
+          });
+          setProducts(mapped);
+        }
+        if (Array.isArray(catList) && catList.length > 0) {
+          setCategories(catList);
+        }
+      })
+      .catch((err) => console.warn('Lỗi tải dữ liệu sản phẩm / danh mục:', err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const filteredProducts = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('vi');
@@ -133,27 +185,46 @@ export default function AdminProductManagement() {
     setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   };
 
-  const deleteProduct = (id) => {
+  const deleteProduct = async (id) => {
     const target = products.find((p) => p.id === id);
     if (!target) return;
     if (window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${target.name}" không?`)) {
-      setProducts((current) => current.filter((item) => item.id !== id));
-      setSelectedIds((current) => current.filter((item) => item !== id));
-      setNotice(`Đã xóa sản phẩm "${target.name}".`);
+      try {
+        if (typeof id === 'number') {
+          await productService.deleteProduct(id);
+        }
+        setProducts((current) => current.filter((item) => item.id !== id));
+        setSelectedIds((current) => current.filter((item) => item !== id));
+        setNotice(`Đã xóa sản phẩm "${target.name}".`);
+      } catch (err) {
+        setNotice(err.message || 'Lỗi khi xóa sản phẩm');
+      }
     }
   };
 
-  const togglePublish = (id) => {
-    setProducts((current) =>
-      current.map((item) => {
-        if (item.id === id) {
-          const next = !item.published;
-          setNotice(next ? `Đã hiển thị sản phẩm "${item.name}".` : `Đã chuyển sản phẩm "${item.name}" về bản nháp.`);
-          return { ...item, published: next };
-        }
-        return item;
-      })
-    );
+  const togglePublish = async (id) => {
+    const target = products.find((p) => p.id === id);
+    if (!target) return;
+    const nextPublished = !target.published;
+    try {
+      if (typeof id === 'number') {
+        await productService.updateProduct(id, {
+          name: target.name,
+          status: nextPublished ? 'ACTIVE' : 'INACTIVE',
+        });
+      }
+      setProducts((current) =>
+        current.map((item) => {
+          if (item.id === id) {
+            return { ...item, published: nextPublished };
+          }
+          return item;
+        })
+      );
+      setNotice(nextPublished ? `Đã hiển thị sản phẩm "${target.name}".` : `Đã chuyển sản phẩm "${target.name}" về bản nháp.`);
+    } catch (err) {
+      setNotice(err.message || 'Lỗi khi đổi trạng thái');
+    }
   };
 
   const stats = [
@@ -170,14 +241,31 @@ export default function AdminProductManagement() {
     out: products.filter((product) => stockState(product.stock) === 'out').length,
   };
 
-  const saveProduct = (product) => {
-    if (product.id) {
-      setProducts((current) => current.map((item) => item.id === product.id ? { ...item, ...product } : item));
-    } else {
-      setProducts((current) => [{ ...product, id: Date.now(), image: thread75, published: true }, ...current]);
+  const saveProduct = async (productData) => {
+    try {
+      const selectedCategoryObj = categories.find((c) => c.name === productData.category);
+      const categoryId = selectedCategoryObj?.id || 1;
+
+      if (productData.id && typeof productData.id === 'number') {
+        await productService.updateProduct(productData.id, {
+          name: productData.name,
+          categoryId,
+          status: 'ACTIVE',
+        });
+        setNotice('Đã cập nhật sản phẩm trên máy chủ.');
+      } else {
+        await productService.createProduct({
+          name: productData.name,
+          categoryId,
+          status: 'ACTIVE',
+        });
+        setNotice('Đã thêm sản phẩm mới vào máy chủ.');
+      }
+      loadData();
+    } catch (err) {
+      setNotice(err.message || 'Lỗi khi lưu sản phẩm.');
     }
     setDialogOpen(false);
-    setNotice(product.id ? 'Đã cập nhật sản phẩm.' : 'Đã thêm sản phẩm mới.');
   };
 
   const exportCsv = () => {
@@ -465,6 +553,7 @@ export default function AdminProductManagement() {
       {dialogOpen && (
         <ProductDialog
           product={dialogProduct}
+          categories={categories}
           onClose={() => setDialogOpen(false)}
           onSave={saveProduct}
         />
