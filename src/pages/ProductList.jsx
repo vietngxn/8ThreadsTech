@@ -14,6 +14,7 @@ import ProductListGridSkeleton from "../components/product-list/ProductListGridS
 
 import { categoryService } from "../services/categoryService";
 import { productService } from "../services/productService";
+import { cartService } from "../services/cartService";
 
 import { useProducts } from "../hooks/useProducts";
 import {
@@ -243,8 +244,12 @@ export default function ProductList() {
   }, [loading, error, page, products.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
-  const handleAddToCart = () => {
-    setCartCount((count) => count + 1);
+  const handleAddToCart = (productId) => {
+    const targetProduct = products.find((p) => p.id === productId || p.slug === productId);
+    if (targetProduct) {
+      cartService.addToCart(targetProduct);
+    }
+    setCartCount(cartService.getTotalQuantity());
   };
 
   return (

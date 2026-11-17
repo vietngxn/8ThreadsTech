@@ -16,10 +16,16 @@ export default function CartList({ items, savings, onChangeQuantity, onRemove })
             {items.map((item, index) => (
               <article className="cart-item" key={item.id} data-node-id={["3:396", "3:420", "3:443"][index]}>
                 <div className="cart-item-image">
-                  <img src={item.image} alt={item.name} />
+                  <a href={`/ban-phim/${item.slug || item.id}`} aria-label={`Xem chi tiết ${item.name}`}>
+                    <img src={item.image} alt={item.name} />
+                  </a>
                 </div>
                 <div className="cart-item-info">
-                  <h2>{item.name}</h2>
+                  <h2>
+                    <a href={`/ban-phim/${item.slug || item.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                      {item.name}
+                    </a>
+                  </h2>
                   <p>{item.color}</p>
                   <span>{item.switch}</span>
                   <small>{item.specs}</small>
@@ -47,18 +53,18 @@ export default function CartList({ items, savings, onChangeQuantity, onRemove })
             ))}
           </div>
           <div className="cart-continue">
-            <a href="/">
+            <a href="/ban-phim">
               <IconArrowLeft />TIẾP TỤC MUA SẮM
             </a>
-            <span>Bạn đã tiết kiệm {formatPrice(savings)} từ giá gốc.</span>
+            {savings > 0 && <span>Bạn đã tiết kiệm {formatPrice(savings)} từ giá gốc.</span>}
           </div>
         </>
       ) : (
         <div className="cart-empty">
           <h2>Giỏ hàng đang trống</h2>
           <p>Khám phá những chiếc bàn phím phù hợp với nhịp gõ của bạn.</p>
-          <a href="/">
-            TIẾP TỤC MUA SẮM <IconArrowRight />
+          <a href="/ban-phim">
+            KHÁM PHÁ BÀN PHÍM <IconArrowRight />
           </a>
         </div>
       )}

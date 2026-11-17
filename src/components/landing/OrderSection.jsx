@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { IconArrowUpRight, IconShoppingBag } from '@tabler/icons-react';
 import { useReveal } from '../../hooks/useReveal';
 import { productService } from '../../services/productService';
+import { cartService } from '../../services/cartService';
 import keyboard from '../../assets/thread-keyboard.png';
 
 function Label({ children }) {
@@ -55,7 +56,12 @@ export default function OrderSection({ selectedColor, onComingSoon }) {
             <a href={`/ban-phim/${product?.slug || 'thread-75t'}`}>
               XEM CHI TIẾT <IconArrowUpRight size={18} />
             </a>
-            <a href="/gio-hang">
+            <a 
+              href="/gio-hang" 
+              onClick={() => {
+                if (product) cartService.addToCart(product, { color: selectedColor });
+              }}
+            >
               <IconShoppingBag size={18} /> THÊM VÀO GIỎ
             </a>
           </div>

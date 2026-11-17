@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { IconArrowUpRight, IconShoppingBag } from '@tabler/icons-react';
 import { useReveal } from '../../hooks/useReveal';
 import { productService } from '../../services/productService';
+import { cartService } from '../../services/cartService';
 import keyboard65 from '../../assets/landing-65.png';
 import keyboard98 from '../../assets/landing-98.png';
 import keyboard60 from '../../assets/landing-60.png';
@@ -113,7 +114,10 @@ export default function CollectionSection({ onComingSoon }) {
               <strong>{product.price}</strong>
               <button 
                 aria-label={`Thêm ${product.name} vào giỏ`} 
-                onClick={() => onComingSoon("Giỏ hàng")}
+                onClick={() => {
+                  cartService.addToCart(product);
+                  if (onComingSoon) onComingSoon(`Đã thêm "${product.name}" vào giỏ hàng.`);
+                }}
               >
                 <IconShoppingBag size={18} />
               </button>

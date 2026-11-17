@@ -20,8 +20,9 @@ import logo from "../../assets/thread-logo.png";
 import NoticeToast from "../product-detail/NoticeToast";
 import { authService } from "../../services/authService";
 import { categoryService } from "../../services/categoryService";
+import { cartService } from "../../services/cartService";
 
-export default function Navbar({ quantity = 0, onSearch }) {
+export default function Navbar({ quantity, onSearch }) {
   const navRef = useNavbar();
   const searchInputRef = useRef(null);
 
@@ -32,6 +33,15 @@ export default function Navbar({ quantity = 0, onSearch }) {
   const [notice, setNotice] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cartCount, setCartCount] = useState(() => cartService.getTotalQuantity());
+
+  useEffect(() => {
+    return cartService.subscribe(() => {
+      setCartCount(cartService.getTotalQuantity());
+    });
+  }, []);
+
+  const displayQuantity = quantity !== undefined && quantity !== null ? quantity : cartCount;
 
   // Danh sách danh mục lấy từ Backend
   const [categories, setCategories] = useState(() =>
@@ -227,11 +237,11 @@ export default function Navbar({ quantity = 0, onSearch }) {
 
           <a
             href="/gio-hang"
-            aria-label={`Giỏ hàng: ${quantity} sản phẩm`}
+            aria-label={`Giỏ hàng: ${displayQuantity} sản phẩm`}
             aria-current={isCartPage ? "page" : undefined}
           >
             <IconShoppingBag size={22} />
-            <span>{quantity}</span>
+            <span>{displayQuantity}</span>
           </a>
 
           <a
