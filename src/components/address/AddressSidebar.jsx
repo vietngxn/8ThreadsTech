@@ -3,6 +3,17 @@ import logo from "../../assets/thread-logo.png";
 import { authService } from "../../services/authService";
 
 export default function AddressSidebar() {
+  const currentUser = authService.getCurrentUser();
+  const displayName = currentUser?.fullName || currentUser?.name || "Khách hàng 8Threads";
+  const displayEmail = currentUser?.email || "";
+
+  const getInitials = (name) => {
+    if (!name) return "8T";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
   const handleLogout = (e) => {
     e.preventDefault();
     authService.logout("/dang-nhap");
@@ -10,8 +21,8 @@ export default function AddressSidebar() {
   return (
     <aside className="address-sidebar" data-node-id="20:36">
       <div className="address-identity" data-node-id="20:37">
-        <div className="address-avatar" data-node-id="20:38"><span data-node-id="20:39">MA</span></div>
-        <div className="address-identity-copy" data-node-id="20:40"><strong data-node-id="20:41">Nguyễn Minh An</strong><span data-node-id="20:42">minhan@example.com</span></div>
+        <div className="address-avatar" data-node-id="20:38"><span data-node-id="20:39">{getInitials(displayName)}</span></div>
+        <div className="address-identity-copy" data-node-id="20:40"><strong data-node-id="20:41">{displayName}</strong><span data-node-id="20:42">{displayEmail}</span></div>
         <small data-node-id="20:43">TÀI KHOẢN NGƯỜI DÙNG</small>
       </div>
       <div className="address-sidebar-rule" data-node-id="20:44" />

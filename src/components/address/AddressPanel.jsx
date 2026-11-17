@@ -1,6 +1,6 @@
-import { IconBuilding, IconHome, IconCircleCheck, IconPencil, IconTrash, IconPlus, IconChevronRight, IconLock } from "@tabler/icons-react";
+import { IconBuilding, IconHome, IconCircleCheck, IconPencil, IconTrash, IconPlus, IconChevronRight, IconLock, IconMapPin } from "@tabler/icons-react";
 
-export default function AddressPanel({ addresses, onAdd, onEdit, onDefault, onDelete }) {
+export default function AddressPanel({ addresses, loading, onAdd, onEdit, onDefault, onDelete }) {
   return (
     <div className="address-main" data-node-id="20:68">
       <section className="address-panel" data-node-id="20:69">
@@ -19,7 +19,11 @@ export default function AddressPanel({ addresses, onAdd, onEdit, onDefault, onDe
           <strong data-node-id="20:79">Địa chỉ đã lưu ({addresses.length})</strong>
           <span data-node-id="20:80">Chỉ có một địa chỉ mặc định</span>
         </div>
-        {addresses.length ? (
+        {loading && addresses.length === 0 ? (
+          <div className="address-empty" style={{ opacity: 0.7, padding: "40px 0" }}>
+            <p>Đang tải sổ địa chỉ...</p>
+          </div>
+        ) : addresses.length ? (
           <div className="address-list" data-node-id="20:81">
             {addresses.map((address) => (
               <article className={`saved-address${address.isDefault ? " is-default" : ""}`} key={address.id}>

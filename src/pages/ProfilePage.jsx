@@ -9,18 +9,23 @@ import NoticeToast from "../components/product-detail/NoticeToast";
 import { userService } from "../services/userService";
 import { authService } from "../services/authService";
 
-const initialProfile = {
-  name: "Nguyễn Minh An",
-  email: "minhan@example.com",
-  phone: "0987 654 123",
-  birthday: "1998-08-15",
-  gender: "Nam",
-  newsletter: true,
-};
+function getInitialProfile() {
+  const user = authService.getCurrentUser();
+  return {
+    name: user?.fullName || user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    birthday: user?.dateOfBirth ? String(user.dateOfBirth) : "",
+    gender: user?.gender || "Nam",
+    newsletter: Boolean(user?.receiveNewsletter),
+    defaultAddress: null,
+    latestOrder: null,
+  };
+}
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState(initialProfile);
-  const [originalProfile, setOriginalProfile] = useState(initialProfile);
+  const [profile, setProfile] = useState(getInitialProfile);
+  const [originalProfile, setOriginalProfile] = useState(getInitialProfile);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState("");
@@ -39,11 +44,16 @@ export default function ProfilePage() {
           birthday: data.dateOfBirth ? String(data.dateOfBirth) : "",
           gender: data.gender || "Nam",
           newsletter: Boolean(data.receiveNewsletter),
-          defaultAddress: data.defaultAddress,
-          latestOrder: data.latestOrder,
+          defaultAddress: data.defaultAddress || null,
+          latestOrder: data.latestOrder || null,
         };
         setProfile(mapped);
         setOriginalProfile(mapped);
+
+        // Đồng bộ lại currentUser vào localStorage để các lần tải sau hiển thị tức thì
+        const currentStored = authService.getCurrentUser() || {};
+        localStorage.setItem("currentUser", JSON.stringify({ ...currentStored, ...data }));
+        window.dispatchEvent(new Event("auth:state-change"));
       })
       .catch((err) => {
         console.warn("Không thể tải thông tin cá nhân:", err);
