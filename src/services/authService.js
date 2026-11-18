@@ -87,6 +87,38 @@ export const authService = {
     return user ? JSON.parse(user) : null;
   },
 
+
+  /**
+   * Đăng nhập bằng Google
+   */
+  async googleLogin(idToken) {
+    const response = await api.post("/api/auth/google", {
+      idToken,
+    });
+
+    const result = response.data;
+
+    // Lưu token và thông tin user giống đăng nhập thường
+    if (result?.data?.accessToken) {
+      localStorage.setItem("accessToken", result.data.accessToken);
+      localStorage.setItem(
+        "tokenType",
+        result.data.tokenType || "Bearer"
+      );
+
+      if (result.data.user) {
+        localStorage.setItem(
+          "currentUser",
+          JSON.stringify(result.data.user)
+        );
+      }
+
+      window.dispatchEvent(new Event("auth:state-change"));
+    }
+
+    return result;
+  },
+
   /**
    * Đăng xuất
    */
