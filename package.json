@@ -12,6 +12,7 @@
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
     "@gsap/react": "^2.1.2",
+    "@react-oauth/google": "^0.13.5",
     "@tabler/icons-react": "3.44.0",
     "axios": "^1.21.1",
     "drizzle-orm": "0.45.2",
