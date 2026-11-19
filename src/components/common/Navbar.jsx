@@ -21,7 +21,8 @@ import logo from "../../assets/thread-logo.png";
 import NoticeToast from "../product-detail/NoticeToast";
 import { authService } from "../../services/authService";
 import { categoryService } from "../../services/categoryService";
-import { cartService } from "../../services/cartService";
+
+import { useCart } from "../../hooks/useCart";
 
 export default function Navbar({ quantity, onSearch }) {
   const navRef = useNavbar();
@@ -34,12 +35,13 @@ export default function Navbar({ quantity, onSearch }) {
   const [notice, setNotice] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [cartCount, setCartCount] = useState(() => cartService.getTotalQuantity());
 
   const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(authService.getToken()));
   const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser());
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userDropdownRef = useRef(null);
+
+  const { cartCount } = useCart();
 
   useEffect(() => {
     const handleAuthChange = () => {
@@ -60,13 +62,7 @@ export default function Navbar({ quantity, onSearch }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    return cartService.subscribe(() => {
-      setCartCount(cartService.getTotalQuantity());
-    });
-  }, []);
-
-  const displayQuantity = quantity !== undefined && quantity !== null ? quantity : cartCount;
+  const displayQuantity = cartCount;
 
   // Danh sách danh mục lấy từ Backend
   const [categories, setCategories] = useState(() =>

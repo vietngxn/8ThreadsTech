@@ -1,61 +1,126 @@
-import { useMemo, useState, useEffect } from "react";
+import { useState, useMemo } from "react";
+
 import Navbar from "../components/common/Navbar";
 import CartIntro from "../components/cart/CartIntro";
 import CartList from "../components/cart/CartList";
 import CartSummary from "../components/cart/CartSummary";
 import CartFooter from "../components/cart/CartFooter";
-import { cartService } from "../services/cartService";
+
+import { useCart } from "../hooks/useCart";
 
 export default function CartPage() {
-  const [items, setItems] = useState(() => cartService.getCart());
+  const {
+    cartItems,
+    cartCount,
+    loading,
+    updateQuantity,
+    removeItem,
+  } = useCart();
 
-  useEffect(() => {
-    return cartService.subscribe((updatedItems) => {
-      setItems(updatedItems);
-    });
-  }, []);
+  const [selectedCartItemIds, setSelectedCartItemIds] = useState([]);
 
+  const toggleItem = (cartItemId) => {
+    setSelectedCartItemIds((prev) =>
+      prev.includes(cartItemId)
+        ? prev.filter((id) => id !== cartItemId)
+        : [...prev, cartItemId]
+    );
+  };
+
+  // Chỉ lấy các sản phẩm đang được tick chọn
+  const selectedItems = useMemo(
+    () =>
+      cartItems.filter((item) =>
+        selectedCartItemIds.includes(item.cartItemId)
+      ),
+    [cartItems, selectedCartItemIds]
+  );
+
+  // Tổng số lượng của các sản phẩm đã chọn (dùng cho CartSummary)
+  const selectedQuantity = useMemo(
+    () =>
+      selectedItems.reduce(
+        (sum, item) => sum + (item.quantity || 0),
+        0
+      ),
+    [selectedItems]
+  );
+
+  // Tạm tính chỉ tính trên sản phẩm đã chọn
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0),
-    [items]
+    () =>
+      selectedItems.reduce(
+        (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
+        0
+      ),
+    [selectedItems]
   );
+
+  // Giá gốc chỉ tính trên sản phẩm đã chọn
   const oldTotal = useMemo(
-    () => items.reduce((sum, item) => sum + (item.oldPrice ?? item.price ?? 0) * (item.quantity || 1), 0),
-    [items]
+    () =>
+      selectedItems.reduce(
+        (sum, item) =>
+          sum + (item.oldPrice ?? item.price ?? 0) * (item.quantity || 1),
+        0
+      ),
+    [selectedItems]
   );
-  const quantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
   const savings = Math.max(0, oldTotal - subtotal);
 
   const changeQuantity = (id, change) => {
-    cartService.changeQuantity(id, change);
+    const item = cartItems.find((item) => item.cartItemId === id);
+
+    if (!item) return;
+
+    const newQuantity = item.quantity + change;
+
+    if (newQuantity <= 0) {
+      return;
+    }
+
+    updateQuantity(id, newQuantity);
   };
 
-  const removeItem = (id) => {
-    cartService.removeItem(id);
+  const handleRemoveItem = (id) => {
+    removeItem(id);
+    setSelectedCartItemIds((prev) => prev.filter((itemId) => itemId !== id));
   };
 
   return (
     <div className="cart-page" data-node-id="3:341">
-      <Navbar quantity={quantity} />
-      
+      {/* Navbar & CartIntro vẫn giữ tổng giỏ hàng như cũ */}
+      <Navbar quantity={cartCount} />
+
       <main>
-        <CartIntro quantity={quantity} />
-        
+        <CartIntro quantity={cartCount} />
+
         <section className="cart-content" data-node-id="3:390">
-          <CartList 
-            items={items} 
-            savings={savings} 
-            onChangeQuantity={changeQuantity} 
-            onRemove={removeItem} 
-          />
-          <CartSummary 
-            quantity={quantity} 
-            subtotal={subtotal} 
-            hasItems={items.length > 0} 
-          />
+          {loading ? (
+            <p>Đang tải giỏ hàng...</p>
+          ) : (
+            <>
+              <CartList
+                items={cartItems}
+                savings={savings}
+                selectedCartItemIds={selectedCartItemIds}
+                onToggleItem={toggleItem}
+                onChangeQuantity={changeQuantity}
+                onRemove={handleRemoveItem}
+              />
+
+              <CartSummary
+                quantity={selectedQuantity}
+                subtotal={subtotal}
+                hasItems={selectedItems.length > 0}
+                selectedItems={selectedItems}
+              />
+            </>
+          )}
         </section>
       </main>
-      
+
       <CartFooter />
     </div>
   );
