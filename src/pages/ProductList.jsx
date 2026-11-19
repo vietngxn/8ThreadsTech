@@ -14,7 +14,8 @@ import ProductListGridSkeleton from "../components/product-list/ProductListGridS
 
 import { categoryService } from "../services/categoryService";
 import { productService } from "../services/productService";
-import { cartService } from "../services/cartService";
+
+import { useCart } from "../hooks/useCart";
 
 import { useProducts } from "../hooks/useProducts";
 import {
@@ -40,6 +41,8 @@ export default function ProductList() {
     categoryService.getCachedParentCategories()
   );
 
+  const { addToCart, cartCount } = useCart();
+
   useEffect(() => {
     categoryService.getParentCategories()
       .then(setParentCategories)
@@ -61,7 +64,6 @@ export default function ProductList() {
   const urlQuery = searchParams.get("q") || "";
 
   const [query, setQuery] = useState(urlQuery);
-  const [cartCount, setCartCount] = useState(0);
 
   // Sửa query string: mutate(next) đổi bản sao rồi đẩy lên URL.
   // Mặc định mỗi lần đổi điều kiện lọc đều về trang 1 (xóa "trang").
@@ -244,12 +246,14 @@ export default function ProductList() {
   }, [loading, error, page, products.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
-  const handleAddToCart = (productId) => {
-    const targetProduct = products.find((p) => p.id === productId || p.slug === productId);
-    if (targetProduct) {
-      cartService.addToCart(targetProduct);
+  const handleAddToCart = async (product) => {
+    const variantId = product.defaultVariantId;
+
+    if (!variantId) {
+      throw new Error("Sản phẩm chưa có biến thể mặc định");
     }
-    setCartCount(cartService.getTotalQuantity());
+
+    await addToCart(variantId, 1);
   };
 
   return (
