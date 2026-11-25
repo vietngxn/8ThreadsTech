@@ -7,6 +7,7 @@ import {
   IconFolder,
   IconHelpCircle,
   IconLayoutDashboard,
+  IconLogout,
   IconPackage,
   IconSettings,
   IconShoppingBag,
@@ -14,6 +15,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import logo from "../../assets/thread-logo.png";
+import { authService } from "../../services/authService";
 import "./AdminSidebar.css";
 
 const MENU_ITEMS = [
@@ -115,6 +117,15 @@ export default function AdminSidebar({ active, badgeCounts = {}, className = "" 
           <IconSettings size={18} stroke={1.5} />
           <span>Cài đặt</span>
         </Link>
+        <button
+          type="button"
+          className="admin-support admin-logout-btn"
+          onClick={() => authService.logout("/dang-nhap")}
+          style={{ width: "100%", background: "transparent", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}
+        >
+          <IconLogout size={18} stroke={1.5} />
+          <span>Đăng xuất</span>
+        </button>
         <Link to="/admin/profile" className="admin-account" aria-label="Sửa hồ sơ quản trị viên">
           <span className="admin-avatar">MA</span>
           <span>

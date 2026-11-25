@@ -207,13 +207,29 @@ export const productService = {
   },
 
   /**
-   * Chi tiết sản phẩm theo slug
+   * Chi tiết sản phẩm theo slug (hoặc id số)
    * Trả null nếu không tìm thấy hoặc có lỗi
    */
   async getProductBySlug(slug) {
     if (!slug) return null;
 
     try {
+      // Nếu là số ID thay vì slug, tra cứu ID trước để lấy slug chính xác
+      if (/^\d+$/.test(String(slug).trim())) {
+        try {
+          const res = await api.get(`/api/products/${slug}`);
+          const product = res.data?.data;
+          if (product?.slug) {
+            const detailRes = await api.get(
+              `/api/products/slug/${encodeURIComponent(product.slug)}`
+            );
+            return mapDetailToFrontend(detailRes.data?.data);
+          }
+        } catch {
+          // Bỏ qua nếu không tìm thấy theo id, tiếp tục thử theo slug
+        }
+      }
+
       const response = await api.get(
         `/api/products/slug/${encodeURIComponent(slug)}`
       );
@@ -227,6 +243,44 @@ export const productService = {
 
       return null;
     }
+  },
+
+  /**
+   * Lấy chi tiết sản phẩm theo ID
+   */
+  async getProductById(id) {
+    if (!id) return null;
+    try {
+      const response = await api.get(`/api/products/${id}`);
+      return response.data?.data;
+    } catch (error) {
+      console.warn("Không thể tải chi tiết sản phẩm theo ID:", error.message);
+      return null;
+    }
+  },
+
+  /**
+   * Thêm sản phẩm mới (Admin)
+   */
+  async createProduct(data) {
+    const response = await api.post("/api/products", data);
+    return response.data?.data;
+  },
+
+  /**
+   * Cập nhật thông tin sản phẩm (Admin)
+   */
+  async updateProduct(id, data) {
+    const response = await api.put(`/api/products/${id}`, data);
+    return response.data?.data;
+  },
+
+  /**
+   * Xóa sản phẩm (Admin)
+   */
+  async deleteProduct(id) {
+    const response = await api.delete(`/api/products/${id}`);
+    return response.data?.data;
   },
 
   async getCategoryFilters(parentId) {

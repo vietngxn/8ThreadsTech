@@ -553,6 +553,44 @@ export default function AdminProductManagement() {
     p.rawVariants?.reduce((s, v) => s + (Number(v.stock) || 0), 0) ??
     (p.inStock ? 10 : 0);
 
+  const loadData = () => {
+    setLoading(true);
+    Promise.all([
+      productService.getProducts({ pageSize: 100 }),
+      categoryService.getAllCategories(),
+    ])
+      .then(([prodRes, catList]) => {
+        if (prodRes?.products && prodRes.products.length > 0) {
+          const mapped = prodRes.products.map((p) => {
+            const firstVariant = p.rawVariants?.[0] || {};
+            return {
+              id: p.numericId || p.id,
+              name: p.name,
+              variant: p.variant || (p.colors?.[0]?.switchDesc || ''),
+              sku: firstVariant.sku || `TH-${p.numericId || p.id}`,
+              category: p.categoryName || 'Bàn phím cơ',
+              categoryId: p.categoryId,
+              price: p.price || 0,
+              stock: p.inStock ? 35 : 0,
+              image: p.image || thread75,
+              published: p.status !== 'INACTIVE',
+              slug: p.slug,
+            };
+          });
+          setProducts(mapped);
+        }
+        if (Array.isArray(catList) && catList.length > 0) {
+          setCategories(catList);
+        }
+      })
+      .catch((err) => console.warn('Lỗi tải dữ liệu sản phẩm / danh mục:', err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('vi');
     return products

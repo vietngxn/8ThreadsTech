@@ -11,7 +11,8 @@ export default function OtpVerificationForm({ notice, onNotice }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const email = location.state?.email || "";
+  const initialEmail = location.state?.email || sessionStorage.getItem("pending_otp_email") || new URLSearchParams(location.search).get("email") || "";
+  const [email, setEmail] = useState(initialEmail);
 
   useEffect(() => {
     // Focus ô đầu tiên khi mở trang
@@ -73,8 +74,8 @@ export default function OtpVerificationForm({ notice, onNotice }) {
     setCountdown(60);
     onNotice("Đang gửi lại mã xác thực...");
     try {
-      // Có thể gọi endpoint gửi lại nếu backend cung cấp hoặc gửi thông báo
-      onNotice("Mã xác thực mới đã được gửi lại vào email của bạn.");
+      const res = await authService.resendOtp(email);
+      onNotice(res?.message || "Mã xác thực mới đã được gửi lại vào email của bạn.");
     } catch (err) {
       onNotice(err.message || "Không thể gửi lại mã OTP.");
     }
@@ -89,7 +90,7 @@ export default function OtpVerificationForm({ notice, onNotice }) {
     }
 
     if (!email) {
-      onNotice("Không tìm thấy thông tin email. Vui lòng thực hiện đăng ký lại.");
+      onNotice("Không tìm thấy thông tin email. Vui lòng nhập email của bạn.");
       return;
     }
 
@@ -103,6 +104,7 @@ export default function OtpVerificationForm({ notice, onNotice }) {
         purpose: "REGISTER",
       });
 
+      sessionStorage.removeItem("pending_otp_email");
       onNotice(response?.message || "Xác thực email thành công! Đang chuyển đến đăng nhập...");
       setTimeout(() => {
         navigate("/dang-nhap");
@@ -119,12 +121,33 @@ export default function OtpVerificationForm({ notice, onNotice }) {
       <div className="login-card-heading">
         <h2 id="otp-heading">XÁC THỰC OTP</h2>
         <p>
-          Mã xác thực gồm 6 chữ số đã được gửi tới email <br />
-          <strong className="otp-email-highlight">{email}</strong>
+          {email ? (
+            <>
+              Mã xác thực gồm 6 chữ số đã được gửi tới email <br />
+              <strong className="otp-email-highlight">{email}</strong>
+            </>
+          ) : (
+            "Vui lòng nhập địa chỉ email và mã xác thực 6 chữ số được gửi tới hộp thư của bạn."
+          )}
         </p>
       </div>
 
       <form className="login-form otp-form" onSubmit={handleSubmit}>
+        {!initialEmail && (
+          <div className="login-field" style={{ marginBottom: 16 }}>
+            <label htmlFor="otp-email">Địa chỉ Email</label>
+            <div className="login-input-wrap">
+              <input
+                id="otp-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value.trim())}
+                placeholder="Nhập email của bạn"
+                required
+              />
+            </div>
+          </div>
+        )}
         <div className="otp-inputs-row" onPaste={handlePaste}>
           {otp.map((digit, idx) => (
             <input

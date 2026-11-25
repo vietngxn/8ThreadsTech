@@ -1,66 +1,122 @@
-import { useState } from "react";
-import { IconArrowUpRight, IconBuilding, IconCheck, IconChevronRight, IconCircleCheck, IconHome, IconLock, IconLogout, IconMapPin, IconPackage, IconPencil, IconPlus, IconSearch, IconShoppingBag, IconTrash, IconUser, IconX } from "@tabler/icons-react";
-import logo from "../assets/thread-logo.png";
+import { useState, useEffect } from "react";
+import { IconChevronRight } from "@tabler/icons-react";
 import Navbar from "../components/common/Navbar";
 import CartFooter from "../components/cart/CartFooter";
 import AddressSidebar from "../components/address/AddressSidebar";
 import AddressPanel from "../components/address/AddressPanel";
 import AddressForm from "../components/address/AddressForm";
 import AddressConfirmDelete from "../components/address/AddressConfirmDelete";
+import { userService } from "../services/userService";
 
-const initialAddresses = [
-  {
-    id: "home",
-    label: "Nhà riêng",
-    recipient: "Nguyễn Minh An",
-    phone: "0987 654 123",
-    address: "123 Đường Số 8, Phường Thủ Đức, TP. Hồ Chí Minh",
-    isDefault: true,
-  },
-  {
-    id: "office",
-    label: "Văn phòng",
-    recipient: "Nguyễn Minh An",
-    phone: "0987 654 123",
-    address: "Tầng 5, 72 Nguyễn Cơ Thạch, Phường An Khánh, TP. Hồ Chí Minh",
-    isDefault: false,
-  },
-];
+const CACHE_KEY = "cached_user_addresses";
 
-const emptyForm = { label: "Nhà riêng", recipient: "", phone: "", address: "", isDefault: false };
+function getCachedAddresses() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function AddressBookPage() {
-  const [addresses, setAddresses] = useState(initialAddresses);
+  const [addresses, setAddresses] = useState(getCachedAddresses);
   const [editingAddress, setEditingAddress] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [deletingAddress, setDeletingAddress] = useState(null);
+  const [loading, setLoading] = useState(() => getCachedAddresses().length === 0);
 
-  const saveAddress = (values) => {
-    const id = values.id ?? `address-${Date.now()}`;
-    setAddresses((current) => {
-      const next = current.map((address) => ({
-        ...address,
-        isDefault: address.id === id || values.isDefault ? false : address.isDefault,
+  const fetchAddresses = async () => {
+    try {
+      const data = await userService.getMyAddresses();
+      const mapped = data.map((item) => ({
+        id: item.id,
+        label: item.addressType || "Nhà riêng",
+        recipient: item.receiverName,
+        phone: item.receiverPhone,
+        address: item.fullAddress || item.addressLine,
+        isDefault: Boolean(item.isDefault),
       }));
-      const savedAddress = { ...values, id, isDefault: values.isDefault || !next.some((address) => address.isDefault) };
-      const existingIndex = next.findIndex((address) => address.id === id);
-      if (existingIndex >= 0) next[existingIndex] = savedAddress;
-      else next.push(savedAddress);
-      return next;
-    });
-    setEditingAddress(null);
-    setIsAdding(false);
+      setAddresses(mapped);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(mapped));
+      return mapped;
+    } catch (err) {
+      console.warn("Không thể tải sổ địa chỉ:", err);
+      return [];
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const setDefault = (id) => setAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === id })));
+  useEffect(() => {
+    fetchAddresses();
+  }, []);
 
-  const deleteAddress = () => {
-    setAddresses((current) => {
-      const remaining = current.filter((address) => address.id !== deletingAddress.id);
-      if (deletingAddress.isDefault && remaining.length) remaining[0] = { ...remaining[0], isDefault: true };
-      return remaining;
+  const saveAddress = async (values) => {
+    const payload = {
+      receiverName: values.recipient,
+      addressType: values.label,
+      receiverPhone: values.phone,
+      addressLine: values.address,
+      isDefault: values.isDefault,
+    };
+
+    setEditingAddress(null);
+    setIsAdding(false);
+
+    try {
+      if (values.id) {
+        await userService.updateAddress(values.id, payload);
+      } else {
+        await userService.createAddress(payload);
+      }
+      await fetchAddresses();
+    } catch (err) {
+      alert(err.message || "Không thể lưu địa chỉ");
+      await fetchAddresses();
+      throw err;
+    }
+  };
+
+  const setDefault = async (id) => {
+    // Cập nhật giao diện ngay tức thì (Optimistic UI)
+    setAddresses((prev) => {
+      const updated = prev.map((a) => ({
+        ...a,
+        isDefault: a.id === id,
+      })).sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+      localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
+      return updated;
     });
+
+    try {
+      await userService.setDefaultAddress(id);
+      fetchAddresses();
+    } catch (err) {
+      alert(err.message || "Không thể đặt làm địa chỉ mặc định");
+      fetchAddresses();
+    }
+  };
+
+  const deleteAddress = async () => {
+    if (!deletingAddress?.id) return;
+    const targetId = deletingAddress.id;
+
+    // Đóng popup và xóa khỏi giao diện ngay lập tức (0ms)
     setDeletingAddress(null);
+    setAddresses((prev) => {
+      const updated = prev.filter((a) => a.id !== targetId);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
+    try {
+      await userService.deleteAddress(targetId);
+      await fetchAddresses();
+    } catch (err) {
+      alert(err.message || "Không thể xóa địa chỉ");
+      await fetchAddresses();
+    }
   };
 
   return (
@@ -92,6 +148,7 @@ export default function AddressBookPage() {
           <AddressSidebar />
           <AddressPanel
             addresses={addresses}
+            loading={loading}
             onAdd={setIsAdding}
             onEdit={setEditingAddress}
             onDefault={setDefault}
@@ -110,7 +167,13 @@ export default function AddressBookPage() {
           onSave={saveAddress}
         />
       )}
-      {deletingAddress && <AddressConfirmDelete address={deletingAddress} onClose={() => setDeletingAddress(null)} onConfirm={deleteAddress} />}
+      {deletingAddress && (
+        <AddressConfirmDelete
+          address={deletingAddress}
+          onClose={() => setDeletingAddress(null)}
+          onConfirm={deleteAddress}
+        />
+      )}
     </div>
   );
 }

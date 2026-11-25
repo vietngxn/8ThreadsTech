@@ -9,6 +9,7 @@ import {
 
 import {
   IconArrowRight,
+  IconLogout,
   IconSearch,
   IconShoppingBag,
   IconUser,
@@ -21,7 +22,9 @@ import NoticeToast from "../product-detail/NoticeToast";
 import { authService } from "../../services/authService";
 import { categoryService } from "../../services/categoryService";
 
-export default function Navbar({ quantity = 0, onSearch }) {
+import { useCart } from "../../hooks/useCart";
+
+export default function Navbar({ quantity, onSearch }) {
   const navRef = useNavbar();
   const searchInputRef = useRef(null);
 
@@ -32,6 +35,34 @@ export default function Navbar({ quantity = 0, onSearch }) {
   const [notice, setNotice] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(authService.getToken()));
+  const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser());
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userDropdownRef = useRef(null);
+
+  const { cartCount } = useCart();
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setIsLoggedIn(Boolean(authService.getToken()));
+      setCurrentUser(authService.getCurrentUser());
+    };
+    window.addEventListener("auth:state-change", handleAuthChange);
+    return () => window.removeEventListener("auth:state-change", handleAuthChange);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const displayQuantity = cartCount;
 
   // Danh sách danh mục lấy từ Backend
   const [categories, setCategories] = useState(() =>
@@ -49,9 +80,6 @@ export default function Navbar({ quantity = 0, onSearch }) {
     return pathname === `/${slug}` ||
       pathname.startsWith(`/${slug}/`);
   };
-
-  const isLoggedIn = Boolean(authService.getToken());
-  const accountUrl = isLoggedIn ? "/ho-so" : "/dang-nhap";
 
   const isProductPage =
     pathname === "/ban-phim" ||
@@ -227,20 +255,119 @@ export default function Navbar({ quantity = 0, onSearch }) {
 
           <a
             href="/gio-hang"
-            aria-label={`Giỏ hàng: ${quantity} sản phẩm`}
+            aria-label={`Giỏ hàng: ${displayQuantity} sản phẩm`}
             aria-current={isCartPage ? "page" : undefined}
           >
             <IconShoppingBag size={22} />
-            <span>{quantity}</span>
+            <span>{displayQuantity}</span>
           </a>
 
-          <a
-            href={accountUrl}
-            aria-label={isLoggedIn ? "Hồ sơ cá nhân" : "Đăng nhập"}
-            aria-current={isAccountPage ? "page" : undefined}
-          >
-            <IconUser size={22} />
-          </a>
+          {isLoggedIn ? (
+            <div ref={userDropdownRef} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((prev) => !prev)}
+                aria-label="Tài khoản cá nhân"
+                aria-expanded={userMenuOpen}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: isAccountPage ? "var(--color-primary, #fff)" : "inherit",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: 0,
+                }}
+              >
+                <IconUser size={22} />
+              </button>
+
+              {userMenuOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 14px)",
+                    right: 0,
+                    width: 210,
+                    background: "#18181b",
+                    border: "1px solid #27272a",
+                    borderRadius: 8,
+                    padding: "8px 0",
+                    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.6)",
+                    zIndex: 1000,
+                  }}
+                >
+                  <div style={{ padding: "8px 16px", borderBottom: "1px solid #27272a" }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {currentUser?.fullName || currentUser?.name || "Tài khoản"}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#a1a1aa", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {currentUser?.email || ""}
+                    </div>
+                  </div>
+                  <Link
+                    to="/ho-so"
+                    onClick={() => setUserMenuOpen(false)}
+                    style={{
+                      display: "block",
+                      padding: "8px 16px",
+                      fontSize: 13,
+                      color: "#e4e4e7",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Hồ sơ cá nhân
+                  </Link>
+                  <Link
+                    to="/don-hang"
+                    onClick={() => setUserMenuOpen(false)}
+                    style={{
+                      display: "block",
+                      padding: "8px 16px",
+                      fontSize: 13,
+                      color: "#e4e4e7",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Đơn hàng của tôi
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      authService.logout("/dang-nhap");
+                    }}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "8px 16px",
+                      fontSize: 13,
+                      color: "#ef4444",
+                      background: "transparent",
+                      border: "none",
+                      borderTop: "1px solid #27272a",
+                      marginTop: 4,
+                      cursor: "pointer",
+                      textAlign: "left",
+                    }}
+                  >
+                    <IconLogout size={16} />
+                    <span>Đăng xuất</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/dang-nhap"
+              aria-label="Đăng nhập"
+              aria-current={pathname === "/dang-nhap" ? "page" : undefined}
+            >
+              <IconUser size={22} />
+            </Link>
+          )}
         </div>
       </header>
 

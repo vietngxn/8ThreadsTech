@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import Navbar from "../components/common/Navbar";
@@ -6,30 +6,32 @@ import CartFooter from "../components/cart/CartFooter";
 import CheckoutIntro from "../components/checkout/CheckoutIntro";
 import CheckoutForm from "../components/checkout/CheckoutForm";
 import CheckoutSummary from "../components/checkout/CheckoutSummary";
-import thread75 from "../assets/list-thread-75.png";
-import thread65 from "../assets/list-thread-65.png";
-import thread98 from "../assets/list-thread-98.png";
-
-const items = [
-  { name: "THREAD 75", color: "Bạc ánh trăng", switch: "Linear Red Switch", price: 2490000, oldPrice: 2790000, image: thread75 },
-  { name: "THREAD 65", color: "Đen nguyên bản", switch: "Linear Switch", price: 1890000, image: thread65 },
-  { name: "THREAD 98", color: "Trắng sương", switch: "Tactile Brown Switch", price: 2190000, oldPrice: 2490000, image: thread98 },
-];
+import { cartService } from "../services/cartService";
 
 export default function CheckoutPage() {
+  const [items, setItems] = useState(() => cartService.getCart());
   const [shipping, setShipping] = useState("standard");
   const [payment, setPayment] = useState("cod");
   const [coupon, setCoupon] = useState("");
   const [submitted, setSubmitted] = useState(false);
   
   const navigate = useNavigate();
-  const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+
+  useEffect(() => {
+    return cartService.subscribe((updated) => {
+      setItems(updated);
+    });
+  }, []);
+
+  const subtotal = items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+  const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
   const shippingFee = shipping === "express" ? 35000 : 0;
   const total = subtotal + shippingFee;
 
   const submitOrder = (event) => {
     event.preventDefault();
     setSubmitted(true);
+    cartService.clearCart();
     setTimeout(() => {
       navigate("/hoan-tat");
     }, 400);
@@ -37,7 +39,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="checkout-page" data-node-id="3:58">
-      <Navbar quantity={3} />
+      <Navbar quantity={totalQuantity} />
       
       <main>
         <CheckoutIntro />

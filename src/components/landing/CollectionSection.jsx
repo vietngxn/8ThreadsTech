@@ -1,10 +1,13 @@
+import { useState, useEffect } from 'react';
 import { IconArrowUpRight, IconShoppingBag } from '@tabler/icons-react';
 import { useReveal } from '../../hooks/useReveal';
+import { productService } from '../../services/productService';
+import { cartService } from '../../services/cartService';
 import keyboard65 from '../../assets/landing-65.png';
 import keyboard98 from '../../assets/landing-98.png';
 import keyboard60 from '../../assets/landing-60.png';
 
-const products = [
+const fallbackProducts = [
   { 
     id: "thread-65",
     name: "THREAD 65", 
@@ -45,6 +48,32 @@ function Label({ children }) {
 
 export default function CollectionSection({ onComingSoon }) {
   const collectionRef = useReveal({ y: 50, stagger: 0.1 });
+  const [products, setProducts] = useState(fallbackProducts);
+
+  useEffect(() => {
+    let alive = true;
+    productService.getProducts({ pageSize: 3, sortBy: "viewCount", sortDirection: "desc" })
+      .then((res) => {
+        if (!alive) return;
+        if (res?.products && res.products.length > 0) {
+          const mapped = res.products.slice(0, 3).map((p) => ({
+            id: p.slug || p.id,
+            name: p.name,
+            tag: p.badge || "NỔI BẬT",
+            variant: p.variant || (p.colors?.[0]?.switchDesc || ""),
+            specs: p.specs || (p.features?.join(" · ") || ""),
+            price: typeof p.price === "number" ? `${p.price.toLocaleString("vi-VN")} ₫` : p.price,
+            image: p.image || fallbackProducts[0].image,
+          }));
+          setProducts(mapped);
+        }
+      })
+      .catch((err) => console.warn("Lỗi tải sản phẩm CollectionSection:", err));
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
     <section ref={collectionRef} className="landing-section collection-section" id="collection" data-node-id="36:5288">
@@ -85,7 +114,10 @@ export default function CollectionSection({ onComingSoon }) {
               <strong>{product.price}</strong>
               <button 
                 aria-label={`Thêm ${product.name} vào giỏ`} 
-                onClick={() => onComingSoon("Giỏ hàng")}
+                onClick={() => {
+                  cartService.addToCart(product);
+                  if (onComingSoon) onComingSoon(`Đã thêm "${product.name}" vào giỏ hàng.`);
+                }}
               >
                 <IconShoppingBag size={18} />
               </button>

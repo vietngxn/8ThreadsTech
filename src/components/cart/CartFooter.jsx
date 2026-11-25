@@ -29,10 +29,10 @@ export default function CartFooter() {
         </div>
         <div className="cart-footer-links">
           <h2>KHÁM PHÁ</h2>
-          <a href="/">Bàn phím</a>
-          <a href="/">Keycap</a>
-          <a href="/">Phụ kiện</a>
-          <a href="/">Về 8Threads Team</a>
+          <a href="/ban-phim">Bàn phím</a>
+          <a href="/keycap">Keycap</a>
+          <a href="/phu-kien">Phụ kiện</a>
+          <a href="/ve-8threads-team">Về 8Threads Team</a>
         </div>
         <div className="cart-footer-links">
           <h2>HỖ TRỢ</h2>

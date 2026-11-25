@@ -118,13 +118,13 @@ function OrderCard({ order, onCancel }) {
             </div>
           )}
           {order.status !== "delivered" && order.status !== "cancelled" ? (
-            <a className="order-button order-button--secondary" href="/don-hang/chi-tiet">XEM CHI TIẾT</a>
+            <a className="order-button order-button--secondary" href={`/don-hang/${order.orderCode || order.id.replace("#", "")}`}>XEM CHI TIẾT</a>
           ) : (
             <button className="order-button order-button--secondary" aria-expanded={detailsOpen} onClick={() => setDetailsOpen((open) => !open)}>
               {detailsOpen ? "ĐÓNG CHI TIẾT" : "XEM CHI TIẾT"}
             </button>
           )}
-          {order.status === "shipping" && <button className="order-button order-button--primary" onClick={() => setDetailsOpen(true)}>THEO DÕI ĐƠN <IconArrowUpRight /></button>}
+          {order.status === "shipping" && <a className="order-button order-button--primary" href={`/don-hang/${order.orderCode || order.id.replace("#", "")}`}>THEO DÕI ĐƠN <IconArrowUpRight /></a>}
           {(order.status === "delivered" || order.status === "cancelled") && <a className="order-button order-button--primary" href="/">MUA LẠI <IconArrowUpRight /></a>}
         </div>
       </footer>
@@ -132,7 +132,7 @@ function OrderCard({ order, onCancel }) {
       {detailsOpen && (
         <div className="order-details" data-node-id="12:836">
           <div><span>MÃ ĐƠN HÀNG</span><strong>{order.id}</strong></div>
-          <div><span>ĐỊA CHỈ GIAO HÀNG</span><strong>Nguyễn Minh An · 123 Đường Số 8, TP. Hồ Chí Minh</strong></div>
+          <div><span>ĐỊA CHỈ GIAO HÀNG</span><strong>{order.deliveryAddress || order.delivery || "Theo địa chỉ đặt hàng"}</strong></div>
           <div><span>PHƯƠNG THỨC THANH TOÁN</span><strong>{order.payment}</strong></div>
         </div>
       )}

@@ -8,11 +8,17 @@ function ProductCard({ product, onAddToCart }) {
   const [added, setAdded] = useState(false);
   const navigate = useNavigate();
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.stopPropagation();
-    onAddToCart(product.id);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1200);
+
+    try {
+      await onAddToCart(product);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1200);
+    } catch (error) {
+      console.error("Lỗi thêm giỏ hàng:", error);
+      alert(error.message || "Không thể thêm sản phẩm vào giỏ hàng");
+    }
   };
 
   const handleCardClick = (e) => {
@@ -63,10 +69,10 @@ function ProductCard({ product, onAddToCart }) {
               )}
             </small>
           </div>
-          <button 
+          <button
             type="button"
             className={added ? "is-added" : ""}
-            aria-label={`Thêm ${product.name} vào giỏ hàng`} 
+            aria-label={`Thêm ${product.name} vào giỏ hàng`}
             onClick={handleAdd}
             title={added ? "Đã thêm vào giỏ hàng" : "Thêm vào giỏ hàng"}
           >

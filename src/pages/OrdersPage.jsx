@@ -1,11 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/common/Navbar";
 import CartFooter from "../components/cart/CartFooter";
 import OrdersHeader from "../components/orders/OrdersHeader";
 import OrdersList from "../components/orders/OrdersList";
 import thread75Image from "../assets/list-thread-75.png";
-import thread65Image from "../assets/list-thread-65.png";
-import thread98Image from "../assets/list-thread-98.png";
 import {
   IconChevronRight,
   IconLock,
@@ -14,58 +12,8 @@ import {
   IconPackage,
   IconUser,
 } from "@tabler/icons-react";
-
-const initialOrders = [
-  {
-    id: "#8TT-261027-0186",
-    date: "27/10/2026",
-    sortDate: "2026-10-27",
-    status: "pending",
-    statusLabel: "Đã tiếp nhận · Chờ xác nhận",
-    payment: "Chưa thanh toán · COD",
-    products: [
-      { name: "THREAD 75", variant: "Bạc ánh trăng / Linear Red Switch", price: 2490000, image: thread75Image },
-      { name: "THREAD 65", variant: "Đen nguyên bản / Linear Switch", price: 1890000, image: thread65Image },
-      { name: "THREAD 98", variant: "Trắng sương / Tactile Brown Switch", price: 2190000, image: thread98Image },
-    ],
-    total: 6570000,
-    delivery: "Giao tiêu chuẩn · Miễn phí vận chuyển",
-  },
-  {
-    id: "#8TT-261024-0152",
-    date: "24/10/2026",
-    sortDate: "2026-10-24",
-    status: "shipping",
-    statusLabel: "Đang giao hàng",
-    payment: "Đã thanh toán · VNPAY",
-    products: [{ name: "THREAD 65", variant: "Đen nguyên bản / Linear Switch", price: 1890000, image: thread65Image }],
-    total: 1890000,
-    delivery: "Dự kiến nhận: 28/10/2026 · Miễn phí vận chuyển",
-  },
-  {
-    id: "#8TT-261010-0089",
-    date: "10/10/2026",
-    sortDate: "2026-10-10",
-    status: "delivered",
-    statusLabel: "Đã giao hàng",
-    payment: "Đã thanh toán · COD",
-    products: [{ name: "THREAD 98", variant: "Trắng sương / Tactile Brown Switch", price: 2190000, image: thread98Image }],
-    total: 2190000,
-    delivery: "Đã nhận: 13/10/2026 · Miễn phí vận chuyển",
-    review: true,
-  },
-  {
-    id: "#8TT-260928-0041",
-    date: "28/09/2026",
-    sortDate: "2026-09-28",
-    status: "cancelled",
-    statusLabel: "Đã hủy",
-    payment: "Chưa thanh toán · COD",
-    products: [{ name: "THREAD 75", variant: "Bạc ánh trăng / Linear Red Switch", price: 2490000, image: thread75Image }],
-    total: 2490000,
-    delivery: "Đã hủy theo yêu cầu · Không phát sinh thanh toán",
-  },
-];
+import { authService } from "../services/authService";
+import { userService } from "../services/userService";
 
 const statusOptions = [
   { id: "all", label: "Tất cả" },
@@ -76,13 +24,24 @@ const statusOptions = [
 ];
 
 function OrdersSidebar() {
+  const currentUser = authService.getCurrentUser();
+  const displayName = currentUser?.fullName || currentUser?.name || "Khách hàng 8Threads";
+  const displayEmail = currentUser?.email || "";
+
+  const getInitials = (name) => {
+    if (!name) return "8T";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
   return (
     <aside className="orders-sidebar">
       <div className="orders-identity">
-        <div className="orders-avatar" aria-hidden="true">MA</div>
+        <div className="orders-avatar" aria-hidden="true">{getInitials(displayName)}</div>
         <div className="orders-identity-copy">
-          <strong>Nguyễn Minh An</strong>
-          <span>minhan@example.com</span>
+          <strong>{displayName}</strong>
+          <span>{displayEmail}</span>
         </div>
         <small>TÀI KHOẢN NGƯỜI DÙNG</small>
       </div>
@@ -94,7 +53,14 @@ function OrdersSidebar() {
         </a>
         <a href="/so-dia-chi"><IconMapPin /><span>Sổ địa chỉ</span></a>
         <a href="/doi-mat-khau"><IconLock /><span>Đổi mật khẩu</span></a>
-        <a href="/dang-nhap"><IconLogout /><span>Đăng xuất</span></a>
+        <button
+          type="button"
+          className="profile-logout"
+          onClick={() => authService.logout("/dang-nhap")}
+        >
+          <IconLogout />
+          <span>Đăng xuất</span>
+        </button>
       </nav>
       <div className="orders-sidebar-rule orders-help-rule" />
       <div className="orders-help">
@@ -105,10 +71,56 @@ function OrdersSidebar() {
   );
 }
 
+const CACHE_ORDERS_KEY = "cached_user_orders";
+
+function getCachedOrders() {
+  try {
+    const raw = localStorage.getItem(CACHE_ORDERS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function OrdersPage() {
   const [filter, setFilter] = useState("all");
+  const [orders, setOrders] = useState(getCachedOrders);
+  const [loading, setLoading] = useState(() => getCachedOrders().length === 0);
 
-  const filteredOrders = initialOrders.filter(
+  useEffect(() => {
+    userService.getMyOrders()
+      .then((data) => {
+        const mapped = data.map((o) => ({
+          id: `#${o.orderCode}`,
+          orderCode: o.orderCode,
+          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("vi-VN") : "",
+          sortDate: o.createdAt,
+          status: o.status?.toLowerCase() || "pending",
+          statusLabel: o.statusLabel || o.status,
+          payment: `${o.paymentStatus === "PAID" ? "Đã thanh toán" : "Chưa thanh toán"} · ${o.paymentMethod || "COD"}`,
+          products: o.items && o.items.length > 0 ? o.items.map((item) => ({
+            name: item.productName,
+            variant: item.selectedOptions || "Bàn phím cơ cao cấp",
+            price: Number(item.unitPrice),
+            quantity: item.quantity,
+            image: item.productImageUrl || thread75Image,
+          })) : [
+            { name: "Đơn hàng #" + o.orderCode, variant: "Tiêu chuẩn", price: Number(o.totalAmount), image: thread75Image }
+          ],
+          total: Number(o.totalAmount || 0),
+          deliveryAddress: o.deliveryAddress,
+          delivery: o.deliveryAddress || "Giao tiêu chuẩn · Miễn phí vận chuyển",
+        }));
+        setOrders(mapped);
+        localStorage.setItem(CACHE_ORDERS_KEY, JSON.stringify(mapped));
+      })
+      .catch((err) => {
+        console.warn("Không thể tải danh sách đơn hàng:", err);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredOrders = orders.filter(
     (o) => filter === "all" || o.status === filter
   );
 
@@ -129,7 +141,7 @@ export default function OrdersPage() {
             <div className="orders-toolbar">
               <div className="orders-heading-row">
                 <h2>Danh sách đơn hàng</h2>
-                <span>Hiển thị {filteredOrders.length} / {initialOrders.length} đơn hàng</span>
+                <span>Hiển thị {filteredOrders.length} / {orders.length} đơn hàng</span>
               </div>
               <div className="orders-filters" aria-label="Lọc đơn hàng">
                 {statusOptions.map((option) => (
@@ -143,14 +155,20 @@ export default function OrdersPage() {
                     {option.label}
                     <span>
                       {option.id === "all"
-                        ? initialOrders.length
-                        : initialOrders.filter((order) => order.status === option.id).length}
+                        ? orders.length
+                        : orders.filter((order) => order.status === option.id).length}
                     </span>
                   </button>
                 ))}
               </div>
             </div>
-            <OrdersList orders={filteredOrders} onCancel={handleCancel} />
+            {loading ? (
+              <div style={{ padding: "40px 0", textAlign: "center", color: "#a1a1aa" }}>
+                Đang tải danh sách đơn hàng...
+              </div>
+            ) : (
+              <OrdersList orders={filteredOrders} onCancel={handleCancel} />
+            )}
           </div>
         </section>
       </main>

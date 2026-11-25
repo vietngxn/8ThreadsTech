@@ -1,6 +1,7 @@
-import { useRef, useEffect } from "react";
-import { IconArrowUpRight, IconShoppingBag } from "@tabler/icons-react";
+import { useRef, useEffect, useState } from "react";
+import { IconArrowUpRight, IconShoppingBag, IconCheck } from "@tabler/icons-react";
 import { gsap, useGSAP } from "../../lib/gsap";
+import { cartService } from "../../services/cartService";
 
 const defaultColors = [
   {
@@ -34,6 +35,33 @@ export default function PurchaseSection({
 
   const activeColors = colors.length > 0 ? colors : defaultColors;
   const currentColor = activeColors[color] || activeColors[0];
+  const [added, setAdded] = useState(false);
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    if (product) {
+      cartService.addToCart(product, {
+        color: currentColor?.name,
+        switch: currentColor?.switchDesc,
+        price: currentColor?.price || product.price,
+        image: currentColor?.image || product.image,
+      });
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+      if (onComingSoon) onComingSoon(`Đã thêm "${product.name}" vào giỏ hàng.`);
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (product) {
+      cartService.addToCart(product, {
+        color: currentColor?.name,
+        switch: currentColor?.switchDesc,
+        price: currentColor?.price || product.price,
+        image: currentColor?.image || product.image,
+      });
+    }
+  };
 
   // Scroll reveal animation với ScrollTrigger
   useGSAP(
@@ -153,12 +181,13 @@ export default function PurchaseSection({
           <del>{product?.oldPrice || "2.790.000 ₫"}</del>
         </div>
         <div className="purchase-buttons">
-          <a className="buy-button" href="/thanh-toan">
+          <a className="buy-button" href="/thanh-toan" onClick={handleBuyNow}>
             MUA NGAY <IconArrowUpRight size={18} />
           </a>
-          <a className="add-button" href="/gio-hang">
-            <IconShoppingBag size={18} /> THÊM VÀO GIỎ
-          </a>
+          <button type="button" className="add-button" onClick={handleAddToCart} style={{ cursor: "pointer", border: "none" }}>
+            {added ? <IconCheck size={18} /> : <IconShoppingBag size={18} />}
+            {added ? "ĐÃ THÊM VÀO GIỎ" : "THÊM VÀO GIỎ"}
+          </button>
         </div>
         <p className="stock">
           <span />

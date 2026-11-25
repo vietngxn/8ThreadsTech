@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   IconArrowRight, IconArrowUpRight, IconCalendar, IconChevronDown,
   IconChevronRight, IconClockHour3, IconPackage, IconReceipt,
@@ -9,6 +10,7 @@ import keyboard98 from '../../assets/list-thread-98.png';
 import keyboard80 from '../../assets/list-thread-80-pro.png';
 import keyboard60 from '../../assets/list-thread-60-he.png';
 import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
+import { productService } from '../../services/productService.js';
 import './AdminDashboard.css';
 
 const metrics = [
@@ -29,7 +31,7 @@ const orders = [
   ['#DH1025', 'Phạm Hoàng Nam', '25/10 · 11:05', '290.000 ₫', 'Đang giao'],
   ['#DH1024', 'Đỗ Minh Tâm', '25/10 · 09:24', '720.000 ₫', 'Hoàn thành'],
 ];
-const products = [
+const defaultProducts = [
   [keyboard75, 'THREAD 75', 'Bạc ánh trăng / Linear Red Switch · 2.490.000 ₫', '64', '159.360.000 ₫'],
   [keyboard65, 'THREAD 65', 'Đen nguyên bản / Linear Switch · 1.890.000 ₫', '58', '109.620.000 ₫'],
   [keyboard98, 'THREAD 98', 'Trắng sương / Tactile Brown Switch · 2.190.000 ₫', '42', '92.180.000 ₫'],
@@ -46,6 +48,40 @@ function RevenueChart() {
 }
 
 export default function AdminDashboard() {
+  const [products, setProducts] = useState(defaultProducts);
+
+  useEffect(() => {
+    let alive = true;
+    productService.getProducts({ pageSize: 5, sortBy: "viewCount", sortDirection: "desc" })
+      .then((res) => {
+        if (!alive) return;
+        if (res?.products && res.products.length > 0) {
+          const mapped = res.products.slice(0, 5).map((p, idx) => {
+            const count = 64 - idx * 8;
+            const revenue = typeof p.price === 'number'
+              ? `${(p.price * count).toLocaleString('vi-VN')} ₫`
+              : '100.000.000 ₫';
+            const details = p.variant
+              ? `${p.variant} · ${typeof p.price === 'number' ? `${p.price.toLocaleString('vi-VN')} ₫` : p.price}`
+              : (p.colors?.[0]?.switchDesc || 'Linear Switch');
+            return [
+              p.image || keyboard75,
+              p.name,
+              details,
+              String(count),
+              revenue,
+            ];
+          });
+          setProducts(mapped);
+        }
+      })
+      .catch((err) => console.warn('Lỗi tải sản phẩm dashboard:', err));
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return <div className="admin-dashboard" data-node-id="45:2218"><AdminSidebar /><main className="admin-main"><header className="admin-topbar"><span>8ThreadTech</span><span className="admin-slash">/</span><strong>Dashboard</strong></header>
     <div className="admin-content"><div className="admin-title-row"><h1>Tổng quan kinh doanh</h1><div className="admin-date"><IconCalendar size={16} stroke={1.5} />19/10 – 25/10/2026</div></div>
       <div className="admin-metrics" data-node-id="45:2299">{metrics.map(([label, value, change, Icon]) => <div className="admin-metric" key={label}><div className="admin-metric-label">{label}<Icon size={17} stroke={1.4} /></div><strong>{value}</strong><div className="admin-comparison"><IconTrendingUp size={13} /><span>{change}</span><small>so với tuần trước</small></div></div>)}</div>

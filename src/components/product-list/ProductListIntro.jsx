@@ -1,12 +1,21 @@
 import { IconChevronRight } from "@tabler/icons-react";
+import { Link } from "react-router-dom";
 
-export default function ProductListIntro({ total = null, name = "Bàn phím" }) {
+export default function ProductListIntro({ total = null, name = "Bàn phím", parentPath = "/ban-phim", childName = null }) {
   return (
     <section className="pl-category" data-node-id="3:735">
       <div className="pl-breadcrumb" data-node-id="3:736">
         <a href="#top" data-node-id="3:737">Trang chủ</a>
         <IconChevronRight size={12} />
-        <span data-node-id="3:740">{name}</span>
+        {childName ? (
+          <>
+            <Link to={parentPath}>{name}</Link>
+            <IconChevronRight size={12} />
+            <span data-node-id="3:740">{childName}</span>
+          </>
+        ) : (
+          <span data-node-id="3:740">{name}</span>
+        )}
       </div>
       <div className="pl-intro" data-node-id="3:741">
         <div className="pl-heading" data-node-id="3:742">
