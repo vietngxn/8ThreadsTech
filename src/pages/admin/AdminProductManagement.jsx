@@ -1,98 +1,527 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IconAdjustments, IconChevronDown, IconChevronLeft, IconChevronRight,
-  IconDownload, IconEye, IconEyeOff, IconFileImport,
+  IconDownload, IconEye, IconEyeOff,
   IconPackage, IconPackageOff, IconPackages, IconPencil, IconPlus,
-  IconSearch, IconTrash, IconX,
+  IconSearch, IconTrash, IconX, IconTag, IconLoader2,
+  IconPhoto, IconUpload,
 } from '@tabler/icons-react';
 import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
-import thread75 from '../../assets/list-thread-75.png';
-import thread65 from '../../assets/list-thread-65.png';
-import thread98 from '../../assets/list-thread-98.png';
-import thread80Pro from '../../assets/list-thread-80-pro.png';
-import thread60He from '../../assets/list-thread-60-he.png';
-import thread75Air from '../../assets/list-thread-75-air.png';
-import thread65Lite from '../../assets/list-thread-65-lite.png';
-import thread87 from '../../assets/list-thread-87.png';
-import thread100 from '../../assets/list-thread-100.png';
+import { productService } from '../../services/productService.js';
+import { categoryService } from '../../services/categoryService.js';
+import api from '../../services/api.js';
 import './AdminProductManagement.css';
-
-const initialProducts = [
-  { id: 1, name: 'THREAD 75', variant: 'Bạc ánh trăng · Linear Red Switch', sku: 'TH-75-SL', category: 'Bàn phím cơ', price: 2490000, stock: 48, image: thread75, published: true },
-  { id: 2, name: 'THREAD 65', variant: 'Đen nguyên bản · Linear Switch', sku: 'TH-65-BK', category: 'Bàn phím cơ', price: 1890000, stock: 36, image: thread65, published: true },
-  { id: 3, name: 'THREAD 98', variant: 'Trắng sương · Tactile Brown Switch', sku: 'TH-98-WH', category: 'Bàn phím cơ', price: 2190000, stock: 8, image: thread98, published: true },
-  { id: 4, name: 'THREAD 80 PRO', variant: 'Xám titan · Linear Silver Switch', sku: 'TH-80P-TI', category: 'Bàn phím gaming', price: 3290000, stock: 21, image: thread80Pro, published: true },
-  { id: 5, name: 'THREAD 60 HE', variant: 'Đỏ dung nham · Switch từ tính', sku: 'TH-60H-RD', category: 'Bàn phím gaming', price: 2790000, stock: 6, image: thread60He, published: true },
-  { id: 6, name: 'THREAD 75 AIR', variant: 'Xanh khói · Low-profile Switch', sku: 'TH-75A-BL', category: 'Bàn phím low-profile', price: 1990000, stock: 0, image: thread75Air, published: true },
-  { id: 7, name: 'THREAD 65 LITE', variant: 'Kem cát · Linear Red Switch', sku: 'TH-65L-CR', category: 'Bàn phím cơ', price: 1290000, stock: 52, image: thread65Lite, published: true },
-  { id: 8, name: 'THREAD 87', variant: 'Đen carbon · Tactile Brown Switch', sku: 'TH-87-CB', category: 'Bàn phím cơ', price: 1690000, stock: 29, image: thread87, published: true },
-  { id: 9, name: 'THREAD 100', variant: 'Bạc tinh vân · Linear Red Switch', sku: 'TH-100-SL', category: 'Bàn phím cơ', price: 2590000, stock: 18, image: thread100, published: true },
-];
 
 const formatPrice = (price) => `${Number(price).toLocaleString('vi-VN')} ₫`;
 const stockState = (stock) => stock === 0 ? 'out' : stock < 10 ? 'low' : 'available';
 
-function ProductDialog({ product, onClose, onSave }) {
-  const [form, setForm] = useState(
-    product || { name: '', variant: '', sku: '', category: 'Bàn phím cơ', price: '', stock: 0 }
-  );
-  const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
-  const submit = (event) => {
-    event.preventDefault();
-    onSave({ ...form, price: Number(form.price), stock: Number(form.stock) });
+const LAYOUTS = ['60%', '65%', '75%', '80%', '87%', '98%', '100%'];
+const CONNECTIONS = ['3 chế độ kết nối', 'Không dây Bluetooth', 'Có dây USB-C'];
+const SWITCH_TYPES = ['Linear', 'Tactile', 'Magnetic'];
+const BRAND = ['8ThreadsTech'];
+
+/* ═══════════════════════════════════════════════
+   HELPER: ImageUploadZone
+   Hỗ trợ cả URL nhập tay lẫn upload file
+═══════════════════════════════════════════════ */
+function ImageUploadZone({ images = [], onChange, label = 'Ảnh sản phẩm', maxCount = 6, hint }) {
+  const fileRef = useRef(null);
+  const [urlInput, setUrlInput] = useState('');
+  const [dragging, setDragging] = useState(false);
+
+  /* Upload file → chuyển thành object URL tạm thời (hoặc gọi API upload thực) */
+  const handleFiles = (files) => {
+    const list = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    if (!list.length) return;
+    // Tạo object URL preview; trong production sẽ thay bằng FormData upload lên server
+    const urls = list.map((f) => URL.createObjectURL(f));
+    const next = [...images, ...urls].slice(0, maxCount);
+    onChange(next);
   };
+
+  const addUrl = () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    if (images.includes(url)) { setUrlInput(''); return; }
+    onChange([...images, url].slice(0, maxCount));
+    setUrlInput('');
+  };
+
+  const removeImage = (idx) => onChange(images.filter((_, i) => i !== idx));
+
+  const moveLeft = (idx) => {
+    if (idx === 0) return;
+    const next = [...images];
+    [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+    onChange(next);
+  };
+
+  const moveRight = (idx) => {
+    if (idx === images.length - 1) return;
+    const next = [...images];
+    [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+    onChange(next);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    handleFiles(e.dataTransfer.files);
+  };
+
   return (
-    <div className="pm-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <form className="pm-dialog" onSubmit={submit} aria-labelledby="pm-dialog-title">
+    <div className="pm-image-zone">
+      <div className="pm-image-zone-header">
+        <span className="pm-image-zone-label"><IconPhoto size={13} /> {<span style={{ display: 'flex' }}>
+          Ảnh sản phẩm  <span className="pm-req">*</span>
+        </span>}</span>
+        {hint && <small className="pm-image-zone-hint">{hint}</small>}
+      </div>
+
+      {/* Thumbnails */}
+      {images.length > 0 && (
+        <div className="pm-image-thumbs">
+          {images.map((src, i) => (
+            <div key={i} className={`pm-thumb ${i === 0 ? 'pm-thumb-primary' : ''}`}>
+              <img src={src} alt={`Ảnh ${i + 1}`} />
+              {i === 0 && <span className="pm-thumb-primary-badge">Chính</span>}
+              <div className="pm-thumb-actions">
+                <button type="button" title="Dịch trái" disabled={i === 0} onClick={() => moveLeft(i)}><IconChevronLeft size={11} /></button>
+                <button type="button" title="Dịch phải" disabled={i === images.length - 1} onClick={() => moveRight(i)}><IconChevronDown size={11} style={{ transform: 'rotate(-90deg)' }} /></button>
+                <button type="button" title="Xóa ảnh" className="pm-thumb-del" onClick={() => removeImage(i)}><IconX size={11} /></button>
+              </div>
+            </div>
+          ))}
+
+          {/* Slot thêm ảnh */}
+          {images.length < maxCount && (
+            <button
+              type="button"
+              className="pm-thumb pm-thumb-add"
+              onClick={() => fileRef.current?.click()}
+              title="Thêm ảnh"
+            >
+              <IconPlus size={18} />
+              <small>Thêm</small>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Drop zone (chỉ hiện khi chưa có ảnh nào) */}
+      {images.length === 0 && (
+        <div
+          className={`pm-dropzone ${dragging ? 'dragging' : ''}`}
+          onClick={() => fileRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+        >
+          <IconUpload size={22} />
+          <span>Kéo thả ảnh vào đây</span>
+          <small>hoặc bấm để chọn file (PNG, JPG, WebP)</small>
+        </div>
+      )}
+
+      {/* Input URL */}
+      <div className="pm-url-row">
+        <input
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addUrl())}
+          placeholder="Hoặc dán URL ảnh rồi nhấn Thêm..."
+          disabled={images.length >= maxCount}
+        />
+        <button
+          type="button"
+          className="pm-button secondary pm-btn-sm"
+          onClick={addUrl}
+          disabled={!urlInput.trim() || images.length >= maxCount}
+        >
+          Thêm
+        </button>
+      </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="pm-file-input"
+        onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
+      />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   VARIANT ITEM trong modal
+═══════════════════════════════════════════════ */
+function VariantItem({ variant, index, onChange, onRemove }) {
+  const update = (key) => (e) =>
+    onChange(index, { ...variant, [key]: e.target.value });
+
+  const updateImages = (imgs) =>
+    onChange(index, { ...variant, images: imgs });
+
+  const isFirst = index === 0;
+
+  return (
+    <div className="pm-variant-item">
+      <div className="pm-variant-row">
+        <label>
+          <span style={{ display: 'flex' }}>
+            Màu sắc <span className="pm-req">*</span>
+          </span>
+          <input value={variant.name || ''} onChange={update('name')} placeholder="Vd: Bạc ánh trăng" />
+        </label>
+        <label>
+          <span style={{ display: 'flex' }}>
+            Mã màu (HEX) <span className="pm-req">*</span>
+          </span>
+
+          <div className="pm-color-pick">
+            <input type="color" value={variant.hex || '#c8c9ca'} onChange={update('hex')} />
+            <input value={variant.hex || '#c8c9ca'} onChange={update('hex')} placeholder="#c8c9ca" />
+          </div>
+        </label>
+        <label>
+          <span style={{ display: 'flex' }}>
+            Chi tiết Switch <span className="pm-req">*</span>
+          </span>
+          <input value={variant.switchName || ''} onChange={update('switchName')} placeholder="Vd: Linear Red Switch" />
+        </label>
+      </div>
+      <div className="pm-variant-row">
+        <label>
+          <span style={{ display: 'flex' }}>
+            Giá bán (đ) <span className="pm-req">*</span>
+          </span>
+          <input type="number" min="0" value={variant.price || ''} onChange={update('price')} placeholder="2490000" />
+        </label>
+        <label>
+          Giá gốc / giá cũ (₫)
+          <input type="number" min="0" value={variant.compareAtPrice || ''} onChange={update('compareAtPrice')} placeholder="Để trống nếu không có" />
+        </label>
+        <label>
+          <span style={{ display: 'flex' }}>
+            Tồn kho <span className="pm-req">*</span>
+          </span>
+          <input type="number" min="0" value={variant.stock ?? 0} onChange={update('stock')} placeholder="0" />
+        </label>
+      </div>
+
+      {/* Ảnh riêng của variant */}
+      <ImageUploadZone
+        images={variant.images || []}
+        onChange={updateImages}
+        label={`Ảnh sản phẩm`}
+        maxCount={4}
+      />
+
+      <button type="button" className="pm-variant-remove" onClick={() => onRemove(index)} aria-label="Xóa phiên bản">
+        <IconX size={13} /> Xóa phiên bản này
+      </button>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   DIALOG THÊM / SỬA SẢN PHẨM
+═══════════════════════════════════════════════ */
+function ProductDialog({ product, categories, onClose, onSave }) {
+  const isEdit = !!product?.numericId;
+
+  const [form, setForm] = useState({
+    name: product?.name || '',
+    slug: product?.slug || '',
+    badge: product?.badge || 'MỚI RA MẮT',
+    categoryId: product?.categoryId || '',
+    layout: product?.layout || '',
+    connectionType: product?.connection || '',
+    switchType: product?.switch || '',
+    shortDescription: product?.specs || '',
+    description: product?.description || '',
+    published: product?.status !== 'DRAFT',
+    heroTitleMain: 'Thread',
+    heroTitleAccent: product?.heroNumber || '',
+    statValue: product?.statValue || '1.000 Hz',
+    statLabel: product?.statLabel || 'KHÔNG DÂY · KHÔNG ĐỘ TRỄ',
+  });
+
+  const [variants, setVariants] = useState(
+    product?.rawVariants?.length
+      ? product.rawVariants.map((v) => ({
+        id: v.id,
+        name: v.attributes?.color || v.color || v.name || '',
+        hex: v.attributes?.colorHex || v.colorHex || '#c8c9ca',
+        switchName: v.attributes?.switch || v.switchName || '',
+        price: v.price || '',
+        compareAtPrice: v.compareAtPrice || '',
+        stock: v.stock ?? 0,
+        images: v.images || [],
+      }))
+      : [{ name: '', hex: '#c8c9ca', switchName: '', price: '', compareAtPrice: '', stock: 0, images: [] }]
+  );
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const updateForm = (key) => (e) =>
+    setForm((f) => ({ ...f, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+
+  const updateVariant = (index, updated) =>
+    setVariants((vs) => vs.map((v, i) => (i === index ? updated : v)));
+
+  const addVariant = () =>
+    setVariants((vs) => [...vs, { name: '', hex: '#c8c9ca', switchName: '', price: '', compareAtPrice: '', stock: 0, images: [] }]);
+
+  const removeVariant = (index) =>
+    setVariants((vs) => vs.filter((_, i) => i !== index));
+
+  /* Auto-generate slug từ tên */
+  const handleNameBlur = () => {
+    if (!form.slug && form.name) {
+      const auto = form.name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      setForm((f) => ({ ...f, slug: auto }));
+    }
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (variants.length === 0) { setError('Cần ít nhất một phiên bản màu sắc.'); return; }
+    if (variants.some((v) => !v.name || !v.price)) {
+      setError('Mỗi phiên bản cần có tên màu và giá bán.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const primaryImageUrl = variants[0]?.images?.[0] || undefined;
+      if (primaryImageUrl === undefined) { setError('Mỗi phiên bản cần phải có ảnh đại diện'); return; }
+
+      const payload = {
+        name: form.name,
+        slug: form.slug || undefined,
+        badge: form.badge,
+        categoryId: form.categoryId ? Number(form.categoryId) : undefined,
+        layout: form.layout,
+        connectionType: form.connectionType,
+        switchType: form.switchType,
+        shortDescription: form.shortDescription,
+        description: form.description,
+        status: form.published ? 'ACTIVE' : 'DRAFT',
+        primaryImageUrl,
+        hero: {
+          titleMain: form.heroTitleMain,
+          titleAccent: form.heroTitleAccent,
+          statValue: form.statValue,
+          statLabel: form.statLabel,
+          slides: variants.map((v) => v.images?.[0]).filter(Boolean),
+        },
+        variants: variants.map((v) => ({
+          id: v.id || undefined,
+          color: v.name,
+          colorHex: v.hex,
+          switchName: v.switchName,
+          price: Number(v.price),
+          compareAtPrice: v.compareAtPrice ? Number(v.compareAtPrice) : null,
+          stock: Number(v.stock ?? 0),
+          images: v.images || [],
+        })),
+      };
+
+      if (isEdit) {
+        await api.put(`/api/products/${product.numericId}`, payload);
+      } else {
+        await api.post('/api/products', payload);
+      }
+
+      onSave(isEdit ? 'Đã cập nhật sản phẩm.' : 'Đã thêm sản phẩm mới.');
+    } catch (err) {
+      setError(err.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="pm-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <form className="pm-dialog pm-dialog-wide" onSubmit={submit} aria-labelledby="pm-dialog-title">
+
+        {/* Header */}
         <div className="pm-dialog-heading">
-          <h2 id="pm-dialog-title">{product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm'}</h2>
+          <h2 id="pm-dialog-title">{isEdit ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}</h2>
           <button type="button" className="pm-icon-button" onClick={onClose} aria-label="Đóng">
             <IconX size={18} />
           </button>
         </div>
-        <label>
-          Tên sản phẩm
-          <input required autoFocus value={form.name} onChange={update('name')} placeholder="Ví dụ: THREAD 75" />
-        </label>
-        <label>
-          Phiên bản
-          <input value={form.variant} onChange={update('variant')} placeholder="Màu sắc · Loại switch" />
-        </label>
-        <div className="pm-form-grid">
-          <label>
-            SKU
-            <input required value={form.sku} onChange={update('sku')} placeholder="Ví dụ: TH-75-SL" />
-          </label>
-          <label>
-            Danh mục
-            <select value={form.category} onChange={update('category')}>
-              <option>Bàn phím cơ</option>
-              <option>Bàn phím gaming</option>
-              <option>Bàn phím low-profile</option>
-            </select>
-          </label>
+
+        <div className="pm-dialog-body">
+          {/* ── Cột trái: thông tin cơ bản + ảnh hero ── */}
+          <div className="pm-dialog-col">
+            <fieldset className="pm-fieldset">
+              <legend>Thông tin cơ bản</legend>
+
+              <label>
+                <span style={{ display: 'flex' }}>
+                  Tên sản phẩm <span className="pm-req">*</span>
+                </span>
+                <input
+                  required autoFocus
+                  value={form.name}
+                  onChange={updateForm('name')}
+                  onBlur={handleNameBlur}
+                  placeholder="Ví dụ: THREAD 75"
+                />
+              </label>
+
+              <label>
+                Đường dẫn (slug)
+                <input
+                  value={form.slug}
+                  onChange={updateForm('slug')}
+                  placeholder="thread-75 (tự tạo nếu để trống)"
+                />
+              </label>
+
+              <div className="pm-form-grid">
+                <label>
+                  <span style={{ display: 'flex' }}>
+                    Brand <span className="pm-req">*</span>
+                  </span>
+                  <select value={form.badge} onChange={updateForm('badge')}>
+                    {BRAND.map((b) => <option key={b}>{b}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span style={{ display: 'flex' }}>
+                    Danh mục <span className="pm-req">*</span>
+                  </span>
+                  <select value={form.categoryId} onChange={updateForm('categoryId')}>
+                    <option value="">— Chọn danh mục —</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="pm-form-grid pm-form-grid-3">
+                <label>
+                  <span style={{ display: 'flex' }}>
+                    Layout <span className="pm-req">*</span>
+                  </span>
+                  <select value={form.layout} onChange={updateForm('layout')}>
+                    <option value="">— Chọn —</option>
+                    {LAYOUTS.map((l) => <option key={l}>{l}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span style={{ display: 'flex' }}>
+                    Kết nối <span className="pm-req">*</span>
+                  </span>
+                  <select value={form.connectionType} onChange={updateForm('connectionType')}>
+                    <option value="">— Chọn —</option>
+                    {CONNECTIONS.map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span style={{ display: 'flex' }}>
+                    Loại Switch <span className="pm-req">*</span>
+                  </span>
+                  <select value={form.switchType} onChange={updateForm('switchType')}>
+                    <option value="">— Chọn —</option>
+                    {SWITCH_TYPES.map((s) => <option key={s}>{s}</option>)}
+                  </select>
+                </label>
+              </div>
+              <label>
+                <span style={{ display: 'flex' }}>
+                  Mô tả chi tiết <span className="pm-req">*</span>
+                </span>
+                <textarea
+                  rows={3}
+                  value={form.description}
+                  onChange={updateForm('description')}
+                  placeholder="Mô tả đầy đủ hiển thị trên trang chi tiết sản phẩm..."
+                />
+              </label>
+            </fieldset>
+
+          </div>
+
+          {/* ── Cột phải: variants (màu + ảnh riêng) ── */}
+          <div className="pm-dialog-col">
+            <fieldset className="pm-fieldset pm-fieldset-variants">
+              <legend>Phiên bản</legend>
+
+              <div className="pm-variants-list">
+                {variants.map((v, i) => (
+                  <VariantItem
+                    key={i}
+                    variant={v}
+                    index={i}
+                    onChange={updateVariant}
+                    onRemove={removeVariant}
+                  />
+                ))}
+              </div>
+
+              <button type="button" className="pm-button secondary pm-add-variant" onClick={addVariant}>
+                <IconPlus size={12} /> Thêm phiên bản màu
+              </button>
+            </fieldset>
+
+            {/* Preview swatch */}
+            {variants.some((v) => v.hex) && (
+              <div className="pm-swatch-preview">
+                <span className="pm-swatch-preview-label">Xem trước màu sắc:</span>
+                <div className="pm-swatch-dots">
+                  {variants.map((v, i) => (
+                    <span
+                      key={i}
+                      className="pm-swatch-dot pm-swatch-dot-lg"
+                      style={{ background: v.hex || '#ccc' }}
+                      title={v.name || `Màu ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="pm-form-grid">
-          <label>
-            Giá bán (₫)
-            <input required type="number" min="0" value={form.price} onChange={update('price')} placeholder="Ví dụ: 2490000" />
-          </label>
-          <label>
-            Tồn kho
-            <input required type="number" min="0" value={form.stock} onChange={update('stock')} placeholder="0" />
-          </label>
-        </div>
+
+        {error && <p className="pm-dialog-error">{error}</p>}
+
         <div className="pm-dialog-actions">
-          <button type="button" className="pm-button secondary" onClick={onClose}>Hủy</button>
-          <button className="pm-button primary" type="submit">{product ? 'Lưu thay đổi' : 'Thêm sản phẩm'}</button>
+          <button type="button" className="pm-button secondary" onClick={onClose} disabled={saving}>Hủy</button>
+          <button className="pm-button primary" type="submit" disabled={saving}>
+            {saving
+              ? <><IconLoader2 size={15} className="pm-spin" /> Đang lưu...</>
+              : isEdit ? 'Lưu thay đổi' : 'Thêm sản phẩm'}
+          </button>
         </div>
       </form>
     </div>
   );
 }
 
+/* ═══════════════════════════════════════════════
+   TRANG CHÍNH
+═══════════════════════════════════════════════ */
 export default function AdminProductManagement() {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [status, setStatus] = useState('all');
@@ -100,222 +529,232 @@ export default function AdminProductManagement() {
   const [tab, setTab] = useState('all');
   const [page, setPage] = useState(1);
   const pageSize = 8;
+
   const [selectedIds, setSelectedIds] = useState([]);
   const [dialogProduct, setDialogProduct] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [notice, setNotice] = useState('');
-  const fileInput = useRef(null);
+
+  /* ── Tải dữ liệu ── */
+  const fetchProducts = async () => {
+    setLoading(true);
+    const result = await productService.getProducts({ pageSize: 200 });
+    setProducts(result.products);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchProducts();
+    categoryService.getParentCategories().then(setCategories).catch(() => { });
+  }, []);
+
+  /* ── Lọc & sắp xếp ── */
+  const totalStock = (p) =>
+    p.rawVariants?.reduce((s, v) => s + (Number(v.stock) || 0), 0) ??
+    (p.inStock ? 10 : 0);
 
   const filteredProducts = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase('vi');
-    return products.filter((product) => {
-      const matchesText = `${product.name} ${product.sku} ${product.variant}`.toLocaleLowerCase('vi').includes(normalized);
-      const stock = stockState(product.stock);
-      return matchesText && (category === 'all' || product.category === category)
-        && (status === 'all' || (status === 'published' ? product.published : !product.published))
-        && (tab === 'all' || stock === tab);
-    }).sort((a, b) => sort === 'price-asc' ? a.price - b.price : sort === 'price-desc' ? b.price - a.price : b.id - a.id);
+    const q = query.trim().toLocaleLowerCase('vi');
+    return products
+      .filter((p) => {
+        const text = `${p.name} ${p.slug} ${p.variant} ${p.specs}`.toLocaleLowerCase('vi');
+        const matchQ = text.includes(q);
+        const matchCat = category === 'all' || p.categoryName === category;
+        const matchStatus =
+          status === 'all' ||
+          (status === 'published' ? p.status === 'ACTIVE' : p.status !== 'ACTIVE');
+        const stock = stockState(totalStock(p));
+        const matchTab = tab === 'all' || stock === tab;
+        return matchQ && matchCat && matchStatus && matchTab;
+      })
+      .sort((a, b) => {
+        if (sort === 'price-asc') return a.price - b.price;
+        if (sort === 'price-desc') return b.price - a.price;
+        return (b.numericId || 0) - (a.numericId || 0);
+      });
   }, [products, query, category, status, sort, tab]);
 
   const pageCount = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const visibleProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  const allVisibleSelected = visibleProducts.length > 0 && visibleProducts.every((product) => selectedIds.includes(product.id));
+  /* ── Checkbox ── */
+  const allVisibleSelected =
+    visibleProducts.length > 0 && visibleProducts.every((p) => selectedIds.includes(p.numericId));
   const toggleAllVisible = () => {
-    setSelectedIds((current) =>
+    setSelectedIds((cur) =>
       allVisibleSelected
-        ? current.filter((id) => !visibleProducts.some((product) => product.id === id))
-        : [...new Set([...current, ...visibleProducts.map((product) => product.id)])]
+        ? cur.filter((id) => !visibleProducts.some((p) => p.numericId === id))
+        : [...new Set([...cur, ...visibleProducts.map((p) => p.numericId)])]
     );
   };
-  const toggleSelectProduct = (id) => {
-    setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
-  };
+  const toggleSelect = (id) =>
+    setSelectedIds((cur) => (cur.includes(id) ? cur.filter((i) => i !== id) : [...cur, id]));
 
-  const deleteProduct = (id) => {
-    const target = products.find((p) => p.id === id);
-    if (!target) return;
-    if (window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${target.name}" không?`)) {
-      setProducts((current) => current.filter((item) => item.id !== id));
-      setSelectedIds((current) => current.filter((item) => item !== id));
-      setNotice(`Đã xóa sản phẩm "${target.name}".`);
+  /* ── Xóa ── */
+  const deleteProduct = async (p) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa sản phẩm "${p.name}" không?`)) return;
+    try {
+      await api.delete(`/api/products/${p.numericId}`);
+      setProducts((cur) => cur.filter((item) => item.numericId !== p.numericId));
+      setSelectedIds((cur) => cur.filter((id) => id !== p.numericId));
+      setNotice(`Đã xóa sản phẩm "${p.name}".`);
+    } catch (err) {
+      setNotice(`Lỗi: ${err.message}`);
     }
   };
 
-  const togglePublish = (id) => {
-    setProducts((current) =>
-      current.map((item) => {
-        if (item.id === id) {
-          const next = !item.published;
-          setNotice(next ? `Đã hiển thị sản phẩm "${item.name}".` : `Đã chuyển sản phẩm "${item.name}" về bản nháp.`);
-          return { ...item, published: next };
-        }
-        return item;
-      })
-    );
+  /* ── Toggle publish ── */
+  const togglePublish = async (p) => {
+    const newStatus = p.status === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
+    try {
+      await api.patch(`/api/products/${p.numericId}/status`, { status: newStatus });
+      setProducts((cur) =>
+        cur.map((item) =>
+          item.numericId === p.numericId ? { ...item, status: newStatus } : item
+        )
+      );
+      setNotice(
+        newStatus === 'ACTIVE'
+          ? `Đã hiển thị sản phẩm "${p.name}".`
+          : `Đã chuyển "${p.name}" về bản nháp.`
+      );
+    } catch (err) {
+      setNotice(`Lỗi: ${err.message}`);
+    }
   };
 
+  /* ── Stats ── */
   const stats = [
-    { label: 'Tổng sản phẩm', value: products.length, note: 'Bàn phím cơ · gaming · low-profile', Icon: IconPackage },
-    { label: 'Đang hiển thị', value: products.filter((product) => product.published).length, note: 'Đã xuất bản trên cửa hàng', Icon: IconEye },
-    { label: 'Sắp hết hàng', value: products.filter((product) => stockState(product.stock) === 'low').length, note: 'Tồn kho từ 1 đến 9 sản phẩm', Icon: IconPackages, alert: true },
-    { label: 'Hết hàng', value: products.filter((product) => product.stock === 0).length, note: 'Cần bổ sung tồn kho', Icon: IconPackageOff, alert: true },
+    { label: 'Tổng sản phẩm', value: products.length, note: 'Tất cả danh mục', Icon: IconPackage },
+    { label: 'Đang hiển thị', value: products.filter((p) => p.status === 'ACTIVE').length, note: 'Đã xuất bản trên cửa hàng', Icon: IconEye },
+    { label: 'Sắp hết hàng', value: products.filter((p) => stockState(totalStock(p)) === 'low').length, note: 'Tồn kho từ 1 đến 9', Icon: IconPackages, alert: true },
+    { label: 'Hết hàng', value: products.filter((p) => stockState(totalStock(p)) === 'out').length, note: 'Cần bổ sung tồn kho', Icon: IconPackageOff, alert: true },
   ];
 
   const counts = {
     all: products.length,
-    available: products.filter((product) => stockState(product.stock) === 'available').length,
-    low: products.filter((product) => stockState(product.stock) === 'low').length,
-    out: products.filter((product) => stockState(product.stock) === 'out').length,
+    available: products.filter((p) => stockState(totalStock(p)) === 'available').length,
+    low: products.filter((p) => stockState(totalStock(p)) === 'low').length,
+    out: products.filter((p) => stockState(totalStock(p)) === 'out').length,
   };
 
-  const saveProduct = (product) => {
-    if (product.id) {
-      setProducts((current) => current.map((item) => item.id === product.id ? { ...item, ...product } : item));
-    } else {
-      setProducts((current) => [{ ...product, id: Date.now(), image: thread75, published: true }, ...current]);
-    }
+  /* ── Lưu (sau khi dialog gọi API) ── */
+  const handleSave = (msg) => {
     setDialogOpen(false);
-    setNotice(product.id ? 'Đã cập nhật sản phẩm.' : 'Đã thêm sản phẩm mới.');
+    setNotice(msg);
+    fetchProducts();
   };
 
+  /* ── Export CSV ── */
   const exportCsv = () => {
-    const targetProducts = selectedIds.length
-      ? products.filter((product) => selectedIds.includes(product.id))
+    const target = selectedIds.length
+      ? products.filter((p) => selectedIds.includes(p.numericId))
       : filteredProducts;
     const rows = [
-      ['Tên sản phẩm', 'SKU', 'Danh mục', 'Giá bán', 'Tồn kho', 'Trạng thái'],
-      ...targetProducts.map((product) => [
-        product.name,
-        product.sku,
-        product.category,
-        product.price,
-        product.stock,
-        product.published ? 'Đang hiển thị' : 'Bản nháp',
+      ['Tên sản phẩm', 'Slug', 'Danh mục', 'Layout', 'Kết nối', 'Switch', 'Màu sắc', 'Giá thấp nhất', 'Ảnh chính', 'Trạng thái'],
+      ...target.map((p) => [
+        p.name, p.slug, p.categoryName || '', p.layout || '', p.connection || '', p.switch || '',
+        p.colors?.map((c) => c.name).join(' | ') || '',
+        p.price,
+        p.image || '',
+        p.status === 'ACTIVE' ? 'Đang hiển thị' : 'Bản nháp',
       ]),
     ];
-    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replaceAll('"', '""')}"`).join(',')).join('\n');
     const url = URL.createObjectURL(new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = '8threadtech-san-pham.csv';
-    link.click();
+    const a = document.createElement('a');
+    a.href = url; a.download = '8threadtech-san-pham.csv'; a.click();
     URL.revokeObjectURL(url);
-    setNotice(`Đã xuất ${targetProducts.length} sản phẩm.`);
+    setNotice(`Đã xuất ${target.length} sản phẩm.`);
   };
 
-  const importCsv = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const text = (await file.text()).replace(/^\uFEFF/, '');
-    const lines = text.split(/\r?\n/).filter(Boolean);
-    if (lines.length < 2) { setNotice('Tệp CSV chưa có dữ liệu sản phẩm.'); return; }
-    const parseRow = (line) => line.match(/("(?:[^"]|"")*"|[^,]*)(,|$)/g)?.map((part) => part.replace(/,$/, '').replace(/^"|"$/g, '').replaceAll('""', '"')) || [];
-    const headers = parseRow(lines[0]).map((header) => header.trim().toLocaleLowerCase('vi'));
-    const nameIndex = headers.findIndex((header) => ['tên sản phẩm', 'name'].includes(header));
-    const skuIndex = headers.findIndex((header) => header === 'sku');
-    const categoryIndex = headers.findIndex((header) => ['danh mục', 'category'].includes(header));
-    const priceIndex = headers.findIndex((header) => ['giá bán', 'price'].includes(header));
-    const stockIndex = headers.findIndex((header) => ['tồn kho', 'stock'].includes(header));
-    if ([nameIndex, skuIndex, priceIndex, stockIndex].some((index) => index < 0)) { setNotice('Tệp CSV cần có cột tên sản phẩm, SKU, giá bán và tồn kho.'); return; }
-    const imported = lines.slice(1).map(parseRow).filter((row) => row[nameIndex]?.trim() && row[skuIndex]?.trim()).map((row, index) => ({
-      id: Date.now() + index, name: row[nameIndex].trim(), variant: '', sku: row[skuIndex].trim(), category: row[categoryIndex] || 'Bàn phím cơ',
-      price: Number(row[priceIndex].replace(/[^\d]/g, '')), stock: Number(row[stockIndex].replace(/[^\d]/g, '')), image: thread75, published: false,
-    })).filter((product) => Number.isFinite(product.price) && Number.isFinite(product.stock));
-    if (!imported.length) { setNotice('Không tìm thấy dòng sản phẩm hợp lệ trong tệp CSV.'); return; }
-    setProducts((current) => [...imported, ...current]);
-    setNotice(`Đã nhập ${imported.length} sản phẩm.`);
-    event.target.value = '';
-  };
-
+  /* ── Render ── */
   return (
-    <div className="pm-dashboard" data-node-id="52:489">
+    <div className="pm-dashboard">
       <AdminSidebar />
-      <main className="pm-main" data-node-id="52:548">
-        <header className="pm-topbar" data-node-id="52:549">
+      <main className="pm-main">
+        <header className="pm-topbar">
           <span>8ThreadTech</span>
           <span className="pm-slash">/</span>
           <strong>Sản phẩm</strong>
         </header>
 
-        <div className="pm-content" data-node-id="52:553">
-          <div className="pm-title-row" data-node-id="52:555">
-            <h1 data-node-id="52:557">Quản lý sản phẩm</h1>
+        <div className="pm-content">
+          {/* Title row */}
+          <div className="pm-title-row">
+            <h1>Quản lý sản phẩm</h1>
             <div className="pm-actions">
-              <input ref={fileInput} className="pm-file-input" type="file" accept=".csv,text/csv" onChange={importCsv} aria-label="Nhập tệp CSV" />
-              <button className="pm-button secondary" onClick={() => fileInput.current?.click()}>
-                <IconFileImport size={16} />Nhập file
-              </button>
               <button className="pm-button secondary" onClick={exportCsv}>
                 <IconDownload size={16} />Xuất file
               </button>
-              <button className="pm-button primary" onClick={() => { setDialogProduct(null); setDialogOpen(true); }}>
+              <button
+                className="pm-button primary"
+                onClick={() => { setDialogProduct(null); setDialogOpen(true); }}
+              >
                 <IconPlus size={17} />Thêm sản phẩm
               </button>
             </div>
           </div>
 
-          <section className="pm-stats" aria-label="Tổng quan sản phẩm" data-node-id="52:569">
-            {stats.map(({ label, value, note, Icon, alert }, index) => (
-              <article className="pm-stat" key={label} data-node-id={['52:570', '52:576', '52:582', '52:588'][index]}>
+          {/* Stats */}
+          <section className="pm-stats" aria-label="Tổng quan sản phẩm">
+            {stats.map(({ label, value, note, Icon, alert }) => (
+              <article className="pm-stat" key={label}>
                 <div className="pm-stat-label">
                   <span>{label}</span>
                   <Icon size={17} stroke={1.5} />
                 </div>
-                <strong>{value}</strong>
+                <strong>{loading ? '—' : value}</strong>
                 <small className={alert ? 'alert' : ''}>{note}</small>
               </article>
             ))}
           </section>
 
-          <section className="pm-table-panel" aria-label="Danh sách sản phẩm" data-node-id="52:594">
-            <div className="pm-tabs" data-node-id="52:595" role="tablist" aria-label="Lọc theo tồn kho">
+          {/* Table panel */}
+          <section className="pm-table-panel" aria-label="Danh sách sản phẩm">
+            {/* Tabs */}
+            <div className="pm-tabs" role="tablist">
               {[
                 ['all', 'Tất cả'],
                 ['available', 'Còn hàng'],
-                ['low', 'Sắp hết hàng'],
+                ['low', 'Sắp hết'],
                 ['out', 'Hết hàng'],
               ].map(([key, label]) => (
                 <button
-                  key={key}
-                  role="tab"
+                  key={key} role="tab"
                   aria-selected={tab === key}
                   className={tab === key ? 'selected' : ''}
                   onClick={() => { setTab(key); setPage(1); }}
                 >
-                  {label}
-                  <span>{counts[key]}</span>
+                  {label}<span>{counts[key]}</span>
                 </button>
               ))}
-              <span className="pm-column-label">
-                <IconAdjustments size={14} /> Tùy chỉnh cột
-              </span>
+              <span className="pm-column-label"><IconAdjustments size={14} /> Tùy chỉnh cột</span>
             </div>
 
-            <div className="pm-filters" data-node-id="52:616">
-              <label className="pm-search" data-node-id="52:617">
+            {/* Filters */}
+            <div className="pm-filters">
+              <label className="pm-search">
                 <IconSearch size={16} />
                 <input
                   value={query}
-                  onChange={(event) => { setQuery(event.target.value); setPage(1); }}
-                  placeholder="Tìm theo tên sản phẩm hoặc SKU..."
+                  onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                  placeholder="Tìm theo tên, slug, mô tả..."
                   aria-label="Tìm sản phẩm"
                 />
               </label>
               <label>
                 <span className="sr-only">Danh mục</span>
-                <select value={category} onChange={(event) => { setCategory(event.target.value); setPage(1); }}>
+                <select value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }}>
                   <option value="all">Tất cả danh mục</option>
-                  <option>Bàn phím cơ</option>
-                  <option>Bàn phím gaming</option>
-                  <option>Bàn phím low-profile</option>
+                  {categories.map((c) => <option key={c.id}>{c.name}</option>)}
                 </select>
                 <IconChevronDown size={14} />
               </label>
               <label>
-                <span className="sr-only">Trạng thái xuất bản</span>
-                <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}>
+                <span className="sr-only">Trạng thái</span>
+                <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
                   <option value="all">Tất cả trạng thái</option>
                   <option value="published">Đang hiển thị</option>
                   <option value="draft">Bản nháp</option>
@@ -324,149 +763,189 @@ export default function AdminProductManagement() {
               </label>
               <label>
                 <span className="sr-only">Sắp xếp</span>
-                <select value={sort} onChange={(event) => setSort(event.target.value)}>
-                  <option value="newest">Sắp xếp: Mới nhất</option>
-                  <option value="price-asc">Giá: Thấp đến cao</option>
-                  <option value="price-desc">Giá: Cao đến thấp</option>
+                <select value={sort} onChange={(e) => setSort(e.target.value)}>
+                  <option value="newest">Mới nhất</option>
+                  <option value="price-asc">Giá: Thấp → Cao</option>
+                  <option value="price-desc">Giá: Cao → Thấp</option>
                 </select>
                 <IconChevronDown size={14} />
               </label>
             </div>
 
+            {/* Table */}
             <div className="pm-table-scroll">
-              <table className="pm-table">
-                <thead data-node-id="52:629">
-                  <tr>
-                    <th className="pm-check-cell">
-                      <input
-                        type="checkbox"
-                        checked={allVisibleSelected}
-                        onChange={toggleAllVisible}
-                        aria-label="Chọn tất cả sản phẩm"
-                      />
-                    </th>
-                    <th>Sản phẩm</th>
-                    <th>SKU</th>
-                    <th>Danh mục</th>
-                    <th className="align-right">Giá bán</th>
-                    <th className="align-right">Tồn kho</th>
-                    <th>Trạng thái</th>
-                    <th className="align-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleProducts.map((product, index) => {
-                    const stock = stockState(product.stock);
-                    const isSelected = selectedIds.includes(product.id);
-                    return (
-                      <tr key={product.id} data-node-id={['52:638', '52:659', '52:680', '52:701', '52:722', '52:743', '52:764', '52:785', '52:806'][index]}>
-                        <td className="pm-check-cell">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelectProduct(product.id)}
-                            aria-label={`Chọn ${product.name}`}
-                          />
-                        </td>
-                        <td>
-                          <div className="pm-product-cell">
-                            <span className="pm-product-image">
-                              <img src={product.image} alt={product.name} />
-                            </span>
-                            <span className="pm-product-copy">
-                              <strong>{product.name}</strong>
-                              <small>{product.variant}</small>
-                            </span>
-                          </div>
-                        </td>
-                        <td className="pm-muted">{product.sku}</td>
-                        <td className="pm-category">{product.category}</td>
-                        <td className="align-right pm-price">{formatPrice(product.price)}</td>
-                        <td className={`align-right pm-stock ${stock}`}>
-                          <strong>{product.stock}</strong>
-                          <small>{stock === 'out' ? 'Hết hàng' : stock === 'low' ? 'Sắp hết' : 'Có sẵn'}</small>
-                        </td>
-                        <td>
-                          <span className={`pm-published ${product.published ? '' : 'draft'}`}>
-                            <i />{product.published ? 'Đang hiển thị' : 'Bản nháp'}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="pm-row-actions">
-                            <button
-                              className="pm-icon-button"
-                              title="Chỉnh sửa sản phẩm"
-                              aria-label={`Chỉnh sửa ${product.name}`}
-                              onClick={() => { setDialogProduct(product); setDialogOpen(true); }}
-                            >
-                              <IconPencil size={15} />
-                            </button>
-                            <button
-                              className="pm-icon-button"
-                              title={product.published ? "Ẩn khỏi cửa hàng" : "Hiển thị lên cửa hàng"}
-                              aria-label={`Đổi trạng thái ${product.name}`}
-                              onClick={() => togglePublish(product.id)}
-                            >
-                              {product.published ? <IconEyeOff size={15} /> : <IconEye size={15} />}
-                            </button>
-                            <button
-                              className="pm-icon-button"
-                              title="Xóa sản phẩm"
-                              aria-label={`Xóa ${product.name}`}
-                              onClick={() => deleteProduct(product.id)}
-                            >
-                              <IconTrash size={15} />
-                            </button>
-                          </div>
+              {loading ? (
+                <div className="pm-loading"><IconLoader2 size={28} className="pm-spin" /> Đang tải sản phẩm...</div>
+              ) : (
+                <table className="pm-table">
+                  <thead>
+                    <tr>
+                      <th className="pm-check-cell">
+                        <input
+                          type="checkbox"
+                          checked={allVisibleSelected}
+                          onChange={toggleAllVisible}
+                          aria-label="Chọn tất cả"
+                        />
+                      </th>
+                      <th>Sản phẩm</th>
+                      <th>Màu / Variants</th>
+                      <th>Danh mục</th>
+                      <th>Layout</th>
+                      <th className="align-right">Giá từ</th>
+                      <th>Kết nối</th>
+                      <th>Trạng thái</th>
+                      <th className="align-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleProducts.map((p) => {
+                      const stock = stockState(totalStock(p));
+                      const isPublished = p.status === 'ACTIVE';
+                      return (
+                        <tr key={p.numericId}>
+                          <td className="pm-check-cell">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(p.numericId)}
+                              onChange={() => toggleSelect(p.numericId)}
+                              aria-label={`Chọn ${p.name}`}
+                            />
+                          </td>
+
+                          {/* Sản phẩm: ảnh + tên + slug + badge */}
+                          <td>
+                            <div className="pm-product-cell">
+                              <span className="pm-product-image">
+                                {(p.image || p.colors?.[0]?.image)
+                                  ? <img src={p.image || p.colors[0].image} alt={p.name} />
+                                  : <IconPackage size={22} stroke={1.2} />}
+                              </span>
+                              <span className="pm-product-copy">
+                                <strong>{p.name}</strong>
+                                <small className="pm-slug">{p.slug}</small>
+                                {p.badge && (
+                                  <span className="pm-badge-chip">
+                                    <IconTag size={9} />{p.badge}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Màu / variants */}
+                          <td>
+                            <div className="pm-variants-cell">
+                              <div className="pm-swatch-dots">
+                                {(p.colors || []).slice(0, 5).map((c, i) => (
+                                  <span
+                                    key={i}
+                                    className="pm-swatch-dot"
+                                    style={{ background: c.color }}
+                                    title={c.name}
+                                  />
+                                ))}
+                                {p.colors?.length > 5 && (
+                                  <span className="pm-swatch-more">+{p.colors.length - 5}</span>
+                                )}
+                              </div>
+                              <small>{p.colors?.length || 0} phiên bản · {p.images?.length || 0} ảnh hero</small>
+                            </div>
+                          </td>
+
+                          <td className="pm-muted">{p.categoryName || '—'}</td>
+                          <td className="pm-muted">{p.layout || '—'}</td>
+
+                          <td className="align-right pm-price">
+                            {formatPrice(p.price)}
+                            {p.oldPrice && <small className="pm-old-price">{p.oldPrice}</small>}
+                          </td>
+
+                          <td>
+                            <span className="pm-connection-chip">{p.connection || '—'}</span>
+                          </td>
+
+                          <td>
+                            <div className="pm-status-cell">
+                              <span className={`pm-published ${isPublished ? '' : 'draft'}`}>
+                                <i />{isPublished ? 'Đang hiển thị' : 'Bản nháp'}
+                              </span>
+                              <span className={`pm-stock-badge ${stock}`}>
+                                {stock === 'out' ? 'Hết hàng' : stock === 'low' ? 'Sắp hết' : 'Còn hàng'}
+                              </span>
+                            </div>
+                          </td>
+
+                          <td>
+                            <div className="pm-row-actions">
+                              <button
+                                className="pm-icon-button"
+                                title="Chỉnh sửa"
+                                onClick={() => { setDialogProduct(p); setDialogOpen(true); }}
+                              >
+                                <IconPencil size={15} />
+                              </button>
+                              <button
+                                className="pm-icon-button"
+                                title={isPublished ? 'Ẩn khỏi cửa hàng' : 'Hiển thị lên cửa hàng'}
+                                onClick={() => togglePublish(p)}
+                              >
+                                {isPublished ? <IconEyeOff size={15} /> : <IconEye size={15} />}
+                              </button>
+                              <button
+                                className="pm-icon-button pm-icon-delete"
+                                title="Xóa sản phẩm"
+                                onClick={() => deleteProduct(p)}
+                              >
+                                <IconTrash size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {!visibleProducts.length && (
+                      <tr>
+                        <td colSpan="9" className="pm-empty">
+                          Không tìm thấy sản phẩm phù hợp với bộ lọc.
                         </td>
                       </tr>
-                    );
-                  })}
-                  {!visibleProducts.length && (
-                    <tr>
-                      <td colSpan="8" className="pm-empty">
-                        Không tìm thấy sản phẩm phù hợp với bộ lọc.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
 
-            <div className="pm-pagination" data-node-id="52:827">
+            {/* Pagination */}
+            <div className="pm-pagination">
               <span>
-                Hiển thị {filteredProducts.length ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filteredProducts.length)}` : '0'} trong {filteredProducts.length} sản phẩm
+                {filteredProducts.length
+                  ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filteredProducts.length)} / ${filteredProducts.length} sản phẩm`
+                  : '0 sản phẩm'}
               </span>
               <div>
                 <small>{pageSize} / trang</small>
-                <button
-                  aria-label="Trang trước"
-                  disabled={currentPage <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
+                <button aria-label="Trang trước" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
                   <IconChevronLeft size={15} />
                 </button>
                 <button className="current" aria-current="page">{currentPage}</button>
-                <button
-                  className="pm-next"
-                  disabled={currentPage >= pageCount}
-                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                >
+                <button className="pm-next" disabled={currentPage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>
                   Trang sau <IconChevronRight size={14} />
                 </button>
               </div>
             </div>
           </section>
 
-          <p className="pm-updated">Cập nhật lần cuối lúc 23:59, 25/10/2026 • Múi giờ Việt Nam (GMT+7)</p>
+          <p className="pm-updated">Dữ liệu trực tiếp từ API · Cập nhật mỗi lần tải trang</p>
         </div>
       </main>
 
       {dialogOpen && (
         <ProductDialog
           product={dialogProduct}
+          categories={categories}
           onClose={() => setDialogOpen(false)}
-          onSave={saveProduct}
+          onSave={handleSave}
         />
       )}
 
