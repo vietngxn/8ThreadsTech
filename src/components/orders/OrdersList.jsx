@@ -1,4 +1,5 @@
 import { useState } from "react";
+import CancelReasonForm from "../order/CancelReasonForm";
 import { IconArrowUpRight, IconStar } from "@tabler/icons-react";
 
 const formatPrice = (price) => `${Number(price || 0).toLocaleString("vi-VN")} ₫`;
@@ -67,11 +68,10 @@ function OrderCard({ order, onCancel, onPay }) {
             <button className="order-button order-button--secondary" onClick={() => setConfirmCancel(true)}>HỦY ĐƠN HÀNG</button>
           )}
           {order.canCancel && confirmCancel && (
-            <div className="order-cancel-confirm" role="group" aria-label="Xác nhận hủy đơn hàng">
-              <span>Hủy đơn này?</span>
-              <button onClick={() => onCancel(order.orderCode)}>Xác nhận</button>
-              <button onClick={() => setConfirmCancel(false)}>Giữ đơn</button>
-            </div>
+            <CancelReasonForm
+              onConfirm={(reason) => onCancel(order.orderCode, reason)}
+              onClose={() => setConfirmCancel(false)}
+            />
           )}
           {order.status !== "delivered" && order.status !== "cancelled" ? (
             <a className="order-button order-button--secondary" href={detailHref}>XEM CHI TIẾT</a>
