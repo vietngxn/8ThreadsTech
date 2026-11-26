@@ -4,9 +4,11 @@ function SectionHeading({ number, children }) {
   return <div className="order-section-heading"><span>{number}</span><h2>{children}</h2></div>;
 }
 
-const formatPrice = (price) => `${price.toLocaleString("vi-VN")} ₫`;
+const formatPrice = (price) => `${Number(price || 0).toLocaleString("vi-VN")} ₫`;
 
-export default function OrderShipping({ total }) {
+export default function OrderShipping({ order }) {
+  const fee = Number(order?.shippingFee || 0);
+
   return (
     <section className="order-shipping">
       <SectionHeading number="03">GIAO HÀNG & THANH TOÁN</SectionHeading>
@@ -14,17 +16,17 @@ export default function OrderShipping({ total }) {
         <article>
           <div>
             <IconTruck />
-            <strong>Giao hàng tiêu chuẩn</strong>
-            <span>Miễn phí</span>
+            <strong>{order?.shippingMethodName || "Giao hàng"}</strong>
+            <span>{fee === 0 ? "Miễn phí" : formatPrice(fee)}</span>
           </div>
-          <p>Dự kiến 2–5 ngày làm việc kể từ khi xác nhận đơn hàng.</p>
+          <p>Mã vận đơn sẽ được cập nhật khi đơn hàng bàn giao cho đơn vị vận chuyển.</p>
         </article>
         <article>
           <div>
             <IconCreditCard />
             <strong>Thanh toán khi nhận hàng (COD)</strong>
           </div>
-          <p>Thanh toán {formatPrice(total)} cho đơn vị vận chuyển khi nhận sản phẩm.</p>
+          <p>Thanh toán {formatPrice(order?.totalAmount)} cho đơn vị vận chuyển khi nhận sản phẩm.</p>
         </article>
       </div>
     </section>

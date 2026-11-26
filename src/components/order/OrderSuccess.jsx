@@ -1,8 +1,6 @@
 import { IconArrowRight, IconArrowUpRight, IconCheck } from "@tabler/icons-react";
 
-export default function OrderSuccess({ orderId, total }) {
-  const formatPrice = (price) => `${price.toLocaleString("vi-VN")} ₫`;
-  
+export default function OrderSuccess({ orderId, statusLabel = "Đã tiếp nhận · Chờ xác nhận" }) {
   return (
     <section className="order-success" data-node-id="5:524">
       <div className="order-success-heading">
@@ -17,11 +15,11 @@ export default function OrderSuccess({ orderId, total }) {
           <span>MÃ ĐƠN HÀNG</span>
           <strong>{orderId}</strong>
         </div>
-        <span className="order-status">Đã tiếp nhận · Chờ xác nhận</span>
+        <span className="order-status">{statusLabel}</span>
       </div>
       <p className="order-payment-copy">
-        Đơn hàng đã được ghi nhận, chưa thanh toán. Bạn sẽ thanh toán khi nhận hàng (COD). 
-        Thông tin xác nhận sẽ được gửi qua email sau khi đơn được xử lý.
+        Đơn hàng đã được ghi nhận, chưa thanh toán. Bạn sẽ thanh toán khi nhận hàng (COD).
+        8Threads sẽ liên hệ qua số điện thoại bạn đã cung cấp để xác nhận đơn.
       </p>
       <div className="order-actions">
         <a className="order-primary-action" href="/ban-phim">

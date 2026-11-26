@@ -133,3 +133,6 @@
         transform: none;
     }
 }
+
+.order-status--unpaid { color: #f5c46b; background: #221a0d; }
+.order-status--processing { color: #c7b8f0; background: #18142a; }

@@ -1,74 +1,24 @@
 import { useState } from "react";
 import { IconArrowUpRight, IconStar } from "@tabler/icons-react";
 
-const initialOrders = [
-  {
-    id: "#8TT-261027-0186",
-    date: "27/10/2026",
-    sortDate: "2026-10-27",
-    status: "pending",
-    statusLabel: "Đã tiếp nhận · Chờ xác nhận",
-    payment: "Chưa thanh toán · COD",
-    products: [
-      { name: "THREAD 75", variant: "Bạc ánh trăng / Linear Red Switch", price: 2490000, image: "/assets/list-thread-75.png" },
-      { name: "THREAD 65", variant: "Đen nguyên bản / Linear Switch", price: 1890000, image: "/assets/list-thread-65.png" },
-      { name: "THREAD 98", variant: "Trắng sương / Tactile Brown Switch", price: 2190000, image: "/assets/list-thread-98.png" },
-    ],
-    total: 6570000,
-    delivery: "Giao tiêu chuẩn · Miễn phí vận chuyển",
-  },
-  {
-    id: "#8TT-261024-0152",
-    date: "24/10/2026",
-    sortDate: "2026-10-24",
-    status: "shipping",
-    statusLabel: "Đang giao hàng",
-    payment: "Đã thanh toán · VNPAY",
-    products: [{ name: "THREAD 65", variant: "Đen nguyên bản / Linear Switch", price: 1890000, image: "/assets/list-thread-65.png" }],
-    total: 1890000,
-    delivery: "Dự kiến nhận: 28/10/2026 · Miễn phí vận chuyển",
-  },
-  {
-    id: "#8TT-261010-0089",
-    date: "10/10/2026",
-    sortDate: "2026-10-10",
-    status: "delivered",
-    statusLabel: "Đã giao hàng",
-    payment: "Đã thanh toán · COD",
-    products: [{ name: "THREAD 98", variant: "Trắng sương / Tactile Brown Switch", price: 2190000, image: "/assets/list-thread-98.png" }],
-    total: 2190000,
-    delivery: "Đã nhận: 13/10/2026 · Miễn phí vận chuyển",
-    review: true,
-  },
-  {
-    id: "#8TT-260928-0041",
-    date: "28/09/2026",
-    sortDate: "2026-09-28",
-    status: "cancelled",
-    statusLabel: "Đã hủy",
-    payment: "Chưa thanh toán · COD",
-    products: [{ name: "THREAD 75", variant: "Bạc ánh trăng / Linear Red Switch", price: 2490000, image: "/assets/list-thread-75.png" }],
-    total: 2490000,
-    delivery: "Đã hủy theo yêu cầu · Không phát sinh thanh toán",
-  },
-];
+const formatPrice = (price) => `${Number(price || 0).toLocaleString("vi-VN")} ₫`;
 
-const statusOptions = [
-  { id: "all", label: "Tất cả" },
-  { id: "pending", label: "Chờ xác nhận" },
-  { id: "shipping", label: "Đang giao" },
-  { id: "delivered", label: "Đã giao" },
-  { id: "cancelled", label: "Đã hủy" },
-];
-
-const formatPrice = (price) => `${price.toLocaleString("vi-VN")} ₫`;
-
-function OrderCard({ order, onCancel }) {
+function OrderCard({ order, onCancel, onPay }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [reviewSent, setReviewSent] = useState(false);
+  const [paying, setPaying] = useState(false);
+
+  const detailHref = `/don-hang/${order.orderCode}`;
+  const itemCount = order.products.reduce((sum, p) => sum + p.quantity, 0);
+
+  const handlePay = async () => {
+    setPaying(true);
+    await onPay(order.orderCode); // thành công thì trình duyệt đã rời trang
+    setPaying(false);
+  };
 
   return (
     <article className={`order-card order-card--${order.status}`} data-node-id={order.nodeId}>
@@ -88,44 +38,50 @@ function OrderCard({ order, onCancel }) {
       </header>
 
       <div className="order-products">
-        {order.products.map((product) => (
-          <div className="order-product" key={`${order.id}-${product.name}`} data-node-id="12:811">
+        {order.products.map((product, index) => (
+          <div className="order-product" key={`${order.id}-${index}`} data-node-id="12:811">
             <div className="order-product-image"><img src={product.image} alt={product.name} /></div>
             <div className="order-product-info">
               <strong>{product.name}</strong>
-              <span>{product.variant}</span>
+              {product.variant && <span>{product.variant}</span>}
             </div>
-            <span className="order-product-quantity">× 1</span>
-            <strong className="order-product-price">{formatPrice(product.price)}</strong>
+            <span className="order-product-quantity">× {product.quantity}</span>
+            <strong className="order-product-price">{formatPrice(product.price * product.quantity)}</strong>
           </div>
         ))}
       </div>
 
       <footer className="order-card-footer">
         <div className="order-total">
-          <div><span>{order.products.length} sản phẩm · Tổng tiền</span><strong>{formatPrice(order.total)}</strong></div>
+          <div><span>{itemCount} sản phẩm · Tổng tiền</span><strong>{formatPrice(order.total)}</strong></div>
           <small>{order.delivery}</small>
         </div>
         <div className="order-actions">
-          {order.status === "pending" && !confirmCancel && (
+          {/* Nút hiện theo canPay/canCancel do BE tính, FE không tự suy luận từ trạng thái */}
+          {order.canPay && (
+            <button className="order-button order-button--primary" onClick={handlePay} disabled={paying}>
+              {paying ? "ĐANG CHUYỂN..." : "THANH TOÁN"} <IconArrowUpRight />
+            </button>
+          )}
+          {order.canCancel && !confirmCancel && (
             <button className="order-button order-button--secondary" onClick={() => setConfirmCancel(true)}>HỦY ĐƠN HÀNG</button>
           )}
-          {order.status === "pending" && confirmCancel && (
+          {order.canCancel && confirmCancel && (
             <div className="order-cancel-confirm" role="group" aria-label="Xác nhận hủy đơn hàng">
               <span>Hủy đơn này?</span>
-              <button onClick={() => onCancel(order.id)}>Xác nhận</button>
+              <button onClick={() => onCancel(order.orderCode)}>Xác nhận</button>
               <button onClick={() => setConfirmCancel(false)}>Giữ đơn</button>
             </div>
           )}
           {order.status !== "delivered" && order.status !== "cancelled" ? (
-            <a className="order-button order-button--secondary" href={`/don-hang/${order.orderCode || order.id.replace("#", "")}`}>XEM CHI TIẾT</a>
+            <a className="order-button order-button--secondary" href={detailHref}>XEM CHI TIẾT</a>
           ) : (
             <button className="order-button order-button--secondary" aria-expanded={detailsOpen} onClick={() => setDetailsOpen((open) => !open)}>
               {detailsOpen ? "ĐÓNG CHI TIẾT" : "XEM CHI TIẾT"}
             </button>
           )}
-          {order.status === "shipping" && <a className="order-button order-button--primary" href={`/don-hang/${order.orderCode || order.id.replace("#", "")}`}>THEO DÕI ĐƠN <IconArrowUpRight /></a>}
-          {(order.status === "delivered" || order.status === "cancelled") && <a className="order-button order-button--primary" href="/">MUA LẠI <IconArrowUpRight /></a>}
+          {order.status === "shipping" && <a className="order-button order-button--primary" href={detailHref}>THEO DÕI ĐƠN <IconArrowUpRight /></a>}
+          {(order.status === "delivered" || order.status === "cancelled") && <a className="order-button order-button--primary" href="/san-pham">MUA LẠI <IconArrowUpRight /></a>}
         </div>
       </footer>
 
@@ -173,11 +129,11 @@ function OrderCard({ order, onCancel }) {
   );
 }
 
-export default function OrdersList({ orders, onCancel }) {
+export default function OrdersList({ orders, onCancel, onPay }) {
   return (
     <div className="orders-list" data-node-id="12:788">
       {orders.map((order, index) => (
-        <OrderCard key={order.id} order={{...order, nodeId: `12:${790 + index * 10}`}} onCancel={onCancel} />
+        <OrderCard key={order.id} order={{...order, nodeId: `12:${790 + index * 10}`}} onCancel={onCancel} onPay={onPay} />
       ))}
       {orders.length === 0 && <p className="orders-empty">Không có đơn hàng nào phù hợp.</p>}
     </div>

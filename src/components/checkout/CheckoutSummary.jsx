@@ -1,59 +1,99 @@
 import { IconArrowRight, IconArrowUpRight } from "@tabler/icons-react";
 
-const formatPrice = (price) => `${price.toLocaleString("vi-VN")} ₫`;
+const formatPrice = (price) => `${(price || 0).toLocaleString("vi-VN")} ₫`;
 
-export default function CheckoutSummary({ items, subtotal, shippingFee, total, coupon, payment, submitted, onCouponChange }) {
+export default function CheckoutSummary({
+  items = [],
+  subtotal,
+  shippingFee,
+  total,
+  coupon,
+  payment,
+  submitting = false,
+  canSubmit = true,
+  errorMessage = "",
+  onCouponChange,
+}) {
+  const totalQuantity = items.reduce(
+    (sum, item) => sum + (item.quantity || 1),
+    0
+  );
+
+  const oldTotal = items.reduce(
+    (sum, item) =>
+      sum + (item.oldPrice ?? item.price ?? 0) * (item.quantity || 1),
+    0
+  );
+
+  const savings = Math.max(0, oldTotal - subtotal);
+
   return (
     <aside className="checkout-summary-column">
       <div className="checkout-summary-card">
         <div className="checkout-summary-heading">
           <h2>ĐƠN HÀNG CỦA BẠN</h2>
           <div>
-            <span>{items.length} sản phẩm / {items.length} món</span>
+            <span>
+              {items.length} sản phẩm / {totalQuantity} món
+            </span>
             <a href="/gio-hang">Chỉnh sửa</a>
           </div>
         </div>
-        
+
         <div className="checkout-products">
-          {items.map((item, index) => (
-            <article className="checkout-product" key={item.name} data-node-id={["3:216", "3:228", "3:239"][index]}>
-              <div className="checkout-product-image">
-                <img src={item.image} alt={item.name} />
-              </div>
-              <div className="checkout-product-info">
-                <div className="checkout-product-title">
-                  <h3>{item.name}</h3>
-                  <span>× 1</span>
+          {items.map((item, index) => {
+            const qty = item.quantity || 1;
+            return (
+              <article
+                className="checkout-product"
+                key={item.cartItemId || `${item.name}-${index}`}
+                data-node-id={["3:216", "3:228", "3:239"][index]}
+              >
+                <div className="checkout-product-image">
+                  <img src={item.image} alt={item.name} />
                 </div>
-                <p>{item.color}</p>
-                <small>{item.switch}</small>
-                <div className="checkout-product-price">
-                  <strong>{formatPrice(item.price)}</strong>
-                  {item.oldPrice && <del>{formatPrice(item.oldPrice)}</del>}
+                <div className="checkout-product-info">
+                  <div className="checkout-product-title">
+                    <h3>{item.name}</h3>
+                    <span>× {qty}</span>
+                  </div>
+                  <p>{item.color}</p>
+                  <small>{item.switch}</small>
+                  <div className="checkout-product-price">
+                    <strong>{formatPrice((item.price || 0) * qty)}</strong>
+                    {item.oldPrice && (
+                      <del>{formatPrice(item.oldPrice * qty)}</del>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
-        
+
         <div className="checkout-coupon">
           <label htmlFor="checkout-coupon">BẠN CÓ MÃ ƯU ĐÃI?</label>
           <div>
-            <input 
-              id="checkout-coupon" 
-              value={coupon} 
-              onChange={(event) => onCouponChange(event.target.value)} 
-              placeholder="Nhập mã ưu đãi" 
+            <input
+              id="checkout-coupon"
+              value={coupon}
+              onChange={(event) => onCouponChange(event.target.value)}
+              placeholder="Chưa hỗ trợ mã ưu đãi"
+              disabled
             />
-            <button type="button" disabled={!coupon.trim()} onClick={() => onCouponChange("")}>
+            <button
+              type="button"
+              disabled
+              onClick={() => onCouponChange("")}
+            >
               ÁP DỤNG
             </button>
           </div>
         </div>
-        
+
         <div className="checkout-costs">
           <div>
-            <span>Tạm tính ({items.length} sản phẩm)</span>
+            <span>Tạm tính ({totalQuantity} sản phẩm)</span>
             <strong>{formatPrice(subtotal)}</strong>
           </div>
           <div>
@@ -67,40 +107,52 @@ export default function CheckoutSummary({ items, subtotal, shippingFee, total, c
             </strong>
           </div>
         </div>
-        
+
         <div className="checkout-summary-rule" />
-        
+
         <div className="checkout-grand-total">
           <div>
             <strong>TỔNG CỘNG</strong>
             <b>{formatPrice(total)}</b>
           </div>
           <small>Đã bao gồm VAT</small>
-          <p>Bạn đã tiết kiệm 600.000 ₫ từ giá gốc.</p>
+          {savings > 0 && (
+            <p>Bạn đã tiết kiệm {formatPrice(savings)} từ giá gốc.</p>
+          )}
         </div>
-        
+
         <div className="checkout-submit-area">
           <label className="checkout-terms">
             <input type="checkbox" name="terms" required />
             <span>
-              Tôi đã đọc và đồng ý với <a href="#terms">Điều khoản sử dụng</a> và{" "}
-              <a href="#privacy">Chính sách bảo mật</a> của 8ThreadTech.
+              Tôi đã đọc và đồng ý với <a href="#terms">Điều khoản sử dụng</a>{" "}
+              và <a href="#privacy">Chính sách bảo mật</a> của 8ThreadTech.
             </span>
           </label>
-          <button className="checkout-submit" type="submit">
-            ĐẶT HÀNG <IconArrowRight />
+          <button
+            className="checkout-submit"
+            type="submit"
+            disabled={submitting || !canSubmit}
+            aria-busy={submitting}
+          >
+            {submitting ? "ĐANG XỬ LÝ..." : payment === "COD" ? "ĐẶT HÀNG" : "ĐẶT HÀNG VÀ THANH TOÁN"}{" "}<IconArrowRight />
           </button>
           <p className="checkout-payment-hint">
-            Thanh toán {formatPrice(total)} {payment === "cod" ? "khi nhận hàng" : "qua phương thức đã chọn"}.
+            Thanh toán {formatPrice(total)}{" "}
+            {payment === "COD" ? "khi nhận hàng" : `qua ${payment}`}.
           </p>
-          {submitted && (
-            <p className="checkout-success" role="status">
-              Thông tin đơn hàng đã được kiểm tra. Hệ thống thanh toán chưa được kết nối.
+          {errorMessage && (
+            <p
+              className="checkout-error"
+              role="alert"
+              style={{ color: "#ef4444", marginTop: 12 }}
+            >
+              {errorMessage}
             </p>
           )}
         </div>
       </div>
-      
+
       <div className="checkout-help">
         <span aria-hidden="true">◌</span>
         <div>
