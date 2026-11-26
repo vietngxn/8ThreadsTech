@@ -14,6 +14,7 @@ import {
 } from "@tabler/icons-react";
 import thread75 from "../../assets/list-thread-75.png";
 import { authService } from "../../services/authService";
+import CancelReasonForm from "./CancelReasonForm";
 
 const orderSteps = ["Đã tiếp nhận", "Chờ xác nhận", "Đã xác nhận", "Đang giao hàng", "Đã giao hàng"];
 const formatPrice = (price) => `${Number(price || 0).toLocaleString("vi-VN")} ₫`;
@@ -134,8 +135,6 @@ function OrderProgress({ status, orderDate }) {
 
 export default function OrderDetailMain({ order, onCancel }) {
   const [confirmCancel, setConfirmCancel] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
-  const [cancelError, setCancelError] = useState("");
 
   if (!order) {
     return (
@@ -325,39 +324,13 @@ export default function OrderDetailMain({ order, onCancel }) {
                       HỦY ĐƠN HÀNG
                     </button>
                   ) : (
-                    <div className="order-cancel-confirm" role="group" aria-label="Xác nhận hủy đơn hàng">
-                      <span>Bạn có chắc chắn muốn hủy đơn này?</span>
-                      <button
-                        type="button"
-                        disabled={cancelling}
-                        onClick={async () => {
-                          setCancelling(true);
-                          setCancelError("");
-                          try {
-                            await onCancel?.();
-                            setConfirmCancel(false);
-                          } catch (err) {
-                            setCancelError(err.message || "Không thể hủy đơn hàng");
-                          } finally {
-                            setCancelling(false);
-                          }
-                        }}
-                      >
-                        {cancelling ? "Đang hủy..." : "Xác nhận"}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={cancelling}
-                        onClick={() => setConfirmCancel(false)}
-                      >
-                        Không, giữ đơn
-                      </button>
-                    </div>
-                  )}
-                  {cancelError && (
-                    <p role="alert" style={{ color: "#ef4444", marginTop: 8 }}>
-                      {cancelError}
-                    </p>
+                    <CancelReasonForm
+                      onConfirm={async (reason) => {
+                        await onCancel?.(reason);
+                        setConfirmCancel(false);
+                      }}
+                      onClose={() => setConfirmCancel(false)}
+                    />
                   )}
                 </>
               )}

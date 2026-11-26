@@ -255,13 +255,10 @@ export default function OrdersPage() {
   };
 
   // Hủy đơn trên BE (hoàn kho), dùng luôn kết quả BE trả về thay vì tự đoán trạng thái
-  const handleCancel = async (orderCode) => {
-    try {
-      const updated = await orderService.cancelOrder(orderCode);
-      replaceOrder(updated);
-    } catch (err) {
-      alert(err.message || "Không thể hủy đơn hàng");
-    }
+  const handleCancel = async (orderCode, reason) => {
+    const updated = await orderService.cancelOrder(orderCode, reason);
+    replaceOrder(updated);
+    setBanner({ type: "success", text: `Hủy đơn hàng ${orderCode} thành công.` });
   };
 
   // Thanh toán lại đơn đang chờ: BE vô hiệu link cũ, tạo link mới
