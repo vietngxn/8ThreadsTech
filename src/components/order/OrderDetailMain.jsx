@@ -132,9 +132,10 @@ function OrderProgress({ status, orderDate }) {
   );
 }
 
-export default function OrderDetailMain({ order }) {
-  const [isCancelledLocally, setIsCancelledLocally] = useState(false);
+export default function OrderDetailMain({ order, onCancel }) {
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState("");
 
   if (!order) {
     return (
@@ -157,7 +158,7 @@ export default function OrderDetailMain({ order }) {
     );
   }
 
-  const effectiveStatus = isCancelledLocally ? "CANCELLED" : (order.status || "PENDING");
+  const effectiveStatus = order.status || "PENDING";
   const isCancelled = effectiveStatus === "CANCELLED";
   const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString("vi-VN") : "";
   const items = order.items && order.items.length > 0 ? order.items : [];
@@ -313,15 +314,7 @@ export default function OrderDetailMain({ order }) {
               )}
             </section>
             <div className="order-detail-actions">
-              {isCancelled ? (
-                <button
-                  type="button"
-                  className="order-support-button"
-                  onClick={() => setIsCancelledLocally(false)}
-                >
-                  KHÔI PHỤC ĐƠN HÀNG
-                </button>
-              ) : effectiveStatus === "PENDING" && (
+              {isCancelled ? null : effectiveStatus === "PENDING" && (
                 <>
                   {!confirmCancel ? (
                     <button
@@ -336,17 +329,35 @@ export default function OrderDetailMain({ order }) {
                       <span>Bạn có chắc chắn muốn hủy đơn này?</span>
                       <button
                         type="button"
-                        onClick={() => {
-                          setIsCancelledLocally(true);
-                          setConfirmCancel(false);
+                        disabled={cancelling}
+                        onClick={async () => {
+                          setCancelling(true);
+                          setCancelError("");
+                          try {
+                            await onCancel?.();
+                            setConfirmCancel(false);
+                          } catch (err) {
+                            setCancelError(err.message || "Không thể hủy đơn hàng");
+                          } finally {
+                            setCancelling(false);
+                          }
                         }}
                       >
-                        Xác nhận
+                        {cancelling ? "Đang hủy..." : "Xác nhận"}
                       </button>
-                      <button type="button" onClick={() => setConfirmCancel(false)}>
+                      <button
+                        type="button"
+                        disabled={cancelling}
+                        onClick={() => setConfirmCancel(false)}
+                      >
                         Không, giữ đơn
                       </button>
                     </div>
+                  )}
+                  {cancelError && (
+                    <p role="alert" style={{ color: "#ef4444", marginTop: 8 }}>
+                      {cancelError}
+                    </p>
                   )}
                 </>
               )}

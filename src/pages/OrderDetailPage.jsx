@@ -5,10 +5,13 @@ import CartFooter from "../components/cart/CartFooter";
 import OrderDetailIntro from "../components/order/OrderDetailIntro";
 import OrderDetailMain from "../components/order/OrderDetailMain";
 import { userService } from "../services/userService";
+import { orderService } from "../services/orderService";
+import { useCart } from "../hooks/useCart";
 
 export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { cartCount } = useCart();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -55,9 +58,16 @@ export default function OrderDetailPage() {
     };
   }, [id]);
 
+  // Hủy đơn trên BE (hoàn kho), rồi tải lại để hiển thị trạng thái mới
+  const handleCancel = async () => {
+    await orderService.cancelOrder(order.orderCode);
+    const fresh = await userService.getOrderDetails(order.orderCode);
+    setOrder(fresh);
+  };
+
   return (
     <div className="order-detail-page" data-node-id="15:1238">
-      <Navbar quantity={0} />
+      <Navbar quantity={cartCount} />
       
       <main>
         <OrderDetailIntro />
@@ -77,7 +87,7 @@ export default function OrderDetailPage() {
             </button>
           </div>
         ) : (
-          <OrderDetailMain order={order} />
+          <OrderDetailMain order={order} onCancel={handleCancel} />
         )}
       </main>
       

@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import CartFooter from "../components/cart/CartFooter";
 import OrderCompleteHeader from "../components/order/OrderCompleteHeader";
@@ -6,36 +8,122 @@ import OrderNextSteps from "../components/order/OrderNextSteps";
 import OrderDelivery from "../components/order/OrderDelivery";
 import OrderShipping from "../components/order/OrderShipping";
 import OrderSummary from "../components/order/OrderSummary";
-import thread75 from "../assets/list-thread-75.png";
-import thread65 from "../assets/list-thread-65.png";
-import thread98 from "../assets/list-thread-98.png";
+import { useCart } from "../hooks/useCart";
+import { orderService } from "../services/orderService";
+import fallbackImage from "../assets/list-thread-75.png";
 
-const items = [
-  { name: "THREAD 75", color: "Bạc ánh trăng", switch: "Linear Red Switch", price: 2490000, oldPrice: 2790000, image: thread75 },
-  { name: "THREAD 65", color: "Đen nguyên bản", switch: "Linear Switch", price: 1890000, image: thread65 },
-  { name: "THREAD 98", color: "Trắng sương", switch: "Tactile Brown Switch", price: 2190000, oldPrice: 2490000, image: thread98 },
-];
+const STATUS_LABELS = {
+  PENDING: "Đã tiếp nhận · Chờ xác nhận",
+  CONFIRMED: "Đã xác nhận",
+  SHIPPING: "Đang giao hàng",
+  DELIVERED: "Đã giao hàng",
+  CANCELLED: "Đã hủy",
+};
 
-const total = items.reduce((sum, item) => sum + item.price, 0);
-const saved = items.reduce((sum, item) => sum + (item.oldPrice ?? item.price) - item.price, 0);
+// selectedOptions là chuỗi JSON do giỏ hàng lưu, ví dụ {"color":"Đen","switch":"Red"}
+function describeOptions(raw) {
+  if (!raw) return "";
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (parsed && typeof parsed === "object") {
+      return Object.values(parsed).filter(Boolean).join(" · ");
+    }
+  } catch {
+    // không phải JSON thì hiển thị nguyên văn
+  }
+  return String(raw);
+}
 
 export default function OrderCompletePage() {
+  const { orderCode } = useParams();
+  const navigate = useNavigate();
+  const { cartCount } = useCart();
+
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError("");
+
+    orderService
+      .getOrder(orderCode)
+      .then((data) => {
+        if (active) setOrder(data);
+      })
+      .catch((err) => {
+        if (active) setError(err.message || "Không tìm thấy đơn hàng.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [orderCode]);
+
+  const items = useMemo(
+    () =>
+      (order?.items || []).map((item) => ({
+        key: `${item.productVariantId}-${item.productSku}`,
+        name: item.productName,
+        options: describeOptions(item.selectedOptions),
+        quantity: item.quantity,
+        lineTotal: item.lineTotal,
+        image: item.productImageUrl || fallbackImage,
+      })),
+    [order]
+  );
+
   return (
     <div className="order-complete-page" data-node-id="5:465">
-      <Navbar quantity={3} />
+      <Navbar quantity={cartCount} />
 
       <OrderCompleteHeader />
 
       <main className="order-complete-content" data-node-id="5:522">
-        <div className="order-confirmation-column">
-          <OrderSuccess orderId="#8TT-261027-0186" total={total} />
-          <OrderNextSteps />
-          <OrderDelivery />
-          <OrderShipping total={total} />
-        </div>
-        <OrderSummary items={items} total={total} saved={saved} />
+        {loading ? (
+          <p style={{ padding: "60px 20px", textAlign: "center" }}>
+            Đang tải thông tin đơn hàng...
+          </p>
+        ) : error || !order ? (
+          <div style={{ padding: "60px 20px", textAlign: "center" }}>
+            <p style={{ color: "#ef4444", marginBottom: 16 }}>
+              {error || "Không tìm thấy đơn hàng."}
+            </p>
+            <button
+              type="button"
+              className="order-button order-button--primary"
+              onClick={() => navigate("/don-hang")}
+            >
+              XEM ĐƠN HÀNG CỦA TÔI
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="order-confirmation-column">
+              <OrderSuccess
+                orderId={order.orderCode}
+                statusLabel={STATUS_LABELS[order.status] || order.status}
+              />
+              <OrderNextSteps />
+              <OrderDelivery order={order} />
+              <OrderShipping order={order} />
+            </div>
+            <OrderSummary
+              items={items}
+              subtotal={order.subtotalAmount}
+              discount={order.discountAmount}
+              shippingFee={order.shippingFee}
+              total={order.totalAmount}
+            />
+          </>
+        )}
       </main>
-      
+
       <CartFooter />
     </div>
   );

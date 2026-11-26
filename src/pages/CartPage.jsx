@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 import Navbar from "../components/common/Navbar";
 import CartIntro from "../components/cart/CartIntro";
@@ -7,6 +8,19 @@ import CartSummary from "../components/cart/CartSummary";
 import CartFooter from "../components/cart/CartFooter";
 
 import { useCart } from "../hooks/useCart";
+
+const SELECTED_CART_STORAGE_KEY = "selected_cart_item_ids";
+
+const readStoredSelectedIds = () => {
+  try {
+    const raw = sessionStorage.getItem(SELECTED_CART_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
 
 export default function CartPage() {
   const {
@@ -17,7 +31,34 @@ export default function CartPage() {
     removeItem,
   } = useCart();
 
-  const [selectedCartItemIds, setSelectedCartItemIds] = useState([]);
+  const location = useLocation();
+
+  const [selectedCartItemIds, setSelectedCartItemIds] = useState(() => {
+    // Ưu tiên ID truyền ngược từ trang thanh toán (nếu có), sau đó tới sessionStorage
+    if (Array.isArray(location.state?.cartItemIds)) {
+      return location.state.cartItemIds;
+    }
+    return readStoredSelectedIds() ?? [];
+  });
+
+  // Lưu mỗi khi danh sách chọn thay đổi
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        SELECTED_CART_STORAGE_KEY,
+        JSON.stringify(selectedCartItemIds)
+      );
+    } catch {
+      // Bỏ qua nếu sessionStorage không khả dụng
+    }
+  }, [selectedCartItemIds]);
+
+  // Nếu cartItems load xong hoặc thay đổi, loại bỏ các ID không còn tồn tại trong giỏ
+  useEffect(() => {
+    if (loading) return;
+    const validIds = new Set(cartItems.map((item) => item.cartItemId));
+    setSelectedCartItemIds((prev) => prev.filter((id) => validIds.has(id)));
+  }, [cartItems, loading]);
 
   const toggleItem = (cartItemId) => {
     setSelectedCartItemIds((prev) =>
@@ -27,7 +68,6 @@ export default function CartPage() {
     );
   };
 
-  // Chỉ lấy các sản phẩm đang được tick chọn
   const selectedItems = useMemo(
     () =>
       cartItems.filter((item) =>
@@ -36,7 +76,6 @@ export default function CartPage() {
     [cartItems, selectedCartItemIds]
   );
 
-  // Tổng số lượng của các sản phẩm đã chọn (dùng cho CartSummary)
   const selectedQuantity = useMemo(
     () =>
       selectedItems.reduce(
@@ -46,7 +85,6 @@ export default function CartPage() {
     [selectedItems]
   );
 
-  // Tạm tính chỉ tính trên sản phẩm đã chọn
   const subtotal = useMemo(
     () =>
       selectedItems.reduce(
@@ -56,7 +94,6 @@ export default function CartPage() {
     [selectedItems]
   );
 
-  // Giá gốc chỉ tính trên sản phẩm đã chọn
   const oldTotal = useMemo(
     () =>
       selectedItems.reduce(
@@ -71,14 +108,10 @@ export default function CartPage() {
 
   const changeQuantity = (id, change) => {
     const item = cartItems.find((item) => item.cartItemId === id);
-
     if (!item) return;
 
     const newQuantity = item.quantity + change;
-
-    if (newQuantity <= 0) {
-      return;
-    }
+    if (newQuantity <= 0) return;
 
     updateQuantity(id, newQuantity);
   };
@@ -90,7 +123,6 @@ export default function CartPage() {
 
   return (
     <div className="cart-page" data-node-id="3:341">
-      {/* Navbar & CartIntro vẫn giữ tổng giỏ hàng như cũ */}
       <Navbar quantity={cartCount} />
 
       <main>
@@ -114,7 +146,7 @@ export default function CartPage() {
                 quantity={selectedQuantity}
                 subtotal={subtotal}
                 hasItems={selectedItems.length > 0}
-                selectedItems={selectedItems}
+                selectedCartItemIds={selectedCartItemIds}
               />
             </>
           )}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import CartFooter from "../components/cart/CartFooter";
 import OrdersHeader from "../components/orders/OrdersHeader";
@@ -13,15 +14,11 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 import { authService } from "../services/authService";
-import { userService } from "../services/userService";
+import { orderService } from "../services/orderService";
+import { paymentService } from "../services/paymentService";
+import { ORDER_FILTERS, getStatusInfo, describePayment } from "../constants/orderStatus";
+import { useCart } from "../hooks/useCart";
 
-const statusOptions = [
-  { id: "all", label: "Tất cả" },
-  { id: "pending", label: "Chờ xác nhận" },
-  { id: "shipping", label: "Đang giao" },
-  { id: "delivered", label: "Đã giao" },
-  { id: "cancelled", label: "Đã hủy" },
-];
 
 function OrdersSidebar() {
   const currentUser = authService.getCurrentUser();
@@ -73,6 +70,64 @@ function OrdersSidebar() {
 
 const CACHE_ORDERS_KEY = "cached_user_orders";
 
+const formatPrice = (price) => `${Number(price || 0).toLocaleString("vi-VN")} ₫`;
+
+const formatTime = (value) =>
+  new Date(value).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+
+// selectedOptions là chuỗi JSON, ví dụ {"color":"Đen","switch":"Red"}: hiển thị gọn thay vì chuỗi thô
+function describeOptions(raw) {
+  if (!raw) return "";
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (parsed && typeof parsed === "object") {
+      return Object.values(parsed).filter(Boolean).join(" · ");
+    }
+  } catch {
+    // không phải JSON thì dùng nguyên văn
+  }
+  return String(raw);
+}
+
+// Dòng phụ dưới tổng tiền: hạn thanh toán / lý do hủy / phương thức giao
+function describeDelivery(o) {
+  if (o.canPay && o.paymentDeadline) {
+    return `Thanh toán trước ${formatTime(o.paymentDeadline)} để giữ đơn`;
+  }
+  if (o.status === "CANCELLED") {
+    return o.cancelReason || "Đơn đã hủy";
+  }
+  const fee = Number(o.shippingFee || 0);
+  const feeText = fee === 0 ? "Miễn phí vận chuyển" : `Phí giao ${formatPrice(fee)}`;
+  return [o.shippingMethodName, feeText].filter(Boolean).join(" · ");
+}
+
+// OrderResponse của BE -> dữ liệu cho OrderCard
+function mapOrder(o) {
+  const info = getStatusInfo(o.status);
+
+  return {
+    id: `#${o.orderCode}`,
+    orderCode: o.orderCode,
+    date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("vi-VN") : "",
+    status: info.group,
+    statusLabel: info.label,
+    payment: describePayment(o.paymentStatus, o.paymentMethod),
+    canCancel: Boolean(o.canCancel),
+    canPay: Boolean(o.canPay),
+    products: (o.items || []).map((item) => ({
+      name: item.productName,
+      variant: describeOptions(item.selectedOptions),
+      price: Number(item.unitPrice || 0),
+      quantity: item.quantity || 1,
+      image: item.productImageUrl || thread75Image,
+    })),
+    total: Number(o.totalAmount || 0),
+    deliveryAddress: o.deliveryAddress,
+    delivery: describeDelivery(o),
+  };
+}
+
 function getCachedOrders() {
   try {
     const raw = localStorage.getItem(CACHE_ORDERS_KEY);
@@ -82,55 +137,145 @@ function getCachedOrders() {
   }
 }
 
+function saveCache(orders) {
+  localStorage.setItem(CACHE_ORDERS_KEY, JSON.stringify(orders));
+}
+
+/** Đọc một lần khi vào trang: có phải vừa quay về từ VNPAY/MoMo không? */
+function readGatewayReturn(search) {
+  const params = Object.fromEntries(new URLSearchParams(search));
+  const fromGateway = "vnp_TxnRef" in params || "partnerCode" in params;
+  if (!fromGateway) return null;
+  return { params, orderCode: paymentService.getPendingOrderCode() };
+}
+
+const BANNER_STYLES = {
+  success: { border: "1px solid #22c55e", background: "rgba(34, 197, 94, 0.1)" },
+  warning: { border: "1px solid #f59e0b", background: "rgba(245, 158, 11, 0.1)" },
+  error: { border: "1px solid #ef4444", background: "rgba(239, 68, 68, 0.1)" },
+};
+
 export default function OrdersPage() {
+  const location = useLocation();
+  const { cartCount } = useCart();
+
+  // Hai cách vào trang ngay sau khi mua: đặt COD xong (state) hoặc cổng thanh toán trả về (query)
+  const [justOrdered] = useState(() => location.state?.justOrdered || null);
+  const [gatewayReturn] = useState(() => readGatewayReturn(location.search));
+  const fresh = Boolean(justOrdered || gatewayReturn);
+
+  const [banner, setBanner] = useState(() => {
+    if (location.state?.paymentError) {
+      return { type: "error", text: location.state.paymentError };
+    }
+    if (justOrdered) {
+      return {
+        type: "success",
+        text: `Đặt hàng thành công! Mã đơn ${justOrdered}. Bạn thanh toán khi nhận hàng (COD), 8Threads sẽ gọi điện xác nhận.`,
+      };
+    }
+    if (gatewayReturn) {
+      return { type: "warning", text: "Đang xác nhận kết quả thanh toán..." };
+    }
+    return null;
+  });
+
   const [filter, setFilter] = useState("all");
-  const [orders, setOrders] = useState(getCachedOrders);
-  const [loading, setLoading] = useState(() => getCachedOrders().length === 0);
+  // Vừa mua xong thì không hiện cache cũ (thiếu đơn mới / sai trạng thái)
+  const [orders, setOrders] = useState(() => (fresh ? [] : getCachedOrders()));
+  const [loading, setLoading] = useState(() => fresh || getCachedOrders().length === 0);
 
   useEffect(() => {
-    userService.getMyOrders()
-      .then((data) => {
-        const mapped = data.map((o) => ({
-          id: `#${o.orderCode}`,
-          orderCode: o.orderCode,
-          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("vi-VN") : "",
-          sortDate: o.createdAt,
-          status: o.status?.toLowerCase() || "pending",
-          statusLabel: o.statusLabel || o.status,
-          payment: `${o.paymentStatus === "PAID" ? "Đã thanh toán" : "Chưa thanh toán"} · ${o.paymentMethod || "COD"}`,
-          products: o.items && o.items.length > 0 ? o.items.map((item) => ({
-            name: item.productName,
-            variant: item.selectedOptions || "Bàn phím cơ cao cấp",
-            price: Number(item.unitPrice),
-            quantity: item.quantity,
-            image: item.productImageUrl || thread75Image,
-          })) : [
-            { name: "Đơn hàng #" + o.orderCode, variant: "Tiêu chuẩn", price: Number(o.totalAmount), image: thread75Image }
-          ],
-          total: Number(o.totalAmount || 0),
-          deliveryAddress: o.deliveryAddress,
-          delivery: o.deliveryAddress || "Giao tiêu chuẩn · Miễn phí vận chuyển",
-        }));
+    let active = true;
+
+    async function load() {
+      // 1. Quay về từ cổng: xác nhận TRƯỚC rồi mới tải danh sách, để đơn hiện đúng trạng thái mới
+      if (gatewayReturn) {
+        // Xóa query khỏi thanh địa chỉ: F5 không gửi lại, mã giao dịch không nằm trên URL
+        window.history.replaceState({}, "", "/don-hang");
+
+        if (!gatewayReturn.orderCode) {
+          setBanner({ type: "warning", text: "Đã quay về từ cổng thanh toán. Kiểm tra trạng thái đơn bên dưới." });
+        } else {
+          try {
+            const result = await paymentService.confirmReturn(
+              gatewayReturn.orderCode,
+              gatewayReturn.params
+            );
+            paymentService.clearPendingOrderCode();
+
+            if (!active) return;
+            setBanner(result?.paid
+              ? { type: "success", text: `Thanh toán thành công! Đơn ${result.orderCode} đang chờ 8Threads xác nhận.` }
+              : { type: "error", text: `Đơn ${gatewayReturn.orderCode} chưa được thanh toán. Bạn có thể bấm "THANH TOÁN" để thử lại trước khi hết hạn.` });
+          } catch (err) {
+            if (active) setBanner({ type: "error", text: err.message || "Không xác nhận được kết quả thanh toán." });
+          }
+        }
+      } else if (justOrdered || location.state?.paymentError) {
+        // Làm mới trang không hiện lại thông báo
+        window.history.replaceState({}, "");
+      }
+
+      // 2. Danh sách đơn
+      try {
+        const data = await orderService.getMyOrders();
+        if (!active) return;
+        const mapped = data.map(mapOrder);
         setOrders(mapped);
-        localStorage.setItem(CACHE_ORDERS_KEY, JSON.stringify(mapped));
-      })
-      .catch((err) => {
+        saveCache(mapped);
+      } catch (err) {
         console.warn("Không thể tải danh sách đơn hàng:", err);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      active = false;
+    };
+    // Chỉ chạy một lần khi vào trang
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredOrders = orders.filter(
     (o) => filter === "all" || o.status === filter
   );
 
-  const handleCancel = (id) => {
-    alert(`Hủy đơn ${id} - tính năng chưa được kết nối.`);
+  // Thay một đơn trong danh sách bằng dữ liệu mới nhất BE trả về
+  const replaceOrder = (updated) => {
+    setOrders((current) => {
+      const next = current.map((order) =>
+        order.orderCode === updated.orderCode ? mapOrder(updated) : order
+      );
+      saveCache(next);
+      return next;
+    });
+  };
+
+  // Hủy đơn trên BE (hoàn kho), dùng luôn kết quả BE trả về thay vì tự đoán trạng thái
+  const handleCancel = async (orderCode) => {
+    try {
+      const updated = await orderService.cancelOrder(orderCode);
+      replaceOrder(updated);
+    } catch (err) {
+      alert(err.message || "Không thể hủy đơn hàng");
+    }
+  };
+
+  // Thanh toán lại đơn đang chờ: BE vô hiệu link cũ, tạo link mới
+  const handlePay = async (orderCode) => {
+    try {
+      await paymentService.redirectToGateway(orderCode);
+    } catch (err) {
+      setBanner({ type: "error", text: err.message || "Không tạo được liên kết thanh toán." });
+    }
   };
 
   return (
     <div className="orders-page" data-node-id="12:747">
-      <Navbar quantity={0} />
+      <Navbar quantity={cartCount} />
 
       <main>
         <OrdersHeader />
@@ -138,13 +283,26 @@ export default function OrdersPage() {
         <section className="orders-layout" data-node-id="12:778">
           <OrdersSidebar />
           <div className="orders-main">
+            {banner && (
+              <div
+                role="status"
+                style={{
+                  margin: "0 0 20px",
+                  padding: "14px 18px",
+                  borderRadius: 8,
+                  ...BANNER_STYLES[banner.type],
+                }}
+              >
+                {banner.text}
+              </div>
+            )}
             <div className="orders-toolbar">
               <div className="orders-heading-row">
                 <h2>Danh sách đơn hàng</h2>
                 <span>Hiển thị {filteredOrders.length} / {orders.length} đơn hàng</span>
               </div>
               <div className="orders-filters" aria-label="Lọc đơn hàng">
-                {statusOptions.map((option) => (
+                {ORDER_FILTERS.map((option) => (
                   <button
                     key={option.id}
                     type="button"
@@ -167,7 +325,7 @@ export default function OrdersPage() {
                 Đang tải danh sách đơn hàng...
               </div>
             ) : (
-              <OrdersList orders={filteredOrders} onCancel={handleCancel} />
+              <OrdersList orders={filteredOrders} onCancel={handleCancel} onPay={handlePay} />
             )}
           </div>
         </section>
