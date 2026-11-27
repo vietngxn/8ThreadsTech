@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import {
   IconArrowLeft,
@@ -16,13 +17,14 @@ import {
 } from "@tabler/icons-react";
 import logo from "../../assets/thread-logo.png";
 import { authService } from "../../services/authService";
+import { adminOrderService } from "../../services/adminOrderService";
 import "./AdminSidebar.css";
 
 const MENU_ITEMS = [
   { id: "dashboard", label: "Tổng quan", href: "/admin", icon: IconLayoutDashboard },
   { id: "products", label: "Sản phẩm", href: "/admin/products", icon: IconPackage },
   { id: "categories", label: "Danh mục", href: "/admin/categories", icon: IconFolder },
-  { id: "orders", label: "Đơn hàng", href: "/admin/orders", icon: IconShoppingBag, defaultBadge: "12" },
+  { id: "orders", label: "Đơn hàng", href: "/admin/orders", icon: IconShoppingBag },
   { id: "customers", label: "Khách hàng", href: "/admin/customers", icon: IconUsers },
   { id: "promotions", label: "Khuyến mãi", href: "/admin/promotions", icon: IconTicket },
   { id: "stats", label: "Thống kê", href: "/admin/statistics", icon: IconChartLine },
@@ -40,6 +42,17 @@ const MENU_ITEMS = [
 export default function AdminSidebar({ active, badgeCounts = {}, className = "" }) {
   const location = useLocation();
   const pathname = location.pathname;
+
+  // Lấy số đơn PENDING thực từ API để hiển thị badge chính xác
+  const [pendingCount, setPendingCount] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    adminOrderService
+      .getOrders({ page: 0, size: 1, status: "PENDING" })
+      .then((res) => { if (!cancelled) setPendingCount(res.totalElements); })
+      .catch(() => {}); // Không block UI nếu lỗi
+    return () => { cancelled = true; };
+  }, []);
 
   // Tự động nhận diện tab active dựa vào pathname nếu không truyền prop `active`
   const getActiveTab = () => {
@@ -69,7 +82,11 @@ export default function AdminSidebar({ active, badgeCounts = {}, className = "" 
         {MENU_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = currentActive === item.id;
-          const badge = badgeCounts[item.id] !== undefined ? badgeCounts[item.id] : item.defaultBadge;
+          const badge = badgeCounts[item.id] !== undefined
+            ? badgeCounts[item.id]
+            : item.id === "orders"
+              ? (pendingCount !== null ? (pendingCount > 0 ? String(pendingCount) : null) : null)
+              : item.defaultBadge;
 
           const innerContent = (
             <>

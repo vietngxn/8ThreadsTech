@@ -22,6 +22,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import TeamPage from "./pages/TeamPage.jsx";
 
 // Pages quản trị Admin
+import AdminLoginPage from "./pages/admin/AdminLoginPage.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminProductManagement from "./pages/admin/AdminProductManagement.jsx";
 import AdminCategoryManagement from "./pages/admin/AdminCategoryManagement.jsx";
@@ -33,6 +34,7 @@ import AdminJournal from "./pages/admin/AdminJournal.jsx";
 import AdminSettings from "./pages/admin/AdminSettings.jsx";
 import AdminHelp from "./pages/admin/AdminHelp.jsx";
 import AdminProfile from "./pages/admin/AdminProfile.jsx";
+import AdminRoute from "./components/admin/AdminRoute.jsx";
 
 export default function App() {
   return (
@@ -43,18 +45,19 @@ export default function App() {
 
       <Routes>
         {/* === NHÓM QUẢN TRỊ ADMIN (Không dùng Storefront Layout) === */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/products" element={<AdminProductManagement />} />
-        <Route path="/admin/categories" element={<AdminCategoryManagement />} />
-        <Route path="/admin/orders" element={<AdminOrderManagement />} />
-        <Route path="/admin/customers" element={<AdminCustomerManagement />} />
-        <Route path="/admin/promotions" element={<AdminPromotionManagement />} />
-        <Route path="/admin/statistics" element={<AdminStatistics />} />
-        <Route path="/admin/logs" element={<AdminJournal />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
-        <Route path="/admin/help" element={<AdminHelp />} />
-        <Route path="/admin/profile" element={<AdminProfile />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/products" element={<AdminRoute><AdminProductManagement /></AdminRoute>} />
+        <Route path="/admin/categories" element={<AdminRoute><AdminCategoryManagement /></AdminRoute>} />
+        <Route path="/admin/orders" element={<AdminRoute><AdminOrderManagement /></AdminRoute>} />
+        <Route path="/admin/customers" element={<AdminRoute><AdminCustomerManagement /></AdminRoute>} />
+        <Route path="/admin/promotions" element={<AdminRoute><AdminPromotionManagement /></AdminRoute>} />
+        <Route path="/admin/statistics" element={<AdminRoute><AdminStatistics /></AdminRoute>} />
+        <Route path="/admin/logs" element={<AdminRoute><AdminJournal /></AdminRoute>} />
+        <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+        <Route path="/admin/help" element={<AdminRoute><AdminHelp /></AdminRoute>} />
+        <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
 
         {/* === NHÓM CỬA HÀNG KHÁCH HÀNG (Bọc trong Storefront Layout) === */}
         <Route element={<Layout />}>
