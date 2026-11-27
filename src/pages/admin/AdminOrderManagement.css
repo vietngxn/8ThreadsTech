@@ -138,3 +138,135 @@
 @media (max-width: 1150px) { .om-content { padding: 26px 24px; }.om-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }.om-filters { grid-template-columns: minmax(220px, 1fr) 1fr; }.om-column-label { display: none; } }
 @media (max-width: 700px) { .om-dashboard { display: block; }.om-sidebar { width: 100%; min-height: 0; padding: 16px; display: block; }.om-brand { margin: 0 0 16px; font-size: 18px; }.om-brand img { width: 30px; height: 30px; }.om-sidebar nav { overflow-x: auto; display: flex; gap: 4px; }.om-nav-label, .om-sidebar-bottom { display: none; }.om-nav-item { flex: 0 0 auto; margin: 0; height: 40px; padding: 0 10px; gap: 7px; font-size: 12px; }.om-topbar { height: 56px; padding: 0 20px; }.om-content { padding: 20px 16px; }.om-title-row { min-height: 48px; align-items: flex-start; margin-bottom: 18px; }.om-title-row h1 { font-size: 23px; }.om-button { min-height: 38px; padding: 0 10px; font-size: 11px; }.om-stats { gap: 10px; margin-bottom: 16px; }.om-stat { height: 104px; padding: 14px; }.om-stat > strong { font-size: 21px; }.om-stat:last-child > strong { font-size: 17px; }.om-stat > small { overflow: hidden; text-overflow: ellipsis; font-size: 9px; }.om-tabs { gap: 16px; overflow-x: auto; padding: 0 12px; }.om-tabs > button { font-size: 11px; }.om-filters { padding: 12px; grid-template-columns: 1fr 1fr; gap: 8px; }.om-search { grid-column: 1 / -1; }.om-table { min-width: 980px; }.om-pagination { padding: 12px; flex-wrap: wrap; }.om-pagination > div { gap: 5px; }.om-pagination small { display: none; }.om-pagination .om-next { font-size: 10px; }.om-dialog { max-height: 95vh; } }
 @media (max-width: 390px) { .om-stats { grid-template-columns: 1fr; }.om-stat { height: 98px; }.om-title-row { align-items: flex-start; flex-direction: column; }.om-title-row .om-button { align-self: flex-end; }.om-filters { grid-template-columns: 1fr; }.om-search { grid-column: auto; }.om-pagination { font-size: 10px; } }
+
+/* ─── Spin animation ─── */
+@keyframes om-spin { to { transform: rotate(360deg); } }
+.om-spin { animation: om-spin 0.8s linear infinite; display: inline-block; vertical-align: middle; }
+
+/* ─── Loading / error states ─── */
+.om-dialog-loading,
+.om-dialog-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 20px;
+  color: #929292;
+  font-size: 13px;
+}
+.om-dialog-error { color: #f02b24; }
+
+.om-fetch-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 20px 0;
+  padding: 10px 14px;
+  background: #180e0e;
+  border: 1px solid #3f1919;
+  border-radius: 8px;
+  color: #f48787;
+  font-size: 12px;
+}
+.om-fetch-error svg { color: #f02b24; flex-shrink: 0; }
+.om-fetch-error button {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  color: #f02b24;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.om-inline-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: #180e0e;
+  border: 1px solid #3f1919;
+  border-radius: 6px;
+  color: #f48787;
+  font-size: 12px;
+}
+.om-inline-error svg { color: #f02b24; flex-shrink: 0; }
+
+/* ─── Small dialog variant ─── */
+.om-dialog--sm { width: min(100%, 440px); }
+
+/* ─── Textarea ─── */
+.om-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #2c2c2c;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+  background: #0b0b0b;
+  color: #f5f5f2;
+}
+.om-textarea::placeholder { color: #686868; }
+.om-textarea:focus { border-color: #555; }
+
+/* ─── Status update panel ─── */
+.om-status-panel {
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid #1c1c1c;
+}
+.om-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.om-status-terminal {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #686868;
+}
+
+/* ─── Button variants ─── */
+.om-button--ghost {
+  background: transparent;
+  border-color: #2c2c2c;
+  color: #929292;
+}
+.om-button--ghost:hover:not(:disabled) {
+  background: #171717;
+  border-color: #444;
+  color: #f5f5f2;
+}
+
+.om-button--danger {
+  background: #2e1716;
+  border-color: #5a2321;
+  color: #f48787;
+}
+.om-button--danger:hover:not(:disabled) {
+  background: #f02b24;
+  border-color: #f02b24;
+  color: #fff;
+}
+.om-button--danger:disabled,
+.om-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ─── Items list in dialog ─── */
+.om-items-list { display: flex; flex-direction: column; }
+.om-items-list .om-product-row { border-bottom: 0; }
+.om-items-list .om-product-row:last-child { border-bottom: 1px solid #1c1c1c; }
+
+.om-product-sku { color: #686868; font-size: 11px; }
+.om-empty-inline { color: #686868; font-size: 12px; margin: 4px 0; }
