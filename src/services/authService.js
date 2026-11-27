@@ -119,6 +119,47 @@ export const authService = {
     return result;
   },
 
+    /**
+   * UC04 bước 1: gửi OTP đặt lại mật khẩu
+   */
+  async forgotPassword(email) {
+    const response = await api.post("/api/auth/forgot-password", { email });
+    return response.data;
+  },
+
+  /**
+   * UC04 bước 2: kiểm tra OTP (chưa đổi mật khẩu)
+   */
+  async verifyResetOtp({ email, otp }) {
+    const response = await api.post("/api/auth/verify-reset-otp", { email, otp });
+    return response.data;
+  },
+
+  /**
+   * UC04 bước 3: đặt mật khẩu mới
+   */
+  async resetPassword({ email, otp, newPassword, confirmPassword }) {
+    const response = await api.post("/api/auth/reset-password", {
+      email,
+      otp,
+      newPassword,
+      confirmPassword,
+    });
+    return response.data;
+  },
+
+  /**
+   * UC07: đổi mật khẩu (cần đăng nhập, api.js tự gắn token)
+   */
+  async changePassword({ currentPassword, newPassword, confirmPassword }) {
+    const response = await api.post("/api/auth/change-password", {
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    });
+    return response.data;
+  },
+
   /**
    * Đăng xuất
    */
