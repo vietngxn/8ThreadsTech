@@ -6,7 +6,18 @@ const passwordFields = [
   { name: "confirmation", label: "Xác nhận mật khẩu mới", placeholder: "Nhập lại mật khẩu mới", autoComplete: "new-password", nodeId: "23:396" },
 ];
 
-export default function ChangePasswordForm({ passwords, visible, errors, status, onUpdate, onToggleVisibility, onReset, onSubmit }) {
+export default function ChangePasswordForm({
+  passwords,
+  visible,
+  errors,
+  status,
+  statusType = "success",
+  loading = false,
+  onUpdate,
+  onToggleVisibility,
+  onReset,
+  onSubmit,
+}) {
   const requirements = [
     { label: "Sử dụng ít nhất 8 ký tự.", valid: passwords.next.length >= 8 },
     { label: "Kết hợp chữ hoa, chữ thường và số.", valid: /[A-Z]/.test(passwords.next) && /[a-z]/.test(passwords.next) && /\d/.test(passwords.next) },
@@ -74,17 +85,17 @@ export default function ChangePasswordForm({ passwords, visible, errors, status,
         </div>
 
         {status && (
-          <p className="change-password-status" role="status">
+          <p className={`change-password-status${statusType === "error" ? " is-error" : ""}`} role={statusType === "error" ? "alert" : "status"}>
             {status}
           </p>
         )}
 
         <div className="change-password-actions" data-node-id="23:413">
-          <button type="button" className="change-password-reset" onClick={onReset}>
+          <button type="button" className="change-password-reset" onClick={onReset} disabled={loading}>
             HỦY THAY ĐỔI
           </button>
-          <button type="submit" className="change-password-submit">
-            LƯU MẬT KHẨU MỚI <IconCheck aria-hidden="true" />
+          <button type="submit" className="change-password-submit" disabled={loading}>
+            {loading ? "ĐANG LƯU..." : "LƯU MẬT KHẨU MỚI"} <IconCheck aria-hidden="true" />
           </button>
         </div>
       </form>
