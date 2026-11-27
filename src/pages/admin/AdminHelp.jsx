@@ -153,7 +153,7 @@ export default function AdminHelp() {
               <h2 id="help-useful-title">Liên kết hữu ích</h2>
               <Link to="/admin" data-node-id="219:228">Hướng dẫn bắt đầu sử dụng <IconChevronRight size={15} aria-hidden="true" /></Link>
               <Link to="/admin/logs" data-node-id="219:231">Tra cứu nhật kí hệ thống <IconChevronRight size={15} aria-hidden="true" /></Link>
-              <Link to="/admin/settings" data-node-id="219:234">Cài đặt ngôn ngữ và thông báo <IconChevronRight size={15} aria-hidden="true" /></Link>
+              <Link to="/admin/settings" data-node-id="219:234">Cài đặt thông báo và phiên đăng nhập <IconChevronRight size={15} aria-hidden="true" /></Link>
             </aside>
           </div>
 

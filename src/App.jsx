@@ -1,7 +1,10 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./layouts/Layout.jsx";
 import ScrollToTop from "./components/common/ScrollToTop.jsx";
 import SpaNavigationHandler from "./components/common/SpaNavigationHandler.jsx";
+import { authService } from "./services/authService.js";
+import { userService } from "./services/userService.js";
 
 // Pages cửa hàng
 import LandingPage from "./pages/LandingPage.jsx";
@@ -37,6 +40,18 @@ import AdminProfile from "./pages/admin/AdminProfile.jsx";
 import AdminRoute from "./components/admin/AdminRoute.jsx";
 
 export default function App() {
+  useEffect(() => {
+    if (!authService.getToken()) return;
+    userService.getMyProfile()
+      .then((data) => {
+        if (!data) return;
+        const currentStored = authService.getCurrentUser() || {};
+        localStorage.setItem("currentUser", JSON.stringify({ ...currentStored, ...data }));
+        window.dispatchEvent(new Event("auth:state-change"));
+      })
+      .catch(() => { });
+  }, []);
+
   return (
     <BrowserRouter>
       {/* Tự động cuộn lên đầu trang & điều hướng SPA mượt mà */}

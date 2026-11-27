@@ -144,11 +144,23 @@ export default function AdminSidebar({ active, badgeCounts = {}, className = "" 
           <span>Đăng xuất</span>
         </button>
         <Link to="/admin/profile" className="admin-account" aria-label="Sửa hồ sơ quản trị viên">
-          <span className="admin-avatar">MA</span>
-          <span>
-            <strong>Minh Anh</strong>
-            <small>Quản trị viên</small>
-          </span>
+          {(() => {
+            const currentUser = authService.getCurrentUser();
+            const adminName = currentUser?.fullName || currentUser?.name || "Quản trị viên";
+            const parts = adminName.trim().split(/\s+/);
+            const initials = parts.length === 1
+              ? parts[0].slice(0, 2).toUpperCase()
+              : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            return (
+              <>
+                <span className="admin-avatar">{initials}</span>
+                <span>
+                  <strong>{adminName}</strong>
+                  <small>Quản trị viên</small>
+                </span>
+              </>
+            );
+          })()}
           <IconChevronDown size={14} />
         </Link>
       </div>

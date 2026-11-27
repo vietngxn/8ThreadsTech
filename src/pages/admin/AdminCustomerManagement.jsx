@@ -1,94 +1,31 @@
-import { useEffect, useRef, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  IconCalendar, IconChevronDown, IconChevronLeft, IconChevronRight,
+  IconChevronDown, IconChevronLeft, IconChevronRight,
   IconColumns3, IconCrown, IconDots, IconDownload, IconEye,
   IconLock, IconLockOpen, IconRepeat, IconSearch,
   IconUserPlus, IconUsers, IconX,
 } from '@tabler/icons-react';
 import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
+import { adminCustomerService } from '../../services/adminCustomerService.js';
 import './AdminOrderManagement.css';
 import './AdminCustomerManagement.css';
 
-/* ── Mock data theo schema DB ── */
-const customers = [
-  {
-    id: 1, numericId: '#KH-0248',
-    fullName: 'Nguyễn Hoàng Nam', email: 'hoangnam.ng@gmail.com',
-    phone: '0901234567', dateOfBirth: '1995-03-14', gender: 'Nam',
-    receiveNewsletter: true, status: 'ACTIVE', emailVerifiedAt: '2026-01-05 08:12:00',
-    lockedReason: null,
-    orders: 8, spend: 15680000, lastPurchase: '25/10/2026', lastOrder: '#8TT-1024',
-  },
-  {
-    id: 2, numericId: '#KH-0247',
-    fullName: 'Trần Minh Thư', email: 'minhthu.tran@gmail.com',
-    phone: '0938456789', dateOfBirth: '1998-07-22', gender: 'Nữ',
-    receiveNewsletter: false, status: 'ACTIVE', emailVerifiedAt: '2026-02-14 10:30:00',
-    lockedReason: null,
-    orders: 1, spend: 1890000, lastPurchase: '25/10/2026', lastOrder: '#8TT-1023',
-  },
-  {
-    id: 3, numericId: '#KH-0236',
-    fullName: 'Lê Đức Anh', email: 'ducanh.le@gmail.com',
-    phone: '0987123456', dateOfBirth: '1992-11-05', gender: 'Nam',
-    receiveNewsletter: true, status: 'ACTIVE', emailVerifiedAt: '2025-12-20 14:00:00',
-    lockedReason: null,
-    orders: 5, spend: 10450000, lastPurchase: '25/10/2026', lastOrder: '#8TT-1022',
-  },
-  {
-    id: 4, numericId: '#KH-0231',
-    fullName: 'Phạm Ngọc Linh', email: 'ngoclinh.pham@gmail.com',
-    phone: '0912678345', dateOfBirth: null, gender: null,
-    receiveNewsletter: true, status: 'ACTIVE', emailVerifiedAt: '2026-03-10 09:45:00',
-    lockedReason: null,
-    orders: 3, spend: 4270000, lastPurchase: '25/10/2026', lastOrder: '#8TT-1021',
-  },
-  {
-    id: 5, numericId: '#KH-0228',
-    fullName: 'Võ Thanh Tùng', email: 'thanhtung.vo@gmail.com',
-    phone: '0976543210', dateOfBirth: '1990-06-30', gender: 'Nam',
-    receiveNewsletter: false, status: 'ACTIVE', emailVerifiedAt: '2026-04-01 11:00:00',
-    lockedReason: null,
-    orders: 4, spend: 6380000, lastPurchase: '25/10/2026', lastOrder: '#8TT-1020',
-  },
-  {
-    id: 6, numericId: '#KH-0225',
-    fullName: 'Đặng Gia Huy', email: 'giahuy.dang@gmail.com',
-    phone: '0903876543', dateOfBirth: '1996-09-18', gender: 'Nam',
-    receiveNewsletter: true, status: 'ACTIVE', emailVerifiedAt: '2026-01-28 16:20:00',
-    lockedReason: null,
-    orders: 2, spend: 5930000, lastPurchase: '24/10/2026', lastOrder: '#8TT-1019',
-  },
-  {
-    id: 7, numericId: '#KH-0221',
-    fullName: 'Bùi Thảo Vy', email: 'thaovy.bui@gmail.com',
-    phone: '0945321678', dateOfBirth: '2000-02-14', gender: 'Nữ',
-    receiveNewsletter: false, status: 'ACTIVE', emailVerifiedAt: '2026-05-03 13:10:00',
-    lockedReason: null,
-    orders: 1, spend: 350000, lastPurchase: '24/10/2026', lastOrder: '#8TT-1018',
-  },
-  {
-    id: 8, numericId: '#KH-0219',
-    fullName: 'Đỗ Quang Minh', email: 'quangminh.do@gmail.com',
-    phone: '0968234901', dateOfBirth: '1988-12-01', gender: 'Nam',
-    receiveNewsletter: false, status: 'LOCKED', emailVerifiedAt: '2025-11-15 07:30:00',
-    lockedReason: 'Vi phạm chính sách đặt hàng nhiều lần – hủy đơn không có lý do.',
-    orders: 2, spend: 2490000, lastPurchase: '24/10/2026', lastOrder: '#8TT-1017',
-  },
-  {
-    id: 9, numericId: '#KH-0216',
-    fullName: 'Ngô Hải Yến', email: 'haiyen.ngo@gmail.com',
-    phone: '0923567890', dateOfBirth: '1997-04-25', gender: 'Nữ',
-    receiveNewsletter: true, status: 'ACTIVE', emailVerifiedAt: '2026-02-20 10:00:00',
-    lockedReason: null,
-    orders: 3, spend: 4920000, lastPurchase: '24/10/2026', lastOrder: '#8TT-1016',
-  },
-];
+const PAGE_SIZE = 9;
 
-const formatPrice = (price) => `${(price || 0).toLocaleString('vi-VN')} ₫`;
+const formatPrice = (price) => `${Number(price || 0).toLocaleString('vi-VN')} ₫`;
 const formatPhone = (phone) => phone
   ? phone.replace(/^(\d{4})(\d{3})(\d{3})$/, '$1 $2 $3')
   : '—';
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString('vi-VN');
+};
+const formatDateTime = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleString('vi-VN');
+};
 
 /* ── Status badge ── */
 function StatusBadge({ status }) {
@@ -143,19 +80,19 @@ function ActionMenu({ customer, onView, onToggleLock }) {
 }
 
 /* ── Modal khóa / mở khóa ── */
-function LockDialog({ customer, onClose, onConfirm }) {
+function LockDialog({ customer, loading, onClose, onConfirm }) {
   const [reason, setReason] = useState('');
   const isLocked = customer.status === 'LOCKED';
 
   return (
-    <div className="om-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="om-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget && !loading) onClose(); }}>
       <section className="om-dialog cm-lock-dialog" role="dialog" aria-modal="true">
         <div className="om-dialog-heading">
           <div className="om-dialog-id">
             <span>{isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}</span>
             <h2>{customer.fullName}</h2>
           </div>
-          <button className="om-icon-button" onClick={onClose} aria-label="Đóng"><IconX size={18} /></button>
+          <button className="om-icon-button" onClick={onClose} disabled={loading} aria-label="Đóng"><IconX size={18} /></button>
         </div>
 
         <div className="cm-lock-body">
@@ -180,6 +117,7 @@ function LockDialog({ customer, onClose, onConfirm }) {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={3}
+                  maxLength={500}
                   autoFocus
                 />
               </label>
@@ -188,14 +126,14 @@ function LockDialog({ customer, onClose, onConfirm }) {
         </div>
 
         <div className="om-dialog-actions">
-          <button className="om-button" onClick={onClose}>Hủy</button>
+          <button className="om-button" onClick={onClose} disabled={loading}>Hủy</button>
           <button
             className={`om-button cm-lock-confirm ${isLocked ? 'unlock' : 'lock'}`}
             onClick={() => onConfirm(customer, reason)}
-            disabled={!isLocked && !reason.trim()}
+            disabled={loading || (!isLocked && !reason.trim())}
           >
             {isLocked ? <IconLockOpen size={14} /> : <IconLock size={14} />}
-            {isLocked ? 'Xác nhận mở khóa' : 'Xác nhận khóa'}
+            {loading ? 'Đang xử lý...' : isLocked ? 'Xác nhận mở khóa' : 'Xác nhận khóa'}
           </button>
         </div>
       </section>
@@ -233,7 +171,7 @@ function CustomerDialog({ customer, onClose, onToggleLock }) {
           <span className="om-dot" />
           <span>Đăng ký qua website</span>
           {customer.emailVerifiedAt && (
-            <><span className="om-dot" /><span>Xác minh {customer.emailVerifiedAt.split(' ')[0]}</span></>
+            <><span className="om-dot" /><span>Xác minh {formatDate(customer.emailVerifiedAt)}</span></>
           )}
         </div>
 
@@ -280,7 +218,7 @@ function CustomerDialog({ customer, onClose, onToggleLock }) {
               </div>
               <div className="om-info-row">
                 <span>Xác minh email</span>
-                <strong>{customer.emailVerifiedAt || '—'}</strong>
+                <strong>{formatDateTime(customer.emailVerifiedAt)}</strong>
               </div>
               {isLocked && customer.lockedReason && (
                 <div className="om-info-row">
@@ -305,7 +243,11 @@ function CustomerDialog({ customer, onClose, onToggleLock }) {
               </div>
               <div className="om-info-row">
                 <span>Mua gần nhất</span>
-                <strong>{customer.lastPurchase} · {customer.lastOrder}</strong>
+                <strong>
+                  {customer.lastPurchaseAt
+                    ? `${formatDate(customer.lastPurchaseAt)}${customer.lastOrder ? ` · ${customer.lastOrder}` : ''}`
+                    : 'Chưa có đơn hàng'}
+                </strong>
               </div>
             </div>
           </div>
@@ -328,39 +270,110 @@ function CustomerDialog({ customer, onClose, onToggleLock }) {
 
 /* ── Main page ── */
 export default function AdminCustomerManagement() {
-  const [data, setData] = useState(customers);
+  const [data, setData] = useState([]);
+  const [statsData, setStatsData] = useState({
+    totalCustomers: 0,
+    newCustomers: 0,
+    returningCustomers: 0,
+    vipCustomers: 0,
+    lockedCustomers: 0,
+  });
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [lockLoading, setLockLoading] = useState(false);
+
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('all');
-  const [date, setDate] = useState('all');
   const [sort, setSort] = useState('newest');
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [lockTarget, setLockTarget] = useState(null);
   const [notice, setNotice] = useState('');
 
-  const filteredCustomers = useMemo(() => data.filter((c) => {
-    const needle = query.trim().toLocaleLowerCase('vi');
-    const matchesQuery = `${c.numericId} ${c.fullName} ${c.phone} ${c.email}`.toLocaleLowerCase('vi').includes(needle);
-    const matchesStatus = statusFilter === 'all'
-      || (statusFilter === 'active' ? c.status === 'ACTIVE' : c.status === 'LOCKED');
-    const matchesTab = activeTab === 'all' || (activeTab === 'locked' && c.status === 'LOCKED');
-    const matchesDate = date === 'all' || c.lastPurchase === date;
-    return matchesQuery && matchesStatus && matchesTab && matchesDate;
-  }).sort((a, b) => sort === 'oldest' ? a.id - b.id : b.id - a.id), [data, query, statusFilter, activeTab, date, sort]);
+  const fetchStats = useCallback(async () => {
+    try {
+      const statsRes = await adminCustomerService.getStats();
+      setStatsData(statsRes);
+    } catch {
+      // Giữ số liệu hiện tại nếu lỗi tạm thời
+    }
+  }, []);
+
+  const fetchCustomers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const effectiveStatus = activeTab === 'locked'
+        ? 'LOCKED'
+        : statusFilter === 'all'
+          ? undefined
+          : statusFilter.toUpperCase();
+
+      const res = await adminCustomerService.getCustomers({
+        page,
+        size: PAGE_SIZE,
+        sortDirection: sort === 'oldest' ? 'asc' : 'desc',
+        search: query.trim() || undefined,
+        status: effectiveStatus,
+      });
+
+      setData(res.content);
+      setTotalPages(Math.max(res.totalPages || 1, 1));
+      setTotalElements(res.totalElements || 0);
+    } catch (err) {
+      setNotice(err?.message || 'Không thể tải danh sách khách hàng.');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, sort, query, statusFilter, activeTab]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCustomers();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [fetchCustomers]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setPage(0);
+    setSelectedIds([]);
+  };
+
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setPage(0);
+    setSelectedIds([]);
+  };
+
+  const handleQueryChange = (value) => {
+    setQuery(value);
+    setPage(0);
+  };
+
+  const handleSortChange = (value) => {
+    setSort(value);
+    setPage(0);
+  };
 
   const toggleAll = () => {
-    const visibleIds = filteredCustomers.map((c) => c.id);
+    const visibleIds = data.map((c) => c.id);
     const allSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
     setSelectedIds((cur) => allSelected ? cur.filter((id) => !visibleIds.includes(id)) : [...new Set([...cur, ...visibleIds])]);
   };
   const toggleCustomer = (id) => setSelectedIds((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
 
   const exportCsv = () => {
-    const selected = selectedIds.length ? data.filter((c) => selectedIds.includes(c.id)) : filteredCustomers;
+    const selected = selectedIds.length ? data.filter((c) => selectedIds.includes(c.id)) : data;
     const rows = [
       ['ID', 'Mã KH', 'Họ tên', 'Email', 'Điện thoại', 'Ngày sinh', 'Giới tính', 'Nhận bản tin', 'Trạng thái', 'Xác minh email', 'Số đơn', 'Tổng chi tiêu', 'Mua gần nhất'],
-      ...selected.map((c) => [c.id, c.numericId, c.fullName, c.email, c.phone, c.dateOfBirth || '', c.gender || '', c.receiveNewsletter ? 'Có' : 'Không', c.status, c.emailVerifiedAt || '', c.orders, c.spend, c.lastPurchase]),
+      ...selected.map((c) => [c.id, c.numericId, c.fullName, c.email, c.phone || '', c.dateOfBirth || '', c.gender || '', c.receiveNewsletter ? 'Có' : 'Không', c.status, formatDateTime(c.emailVerifiedAt), c.orders, c.spend, formatDate(c.lastPurchaseAt)]),
     ];
     const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
     const url = URL.createObjectURL(new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' }));
@@ -373,22 +386,35 @@ export default function AdminCustomerManagement() {
     setLockTarget(customer);
   };
 
-  const handleLockConfirm = (customer, reason) => {
+  const handleLockConfirm = async (customer, reason) => {
     const isLocked = customer.status === 'LOCKED';
-    setData((prev) => prev.map((c) => c.id === customer.id
-      ? { ...c, status: isLocked ? 'ACTIVE' : 'LOCKED', lockedReason: isLocked ? null : reason }
-      : c
-    ));
-    setLockTarget(null);
-    setNotice(isLocked ? `Đã mở khóa tài khoản ${customer.fullName}.` : `Đã khóa tài khoản ${customer.fullName}.`);
+    const nextStatus = isLocked ? 'ACTIVE' : 'LOCKED';
+    setLockLoading(true);
+    try {
+      const updated = await adminCustomerService.updateStatus(customer.id, nextStatus, isLocked ? undefined : reason);
+      setData((prev) => prev.map((c) => (c.id === customer.id ? updated : c)));
+      setLockTarget(null);
+      setNotice(isLocked ? `Đã mở khóa tài khoản ${customer.fullName}.` : `Đã khóa tài khoản ${customer.fullName}.`);
+      fetchStats();
+      if (activeTab === 'locked' || statusFilter !== 'all') {
+        fetchCustomers();
+      }
+    } catch (err) {
+      setNotice(err?.message || 'Không thể cập nhật trạng thái tài khoản.');
+    } finally {
+      setLockLoading(false);
+    }
   };
 
   const stats = [
-    { label: 'Tổng khách hàng', value: '1.248', note: 'Khách hàng đã đăng ký', Icon: IconUsers },
-    { label: 'Khách hàng mới', value: '86', note: '+18,6% so với tháng trước', Icon: IconUserPlus, alert: true },
-    { label: 'Khách hàng quay lại', value: '324', note: 'Chiếm 26% tổng khách hàng', Icon: IconRepeat },
-    { label: 'Khách hàng VIP', value: '48', note: 'Tổng chi tiêu từ 10.000.000 ₫', Icon: IconCrown },
+    { label: 'Tổng khách hàng', value: statsData.totalCustomers.toLocaleString('vi-VN'), note: 'Khách hàng đã đăng ký', Icon: IconUsers },
+    { label: 'Khách hàng mới', value: statsData.newCustomers.toLocaleString('vi-VN'), note: 'Đăng ký trong tháng này', Icon: IconUserPlus, alert: true },
+    { label: 'Khách hàng quay lại', value: statsData.returningCustomers.toLocaleString('vi-VN'), note: 'Từ 2 đơn hàng trở lên', Icon: IconRepeat },
+    { label: 'Khách hàng VIP', value: statsData.vipCustomers.toLocaleString('vi-VN'), note: 'Tổng chi tiêu từ 10.000.000 ₫', Icon: IconCrown },
   ];
+
+  const startIndex = totalElements === 0 ? 0 : page * PAGE_SIZE + 1;
+  const endIndex = Math.min((page + 1) * PAGE_SIZE, totalElements);
 
   return (
     <div className="om-dashboard cm-dashboard">
@@ -404,7 +430,7 @@ export default function AdminCustomerManagement() {
               <button className="om-button" onClick={exportCsv}><IconDownload size={16} />Xuất danh sách</button>
             </div>
             <div className="om-stats">
-              {stats.map(({ label, value, note, Icon, alert }, index) => (
+              {stats.map(({ label, value, note, Icon, alert }) => (
                 <article className="om-stat" key={label}>
                   <div className="om-stat-label"><span>{label}</span><Icon size={17} stroke={1.5} /></div>
                   <strong>{value}</strong>
@@ -417,11 +443,11 @@ export default function AdminCustomerManagement() {
           <section className="cm-table-panel" aria-label="Danh sách khách hàng">
             {/* Tabs */}
             <div className="cm-tabs" role="tablist">
-              <button role="tab" aria-selected={activeTab === 'all'} className={activeTab === 'all' ? 'selected' : ''} onClick={() => setActiveTab('all')}>
-                Tất cả<span>1.248</span>
+              <button role="tab" aria-selected={activeTab === 'all'} className={activeTab === 'all' ? 'selected' : ''} onClick={() => handleTabChange('all')}>
+                Tất cả<span>{statsData.totalCustomers.toLocaleString('vi-VN')}</span>
               </button>
-              <button role="tab" aria-selected={activeTab === 'locked'} className={activeTab === 'locked' ? 'selected' : ''} onClick={() => setActiveTab('locked')}>
-                Đã khóa<span>12</span>
+              <button role="tab" aria-selected={activeTab === 'locked'} className={activeTab === 'locked' ? 'selected' : ''} onClick={() => handleTabChange('locked')}>
+                Đã khóa<span>{statsData.lockedCustomers.toLocaleString('vi-VN')}</span>
               </button>
               <span className="cm-column-label"><IconColumns3 size={14} />Tùy chỉnh cột</span>
             </div>
@@ -430,11 +456,11 @@ export default function AdminCustomerManagement() {
             <div className="cm-filters">
               <label className="cm-search">
                 <IconSearch size={16} />
-                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tìm tên, mã KH, email hoặc SĐT..." aria-label="Tìm khách hàng" />
+                <input value={query} onChange={(e) => handleQueryChange(e.target.value)} placeholder="Tìm tên, mã KH, email hoặc SĐT..." aria-label="Tìm khách hàng" />
               </label>
               <label>
                 <span className="sr-only">Trạng thái</span>
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <select value={statusFilter} onChange={(e) => handleStatusFilterChange(e.target.value)} disabled={activeTab === 'locked'}>
                   <option value="all">Tất cả trạng thái</option>
                   <option value="active">Hoạt động</option>
                   <option value="locked">Đã khóa</option>
@@ -442,18 +468,8 @@ export default function AdminCustomerManagement() {
                 <IconChevronDown size={14} />
               </label>
               <label>
-                <IconCalendar size={15} />
-                <span className="sr-only">Ngày tạo</span>
-                <select value={date} onChange={(e) => setDate(e.target.value)}>
-                  <option value="all">Ngày tạo: Tất cả</option>
-                  <option>25/10/2026</option>
-                  <option>24/10/2026</option>
-                </select>
-                <IconChevronDown size={14} />
-              </label>
-              <label>
                 <span className="sr-only">Sắp xếp</span>
-                <select value={sort} onChange={(e) => setSort(e.target.value)}>
+                <select value={sort} onChange={(e) => handleSortChange(e.target.value)}>
                   <option value="newest">Sắp xếp: Mới nhất</option>
                   <option value="oldest">Sắp xếp: Cũ nhất</option>
                 </select>
@@ -468,7 +484,7 @@ export default function AdminCustomerManagement() {
                   <tr>
                     <th className="cm-check-cell">
                       <input type="checkbox" aria-label="Chọn tất cả"
-                        checked={filteredCustomers.length > 0 && filteredCustomers.every((c) => selectedIds.includes(c.id))}
+                        checked={data.length > 0 && data.every((c) => selectedIds.includes(c.id))}
                         onChange={toggleAll} />
                     </th>
                     <th>Khách hàng</th>
@@ -482,7 +498,9 @@ export default function AdminCustomerManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCustomers.map((c) => (
+                  {loading ? (
+                    <tr><td colSpan="9" className="cm-empty">Đang tải dữ liệu khách hàng...</td></tr>
+                  ) : data.map((c) => (
                     <tr key={c.id}>
                       <td className="cm-check-cell">
                         <input type="checkbox" aria-label={`Chọn ${c.fullName}`} checked={selectedIds.includes(c.id)} onChange={() => toggleCustomer(c.id)} />
@@ -505,8 +523,8 @@ export default function AdminCustomerManagement() {
                       <td><StatusBadge status={c.status} /></td>
                       <td>
                         <div className="cm-date-cell">
-                          <span>{c.lastPurchase}</span>
-                          <small>{c.lastOrder}</small>
+                          <span>{formatDate(c.lastPurchaseAt)}</span>
+                          <small>{c.lastOrder || '—'}</small>
                         </div>
                       </td>
                       <td>
@@ -519,7 +537,7 @@ export default function AdminCustomerManagement() {
                       </td>
                     </tr>
                   ))}
-                  {!filteredCustomers.length && (
+                  {!loading && !data.length && (
                     <tr><td colSpan="9" className="cm-empty">Không tìm thấy khách hàng phù hợp.</td></tr>
                   )}
                 </tbody>
@@ -528,21 +546,21 @@ export default function AdminCustomerManagement() {
 
             {/* Pagination */}
             <div className="cm-pagination">
-              <span>Hiển thị {filteredCustomers.length ? `1–${filteredCustomers.length}` : '0'} trong 1.248 khách hàng</span>
+              <span>Hiển thị {totalElements ? `${startIndex}–${endIndex}` : '0'} trong {totalElements.toLocaleString('vi-VN')} khách hàng</span>
               <div>
-                <small>9 / trang</small>
-                <button aria-label="Trang trước" disabled><IconChevronLeft size={15} /></button>
-                <button className="current" aria-current="page">1</button>
-                <button disabled>2</button>
-                <button disabled>3</button>
-                <button disabled className="cm-ellipsis">…</button>
-                <button disabled>139</button>
-                <button disabled className="cm-next">Trang sau <IconChevronRight size={14} /></button>
+                <small>{PAGE_SIZE} / trang</small>
+                <button aria-label="Trang trước" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+                  <IconChevronLeft size={15} />
+                </button>
+                <button className="current" aria-current="page">{page + 1}</button>
+                <button disabled={page + 1 >= totalPages} className="cm-next" onClick={() => setPage((p) => p + 1)}>
+                  Trang sau <IconChevronRight size={14} />
+                </button>
               </div>
             </div>
           </section>
 
-          <p className="om-updated">Cập nhật lần cuối lúc 23:59, 25/10/2026 • Múi giờ Việt Nam (GMT+7)</p>
+          <p className="om-updated">Múi giờ Việt Nam (GMT+7)</p>
         </div>
       </main>
 
@@ -550,7 +568,7 @@ export default function AdminCustomerManagement() {
         <CustomerDialog customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} onToggleLock={handleToggleLock} />
       )}
       {lockTarget && (
-        <LockDialog customer={lockTarget} onClose={() => setLockTarget(null)} onConfirm={handleLockConfirm} />
+        <LockDialog customer={lockTarget} loading={lockLoading} onClose={() => setLockTarget(null)} onConfirm={handleLockConfirm} />
       )}
       {notice && (
         <div className="om-toast" role="status">

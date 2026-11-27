@@ -67,9 +67,35 @@ export const authService = {
           JSON.stringify(result.data.user)
         );
       }
+
+      window.dispatchEvent(new Event("auth:state-change"));
     }
 
     return result;
+  },
+
+  /**
+   * Kiểm tra user có quyền ADMIN (role ADMIN / ROLE_ADMIN / role_id = 2)
+   */
+  isAdmin(user = this.getCurrentUser()) {
+    if (!user) return false;
+    if (user.roleId === 2 || user.role_id === 2) return true;
+    if (typeof user.role === "string") {
+      return user.role === "ADMIN" || user.role === "ROLE_ADMIN";
+    }
+    if (Array.isArray(user.roles)) {
+      return user.roles.some(
+        (r) => r === "ADMIN" || r === "ROLE_ADMIN" || r === 2 || r?.id === 2 || r?.code === "ADMIN"
+      );
+    }
+    if (Array.isArray(user.authorities)) {
+      return user.authorities.some(
+        (a) =>
+          (typeof a === "string" && (a === "ADMIN" || a === "ROLE_ADMIN")) ||
+          (a?.authority && (a.authority === "ADMIN" || a.authority === "ROLE_ADMIN"))
+      );
+    }
+    return false;
   },
 
   /**

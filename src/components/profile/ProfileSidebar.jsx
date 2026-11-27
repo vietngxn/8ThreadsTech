@@ -1,4 +1,4 @@
-import { IconUser, IconLock, IconMapPin, IconLogout, IconPackage, IconChevronRight, IconArrowUpRight } from "@tabler/icons-react";
+import { IconUser, IconLock, IconMapPin, IconLogout, IconPackage, IconChevronRight, IconArrowUpRight, IconLayoutDashboard } from "@tabler/icons-react";
 import { authService } from "../../services/authService";
 
 const menuItems = [
@@ -10,6 +10,7 @@ const menuItems = [
 
 export default function ProfileSidebar({ currentPage }) {
   const currentUser = authService.getCurrentUser();
+  const isAdmin = authService.isAdmin(currentUser);
   const displayName = currentUser?.fullName || currentUser?.name || "Khách hàng 8Threads";
   const displayEmail = currentUser?.email || (authService.getToken() ? "Đã đăng nhập" : "Chưa đăng nhập");
 
@@ -34,10 +35,17 @@ export default function ProfileSidebar({ currentPage }) {
           <strong data-node-id="8:853">{displayName}</strong>
           <span data-node-id="8:854">{displayEmail}</span>
         </div>
-        <small data-node-id="8:855">TÀI KHOẢN NGƯỜI DÙNG</small>
+        <small data-node-id="8:855">{isAdmin ? "TÀI KHOẢN QUẢN TRỊ" : "TÀI KHOẢN NGƯỜI DÙNG"}</small>
       </div>
       <div className="profile-sidebar-rule" data-node-id="8:856" />
       <nav className="profile-menu" aria-label="Điều hướng tài khoản" data-node-id="8:857">
+        {isAdmin && (
+          <a href="/admin">
+            <IconLayoutDashboard size={19} />
+            <span>Trang quản trị</span>
+            <IconChevronRight />
+          </a>
+        )}
         {menuItems.map((item) => (
           <a
             key={item.id}

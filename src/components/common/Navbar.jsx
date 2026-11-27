@@ -9,6 +9,7 @@ import {
 
 import {
   IconArrowRight,
+  IconLayoutDashboard,
   IconSearch,
   IconShoppingBag,
   IconUser,
@@ -36,12 +37,14 @@ export default function Navbar({ quantity, onSearch }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(authService.getToken()));
+  const [isAdmin, setIsAdmin] = useState(() => authService.isAdmin());
 
   const { cartCount } = useCart();
 
   useEffect(() => {
     const handleAuthChange = () => {
       setIsLoggedIn(Boolean(authService.getToken()));
+      setIsAdmin(authService.isAdmin());
     };
     window.addEventListener("auth:state-change", handleAuthChange);
     return () => window.removeEventListener("auth:state-change", handleAuthChange);
@@ -246,6 +249,16 @@ export default function Navbar({ quantity, onSearch }) {
             <IconShoppingBag size={22} />
             <span>{displayQuantity}</span>
           </a>
+
+          {isLoggedIn && isAdmin && (
+            <Link
+              to="/admin"
+              aria-label="Trang quản trị"
+              title="Trang quản trị"
+            >
+              <IconLayoutDashboard size={22} />
+            </Link>
+          )}
 
           {isLoggedIn ? (
             <Link
