@@ -15,6 +15,7 @@ import {
 } from "@tabler/icons-react";
 import { authService } from "../services/authService";
 import { orderService } from "../services/orderService";
+import { userService } from "../services/userService";
 import { paymentService } from "../services/paymentService";
 import { ORDER_FILTERS, getStatusInfo, describePayment } from "../constants/orderStatus";
 import { useCart } from "../hooks/useCart";
@@ -110,17 +111,21 @@ function mapOrder(o) {
     id: `#${o.orderCode}`,
     orderCode: o.orderCode,
     date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("vi-VN") : "",
+    rawStatus: o.status,
     status: info.group,
-    statusLabel: info.label,
+    statusLabel: o.statusLabel || info.label,
     payment: describePayment(o.paymentStatus, o.paymentMethod),
     canCancel: Boolean(o.canCancel),
     canPay: Boolean(o.canPay),
     products: (o.items || []).map((item) => ({
+      id: item.id,
+      productId: item.productId,
       name: item.productName,
       variant: describeOptions(item.selectedOptions),
       price: Number(item.unitPrice || 0),
       quantity: item.quantity || 1,
       image: item.productImageUrl || thread75Image,
+      reviewed: Boolean(item.reviewed || item.isReviewed || item.reviewId),
     })),
     total: Number(o.totalAmount || 0),
     deliveryAddress: o.deliveryAddress,
@@ -219,7 +224,7 @@ export default function OrdersPage() {
 
       // 2. Danh sách đơn
       try {
-        const data = await orderService.getMyOrders();
+        const data = await userService.getMyOrders();
         if (!active) return;
         const mapped = data.map(mapOrder);
         setOrders(mapped);
@@ -267,6 +272,36 @@ export default function OrdersPage() {
       await paymentService.redirectToGateway(orderCode);
     } catch (err) {
       setBanner({ type: "error", text: err.message || "Không tạo được liên kết thanh toán." });
+    }
+  };
+
+  const reloadOrders = async () => {
+    try {
+      const data = await userService.getMyOrders();
+      const mapped = data.map(mapOrder);
+      setOrders(mapped);
+      saveCache(mapped);
+    } catch (err) {
+      console.warn("Không thể tải lại danh sách đơn hàng:", err);
+    }
+  };
+
+  const handleMarkItemReviewed = (orderItemId, message, shouldReload = false) => {
+    setOrders((current) => {
+      const next = current.map((order) => ({
+        ...order,
+        products: order.products.map((p) =>
+          p.id === orderItemId ? { ...p, reviewed: true } : p
+        ),
+      }));
+      saveCache(next);
+      return next;
+    });
+    if (message) {
+      setBanner({ type: "success", text: message });
+    }
+    if (shouldReload) {
+      reloadOrders();
     }
   };
 
@@ -322,7 +357,18 @@ export default function OrdersPage() {
                 Đang tải danh sách đơn hàng...
               </div>
             ) : (
-              <OrdersList orders={filteredOrders} onCancel={handleCancel} onPay={handlePay} />
+              <OrdersList
+                orders={filteredOrders}
+                onCancel={handleCancel}
+                onPay={handlePay}
+                onReviewSuccess={(orderItemId, msg) =>
+                  handleMarkItemReviewed(orderItemId, msg || "Đánh giá sản phẩm thành công.", true)
+                }
+                onAlreadyReviewed={(orderItemId, msg) =>
+                  handleMarkItemReviewed(orderItemId, msg, false)
+                }
+                onReloadOrders={reloadOrders}
+              />
             )}
           </div>
         </section>

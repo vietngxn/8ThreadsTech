@@ -9,12 +9,14 @@ import {
   IconLogout,
   IconMapPin,
   IconPackage,
+  IconStar,
   IconTruck,
   IconUser,
 } from "@tabler/icons-react";
 import thread75 from "../../assets/list-thread-75.png";
 import { authService } from "../../services/authService";
 import CancelReasonForm from "./CancelReasonForm";
+import ReviewModal from "../orders/ReviewModal";
 
 const orderSteps = ["Đã tiếp nhận", "Chờ xác nhận", "Đã xác nhận", "Đang giao hàng", "Đã giao hàng"];
 const formatPrice = (price) => `${Number(price || 0).toLocaleString("vi-VN")} ₫`;
@@ -133,8 +135,11 @@ function OrderProgress({ status, orderDate }) {
   );
 }
 
-export default function OrderDetailMain({ order, onCancel }) {
+export default function OrderDetailMain({ order, onCancel, onReloadOrder }) {
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [reviewTarget, setReviewTarget] = useState(null);
+  const [reviewedItemIds, setReviewedItemIds] = useState([]);
+  const [reviewNotice, setReviewNotice] = useState("");
 
   if (!order) {
     return (
@@ -214,25 +219,80 @@ export default function OrderDetailMain({ order, onCancel }) {
             <h2>SẢN PHẨM TRONG ĐƠN</h2>
             <span>{totalQuantity} sản phẩm</span>
           </div>
+          {reviewNotice && (
+            <div
+              role="status"
+              style={{
+                margin: "0 0 14px",
+                padding: "12px 16px",
+                borderRadius: 6,
+                border: "1px solid #22c55e",
+                background: "rgba(34, 197, 94, 0.1)",
+                fontSize: 13,
+              }}
+            >
+              {reviewNotice}
+            </div>
+          )}
           <div className="order-detail-product-list">
-            {items.map((product) => (
-              <article className="order-detail-product" key={product.id || product.productSku || product.productName}>
-                <div className="order-detail-product-image">
-                  <img src={product.productImageUrl || thread75} alt={product.productName} />
-                </div>
-                <div className="order-detail-product-info">
-                  <strong>{product.productName}</strong>
-                  <span>{product.selectedOptions || "Bàn phím cơ cao cấp"}</span>
-                </div>
-                <div className="order-detail-quantity">
-                  <small>SỐ LƯỢNG</small>
-                  <span>× {product.quantity || 1}</span>
-                </div>
-                <div className="order-detail-price">
-                  <strong>{formatPrice(product.unitPrice)}</strong>
-                </div>
-              </article>
-            ))}
+            {items.map((product) => {
+              const isReviewed = Boolean(
+                product.reviewed ||
+                  product.isReviewed ||
+                  product.reviewId ||
+                  reviewedItemIds.includes(product.id)
+              );
+              const canReview =
+                effectiveStatus === "DELIVERED" &&
+                Boolean(product.id && product.productId);
+
+              return (
+                <article className="order-detail-product" key={product.id || product.productSku || product.productName}>
+                  <div className="order-detail-product-image">
+                    <img src={product.productImageUrl || thread75} alt={product.productName} />
+                  </div>
+                  <div className="order-detail-product-info">
+                    <strong>{product.productName}</strong>
+                    <span>{product.selectedOptions || "Bàn phím cơ cao cấp"}</span>
+                    {effectiveStatus === "DELIVERED" && (
+                      <div className="order-item-review-inline">
+                        {isReviewed ? (
+                          <span className="order-reviewed-badge">
+                            <IconCheck size={12} /> Đã đánh giá
+                          </span>
+                        ) : (
+                          canReview && (
+                            <button
+                              type="button"
+                              className="order-button order-button--secondary order-item-review-btn"
+                              onClick={() =>
+                                setReviewTarget({
+                                  orderItemId: product.id,
+                                  productId: product.productId,
+                                  name: product.productName,
+                                  variant: product.selectedOptions,
+                                  image: product.productImageUrl || thread75,
+                                  orderCode: order.orderCode,
+                                })
+                              }
+                            >
+                              <IconStar size={13} /> ĐÁNH GIÁ
+                            </button>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="order-detail-quantity">
+                    <small>SỐ LƯỢNG</small>
+                    <span>× {product.quantity || 1}</span>
+                  </div>
+                  <div className="order-detail-price">
+                    <strong>{formatPrice(product.unitPrice)}</strong>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
 
@@ -338,6 +398,23 @@ export default function OrderDetailMain({ order, onCancel }) {
           </div>
         </div>
       </div>
+
+      {reviewTarget && (
+        <ReviewModal
+          item={reviewTarget}
+          onClose={() => setReviewTarget(null)}
+          onSuccess={async (orderItemId, _data, msg) => {
+            setReviewedItemIds((prev) => [...new Set([...prev, orderItemId])]);
+            setReviewTarget(null);
+            setReviewNotice(msg || "Đánh giá sản phẩm thành công.");
+            await onReloadOrder?.();
+          }}
+          onAlreadyReviewed={(orderItemId) => {
+            setReviewedItemIds((prev) => [...new Set([...prev, orderItemId])]);
+          }}
+          onReloadOrder={onReloadOrder}
+        />
+      )}
     </div>
   );
 }

@@ -1,23 +1,22 @@
 import { useState } from "react";
 import CancelReasonForm from "../order/CancelReasonForm";
-import { IconArrowUpRight, IconStar } from "@tabler/icons-react";
+import ReviewModal from "./ReviewModal";
+import { IconArrowUpRight, IconCheck, IconStar } from "@tabler/icons-react";
 
 const formatPrice = (price) => `${Number(price || 0).toLocaleString("vi-VN")} ₫`;
 
-function OrderCard({ order, onCancel, onPay }) {
+function OrderCard({ order, onCancel, onPay, onOpenReview }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
-  const [reviewSent, setReviewSent] = useState(false);
   const [paying, setPaying] = useState(false);
 
   const detailHref = `/don-hang/${order.orderCode}`;
   const itemCount = order.products.reduce((sum, p) => sum + p.quantity, 0);
+  const isDelivered = order.rawStatus === "DELIVERED" || (!order.rawStatus && order.status === "delivered");
 
   const handlePay = async () => {
     setPaying(true);
-    await onPay(order.orderCode); // thành công thì trình duyệt đã rời trang
+    await onPay(order.orderCode);
     setPaying(false);
   };
 
@@ -40,11 +39,40 @@ function OrderCard({ order, onCancel, onPay }) {
 
       <div className="order-products">
         {order.products.map((product, index) => (
-          <div className="order-product" key={`${order.id}-${index}`} data-node-id="12:811">
+          <div className="order-product" key={product.id || `${order.id}-${index}`} data-node-id="12:811">
             <div className="order-product-image"><img src={product.image} alt={product.name} /></div>
             <div className="order-product-info">
               <strong>{product.name}</strong>
               {product.variant && <span>{product.variant}</span>}
+              {isDelivered && (
+                <div className="order-item-review-inline">
+                  {product.reviewed ? (
+                    <span className="order-reviewed-badge">
+                      <IconCheck size={12} /> Đã đánh giá
+                    </span>
+                  ) : (
+                    product.id &&
+                    product.productId && (
+                      <button
+                        type="button"
+                        className="order-button order-button--secondary order-item-review-btn"
+                        onClick={() =>
+                          onOpenReview({
+                            orderItemId: product.id,
+                            productId: product.productId,
+                            name: product.name,
+                            variant: product.variant,
+                            image: product.image,
+                            orderCode: order.orderCode,
+                          })
+                        }
+                      >
+                        <IconStar size={13} /> ĐÁNH GIÁ
+                      </button>
+                    )
+                  )}
+                </div>
+              )}
             </div>
             <span className="order-product-quantity">× {product.quantity}</span>
             <strong className="order-product-price">{formatPrice(product.price * product.quantity)}</strong>
@@ -58,7 +86,6 @@ function OrderCard({ order, onCancel, onPay }) {
           <small>{order.delivery}</small>
         </div>
         <div className="order-actions">
-          {/* Nút hiện theo canPay/canCancel do BE tính, FE không tự suy luận từ trạng thái */}
           {order.canPay && (
             <button className="order-button order-button--primary" onClick={handlePay} disabled={paying}>
               {paying ? "ĐANG CHUYỂN..." : "THANH TOÁN"} <IconArrowUpRight />
@@ -92,50 +119,47 @@ function OrderCard({ order, onCancel, onPay }) {
           <div><span>PHƯƠNG THỨC THANH TOÁN</span><strong>{order.payment}</strong></div>
         </div>
       )}
-
-      {order.review && (
-        <section className="order-review" aria-labelledby={`review-${order.id}`} data-node-id="40:121">
-          <div className="order-review-heading">
-            <h3 id={`review-${order.id}`}>Đánh giá sản phẩm</h3>
-            <span>ĐÁNH GIÁ SAU KHI GIAO</span>
-          </div>
-          <p className="order-review-note">Bạn chỉ có thể đánh giá sản phẩm sau khi đơn hàng đã được giao. Đánh giá này dành riêng cho sản phẩm {order.products[0].name} trong đơn {order.id}.</p>
-          <div className="review-product">
-            <div className="review-product-image">
-              <img src={order.products[0].image} alt={order.products[0].name} />
-            </div>
-            <div>
-              <strong>{order.products[0].name}</strong>
-              <span>{order.products[0].variant}</span>
-            </div>
-          </div>
-          <div className="review-rating">
-            <span>Đánh giá của bạn</span>
-            <div className="review-stars" role="radiogroup" aria-label="Chọn số sao">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button key={star} className={star <= rating ? "filled" : ""} onClick={() => setRating(star)} aria-label={`${star} sao`}><IconStar size={20} aria-hidden="true" /></button>
-              ))}
-            </div>
-          </div>
-          <textarea className="review-comment" placeholder="Chia sẻ trải nghiệm của bạn..." value={comment} onChange={(e) => setComment(e.target.value)} rows={3} />
-          {reviewSent ? (
-            <p className="review-thanks">Cảm ơn bạn đã đánh giá!</p>
-          ) : (
-            <button className="order-button order-button--primary review-submit" onClick={() => setReviewSent(true)}>GỬI ĐÁNH GIÁ</button>
-          )}
-        </section>
-      )}
     </article>
   );
 }
 
-export default function OrdersList({ orders, onCancel, onPay }) {
+export default function OrdersList({
+  orders,
+  onCancel,
+  onPay,
+  onReviewSuccess,
+  onAlreadyReviewed,
+  onReloadOrders,
+}) {
+  const [reviewTarget, setReviewTarget] = useState(null);
+
   return (
     <div className="orders-list" data-node-id="12:788">
       {orders.map((order, index) => (
-        <OrderCard key={order.id} order={{...order, nodeId: `12:${790 + index * 10}`}} onCancel={onCancel} onPay={onPay} />
+        <OrderCard
+          key={order.id}
+          order={{ ...order, nodeId: `12:${790 + index * 10}` }}
+          onCancel={onCancel}
+          onPay={onPay}
+          onOpenReview={setReviewTarget}
+        />
       ))}
       {orders.length === 0 && <p className="orders-empty">Không có đơn hàng nào phù hợp.</p>}
+
+      {reviewTarget && (
+        <ReviewModal
+          item={reviewTarget}
+          onClose={() => setReviewTarget(null)}
+          onSuccess={(orderItemId, _data, msg) => {
+            setReviewTarget(null);
+            onReviewSuccess?.(orderItemId, msg);
+          }}
+          onAlreadyReviewed={(orderItemId, msg) => {
+            onAlreadyReviewed?.(orderItemId, msg);
+          }}
+          onReloadOrder={onReloadOrders}
+        />
+      )}
     </div>
   );
 }

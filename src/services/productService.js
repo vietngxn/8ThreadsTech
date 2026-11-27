@@ -283,6 +283,44 @@ export const productService = {
     return response.data?.data;
   },
 
+  /**
+   * Lấy danh sách đánh giá / bình luận của sản phẩm theo ID
+   */
+  async getProductReviews(productId, params = {}) {
+    if (!productId) return { summary: null, items: [], hasNext: false };
+    try {
+      const response = await api.get(`/api/products/${productId}/reviews`, {
+        params,
+      });
+      const data = response.data?.data || {};
+      return {
+        summary: data.summary || null,
+        items: Array.isArray(data.items) ? data.items : [],
+        hasNext: !!data.hasNext,
+      };
+    } catch (error) {
+      console.warn("Không thể tải đánh giá sản phẩm:", error.message);
+      return {
+        summary: null,
+        items: [],
+        hasNext: false,
+        error: error.message,
+      };
+    }
+  },
+
+  /**
+   * Tạo đánh giá sản phẩm (yêu cầu JWT)
+   * POST /api/products/{id}/reviews
+   */
+  async createProductReview(productId, payload) {
+    const response = await api.post(
+      `/api/products/${encodeURIComponent(productId)}/reviews`,
+      payload
+    );
+    return response.data;
+  },
+
   async getCategoryFilters(parentId) {
     try {
       const response = await api.get("/api/products/category-filters", {
