@@ -1,93 +1,330 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  IconArrowRight, IconArrowUpRight, IconCalendar, IconChevronDown,
-  IconChevronRight, IconClockHour3, IconPackage, IconReceipt,
-  IconShoppingBag, IconTrendingUp, IconWallet,
+  IconArrowRight, IconArrowUpRight, IconCalendar, IconChevronRight,
+  IconClockHour3, IconPackage, IconReceipt, IconShoppingBag,
+  IconTrendingDown, IconTrendingUp, IconTruck, IconWallet,
 } from '@tabler/icons-react';
-import keyboard75 from '../../assets/list-thread-75.png';
-import keyboard65 from '../../assets/list-thread-65.png';
-import keyboard98 from '../../assets/list-thread-98.png';
-import keyboard80 from '../../assets/list-thread-80-pro.png';
-import keyboard60 from '../../assets/list-thread-60-he.png';
+import fallbackImage from '../../assets/list-thread-75.png';
 import AdminSidebar from '../../components/admin/AdminSidebar.jsx';
-import { productService } from '../../services/productService.js';
+import { adminDashboardService } from '../../services/adminDashboardService.js';
+import { ORDER_STATUS_LABELS } from '../../services/adminOrderService.js';
 import './AdminDashboard.css';
 
-const metrics = [
-  ['Doanh thu', '128.400.000 ₫', '12,8%', IconWallet],
-  ['Đơn hàng', '214', '8,1%', IconShoppingBag],
-  ['Sản phẩm bán', '326', '10,1%', IconPackage],
-  ['Giá trị đơn trung bình', '600.000 ₫', '4,4%', IconReceipt],
-];
-const tasks = [
-  [IconClockHour3, 'Đơn chờ xác nhận', 'Xác nhận để chuẩn bị hàng', '12'],
-  [IconPackage, 'Đơn chờ lấy hàng', 'Bàn giao cho đơn vị vận chuyển', '8'],
-  [IconPackage, 'Sản phẩm sắp hết', 'Tồn kho dưới 10 sản phẩm', '5'],
-];
-const orders = [
-  ['#DH1028', 'Nguyễn Ngọc Hà', '25/10 · 16:42', '680.000 ₫', 'Chờ xác nhận'],
-  ['#DH1027', 'Trần Minh Khang', '25/10 · 15:18', '540.000 ₫', 'Chờ lấy hàng'],
-  ['#DH1026', 'Lê Thảo Vy', '25/10 · 14:36', '850.000 ₫', 'Đang giao'],
-  ['#DH1025', 'Phạm Hoàng Nam', '25/10 · 11:05', '290.000 ₫', 'Đang giao'],
-  ['#DH1024', 'Đỗ Minh Tâm', '25/10 · 09:24', '720.000 ₫', 'Hoàn thành'],
-];
-const defaultProducts = [
-  [keyboard75, 'THREAD 75', 'Bạc ánh trăng / Linear Red Switch · 2.490.000 ₫', '64', '159.360.000 ₫'],
-  [keyboard65, 'THREAD 65', 'Đen nguyên bản / Linear Switch · 1.890.000 ₫', '58', '109.620.000 ₫'],
-  [keyboard98, 'THREAD 98', 'Trắng sương / Tactile Brown Switch · 2.190.000 ₫', '42', '92.180.000 ₫'],
-  [keyboard80, 'THREAD 80 PRO', 'Xám titan / Linear Silver Switch · 3.290.000 ₫', '36', '118.440.000 ₫'],
-  [keyboard60, 'THREAD 60 HE', 'Đỏ dung nham / Switch từ tính · 2.790.000 ₫', '28', '77.820.000 ₫'],
+const PERIOD_OPTIONS = [
+  { value: 7, label: '7 ngày' },
+  { value: 30, label: '30 ngày' },
+  { value: 90, label: '90 ngày' },
 ];
 
-function RevenueChart() {
-  return <section className="admin-panel admin-chart" data-node-id="45:2337">
-    <div className="admin-panel-heading"><div><h2>Doanh thu theo ngày</h2><p>19 – 25/10/2026 • Đơn vị: triệu đồng</p></div><span className="admin-period">Theo ngày <IconChevronDown size={13} /></span></div>
-    <div className="admin-legend"><i /> Doanh thu</div>
-    <div className="admin-chart-body"><div className="admin-axis"><span>30</span><span>20</span><span>10</span><span>0</span></div><div className="admin-plot"><div className="admin-chart-grid"><i /><i /><i /><i /></div><svg viewBox="0 0 648 150" preserveAspectRatio="none" aria-label="Biểu đồ doanh thu từ 19 đến 25 tháng 10"><defs><linearGradient id="revenue-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#f02b24" stopOpacity=".13"/><stop offset="1" stopColor="#f02b24" stopOpacity="0"/></linearGradient></defs><path d="M0 78 L108 56 L216 70 L324 38 L432 61 L540 26 L648 74 L648 150 L0 150 Z" fill="url(#revenue-fill)"/><path d="M0 78 L108 56 L216 70 L324 38 L432 61 L540 26 L648 74" fill="none" stroke="#f02b24" strokeWidth="2.5" vectorEffect="non-scaling-stroke"/><line x1="540" y1="26" x2="540" y2="150" stroke="#f02b24" opacity=".25"/><circle cx="540" cy="26" r="4" fill="#f02b24" stroke="white" strokeWidth="2"/></svg><span className="admin-chart-tip">24,8 triệu ₫</span><div className="admin-dates">{['19/10','20/10','21/10','22/10','23/10','24/10','25/10'].map(date => <span key={date}>{date}</span>)}</div></div></div>
-  </section>;
+// ---------- Định dạng ----------
+const formatMoney = (value) => `${Math.round(Number(value) || 0).toLocaleString('vi-VN')} ₫`;
+const formatNumber = (value) => (Number(value) || 0).toLocaleString('vi-VN');
+const formatDay = (iso) => {
+  const [, m, d] = String(iso).split('-');
+  return `${d}/${m}`;
+};
+const formatFullDate = (iso) => {
+  const [y, m, d] = String(iso).split('-');
+  return `${d}/${m}/${y}`;
+};
+const formatDateTime = (iso) => {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mi = String(date.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm} · ${hh}:${mi}`;
+};
+const formatMillion = (value) =>
+  (value / 1_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 1 });
+
+/** Bước chia trục tròn đẹp: 1, 2, 5, 10, 20, 50... (đơn vị đồng). */
+function niceStep(raw) {
+  if (raw <= 0) return 1_000_000;
+  const pow = 10 ** Math.floor(Math.log10(raw));
+  const n = raw / pow;
+  const step = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+  return step * pow;
 }
 
+// ---------- Biểu đồ doanh thu ----------
+const CHART_W = 648;
+const CHART_H = 150;
+
+function RevenueChart({ data, fromDate, toDate, days, onDaysChange }) {
+  const chart = useMemo(() => {
+    const points = data || [];
+    const values = points.map((p) => Number(p.revenue) || 0);
+    const max = Math.max(0, ...values);
+    const step = niceStep(max / 3);
+    const top = step * 3;
+
+    const coords = points.map((p, i) => ({
+      x: points.length > 1 ? (i * CHART_W) / (points.length - 1) : CHART_W / 2,
+      y: CHART_H - ((Number(p.revenue) || 0) / top) * CHART_H,
+      ...p,
+    }));
+
+    const line = coords.map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
+    const area = coords.length
+      ? `${line} L${coords[coords.length - 1].x.toFixed(1)} ${CHART_H} L${coords[0].x.toFixed(1)} ${CHART_H} Z`
+      : '';
+
+    // Điểm cao nhất để gắn nhãn
+    const peak = max > 0 ? coords[values.indexOf(max)] : null;
+
+    // Nhiều ngày quá thì chỉ hiện khoảng 7 nhãn ngày
+    const every = Math.max(1, Math.ceil(points.length / 7));
+    const labels = points
+      .map((p, i) => ({ i, date: p.date }))
+      .filter(({ i }) => i % every === 0 || i === points.length - 1);
+
+    return { coords, line, area, peak, labels, axis: [top, step * 2, step, 0] };
+  }, [data]);
+
+  return (
+    <section className="admin-panel admin-chart">
+      <div className="admin-panel-heading">
+        <div>
+          <h2>Doanh thu theo ngày</h2>
+          <p>
+            {fromDate ? `${formatFullDate(fromDate)} – ${formatFullDate(toDate)}` : '...'} • Đơn vị: triệu đồng
+          </p>
+        </div>
+        <select
+          className="admin-period"
+          value={days}
+          onChange={(e) => onDaysChange(Number(e.target.value))}
+          aria-label="Chọn khoảng thời gian"
+        >
+          {PERIOD_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </div>
+
+      <div className="admin-legend"><i /> Doanh thu</div>
+
+      <div className="admin-chart-body">
+        <div className="admin-axis">
+          {chart.axis.map((v, i) => <span key={i}>{formatMillion(v)}</span>)}
+        </div>
+        <div className="admin-plot">
+          <div className="admin-chart-grid"><i /><i /><i /><i /></div>
+          <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} preserveAspectRatio="none" aria-label="Biểu đồ doanh thu theo ngày">
+            <defs>
+              <linearGradient id="revenue-fill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stopColor="#f02b24" stopOpacity=".13" />
+                <stop offset="1" stopColor="#f02b24" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {chart.area && <path d={chart.area} fill="url(#revenue-fill)" />}
+            {chart.line && (
+              <path d={chart.line} fill="none" stroke="#f02b24" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+            )}
+            {chart.peak && (
+              <line x1={chart.peak.x} y1={chart.peak.y} x2={chart.peak.x} y2={CHART_H} stroke="#f02b24" opacity=".25" />
+            )}
+          </svg>
+          {chart.peak && (
+            <span
+              className="admin-chart-tip"
+              style={{
+                left: `${(chart.peak.x / CHART_W) * 100}%`,
+                top: `${Math.max(chart.peak.y - 30, -8)}px`,
+                transform: 'translateX(-50%)',
+              }}
+            >
+              {formatMillion(Number(chart.peak.revenue))} triệu ₫ · {formatDay(chart.peak.date)}
+            </span>
+          )}
+          <div className="admin-dates">
+            {chart.labels.map(({ date }) => <span key={date}>{formatDay(date)}</span>)}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- Thẻ chỉ số ----------
+function MetricCard({ label, icon: Icon, metric, format, days, loading }) {
+  const change = metric?.changePercent;
+  const TrendIcon = change != null && change < 0 ? IconTrendingDown : IconTrendingUp;
+
+  return (
+    <div className="admin-metric">
+      <div className="admin-metric-label">{label}<Icon size={17} stroke={1.4} /></div>
+      <strong>{loading || !metric ? '—' : format(metric.value)}</strong>
+      <div className={`admin-comparison ${change == null ? '' : change < 0 ? 'down' : 'up'}`}>
+        {change == null ? (
+          <small>Chưa có dữ liệu {days} ngày trước</small>
+        ) : (
+          <>
+            <TrendIcon size={13} />
+            <span>{change > 0 ? '+' : ''}{change.toLocaleString('vi-VN')}%</span>
+            <small>so với {days} ngày trước</small>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Trang ----------
 export default function AdminDashboard() {
-  const [products, setProducts] = useState(defaultProducts);
+  const navigate = useNavigate();
+  const [days, setDays] = useState(7);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     let alive = true;
-    productService.getProducts({ pageSize: 5, sortBy: "viewCount", sortDirection: "desc" })
-      .then((res) => {
-        if (!alive) return;
-        if (res?.products && res.products.length > 0) {
-          const mapped = res.products.slice(0, 5).map((p, idx) => {
-            const count = 64 - idx * 8;
-            const revenue = typeof p.price === 'number'
-              ? `${(p.price * count).toLocaleString('vi-VN')} ₫`
-              : '100.000.000 ₫';
-            const details = p.variant
-              ? `${p.variant} · ${typeof p.price === 'number' ? `${p.price.toLocaleString('vi-VN')} ₫` : p.price}`
-              : (p.colors?.[0]?.switchDesc || 'Linear Switch');
-            return [
-              p.image || keyboard75,
-              p.name,
-              details,
-              String(count),
-              revenue,
-            ];
-          });
-          setProducts(mapped);
-        }
-      })
-      .catch((err) => console.warn('Lỗi tải sản phẩm dashboard:', err));
+    setLoading(true);
+    setError('');
 
-    return () => {
-      alive = false;
-    };
-  }, []);
+    adminDashboardService.getDashboard(days)
+      .then((res) => { if (alive) setData(res); })
+      .catch((err) => { if (alive) setError(err.message || 'Không tải được dữ liệu tổng quan.'); })
+      .finally(() => { if (alive) setLoading(false); });
 
-  return <div className="admin-dashboard" data-node-id="45:2218"><AdminSidebar /><main className="admin-main"><header className="admin-topbar"><span>8ThreadTech</span><span className="admin-slash">/</span><strong>Dashboard</strong></header>
-    <div className="admin-content"><div className="admin-title-row"><h1>Tổng quan kinh doanh</h1><div className="admin-date"><IconCalendar size={16} stroke={1.5} />19/10 – 25/10/2026</div></div>
-      <div className="admin-metrics" data-node-id="45:2299">{metrics.map(([label, value, change, Icon]) => <div className="admin-metric" key={label}><div className="admin-metric-label">{label}<Icon size={17} stroke={1.4} /></div><strong>{value}</strong><div className="admin-comparison"><IconTrendingUp size={13} /><span>{change}</span><small>so với tuần trước</small></div></div>)}</div>
-      <div className="admin-grid"><RevenueChart /><section className="admin-panel admin-tasks" data-node-id="45:2373"><div className="admin-panel-heading"><div><h2>Cần xử lý</h2><p>Ưu tiên để vận hành trơn tru hơn.</p></div></div><div className="admin-task-list">{tasks.map(([Icon, title, description, count], index) => <div className="admin-task" key={title}><span className={`admin-task-icon ${index === 0 ? 'urgent' : ''}`}><Icon size={17} stroke={1.5} /></span><div><strong>{title}</strong><small>{description}</small></div><b>{count}</b><IconChevronRight size={14}/></div>)}</div><span className="admin-red-link">Quản lý đơn hàng <IconArrowRight size={14}/></span></section>
-        <section className="admin-panel admin-orders" data-node-id="45:2406"><div className="admin-section-heading"><h2>Đơn hàng gần đây</h2><span className="admin-red-link">Xem tất cả <IconArrowUpRight size={14}/></span></div><div className="admin-table-wrap"><table><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Thời gian</th><th>Tổng tiền</th><th>Trạng thái</th><th aria-label="Chi tiết"></th></tr></thead><tbody>{orders.map(([id, customer, time, total, status], index) => <tr key={id}><td className="admin-order-id">{id}</td><td>{customer}</td><td className="admin-muted">{time}</td><td className="admin-total">{total}</td><td><span className={`admin-status ${index < 2 ? 'pending' : ''}`}>{status}</span></td><td><IconChevronRight size={14}/></td></tr>)}</tbody></table></div><div className="admin-table-footer">5 đơn mới nhất trong 214 đơn hàng tuần này</div></section>
-        <section className="admin-panel admin-products" data-node-id="45:2465"><div className="admin-section-heading"><h2>Sản phẩm bán chạy</h2><span>Tuần này</span></div><div>{products.map(([image, name, details, count, revenue]) => <div className="admin-product" key={name}><img src={image} alt=""/><div className="admin-product-info"><strong>{name}</strong><small>{details}</small></div><div className="admin-product-sales"><strong>{count} đã bán</strong><small>{revenue}</small></div></div>)}</div><div className="admin-products-footer"><a href="/" className="admin-red-link">Xem tất cả sản phẩm <IconArrowRight size={14}/></a></div></section>
-      </div><p className="admin-updated">Cập nhật lần cuối lúc 23:59, 25/10/2026 • Múi giờ Việt Nam (GMT+7)</p>
-    </div></main></div>;
+    return () => { alive = false; };
+  }, [days]);
+
+  const tasks = data?.tasks;
+  const taskRows = [
+    [IconClockHour3, 'Đơn chờ xác nhận', 'Xác nhận để chuẩn bị hàng', tasks?.pendingConfirm, '/admin/orders'],
+    [IconTruck, 'Đơn chờ giao', 'Đã xác nhận, bàn giao cho đơn vị vận chuyển', tasks?.waitingShipment, '/admin/orders'],
+    [IconPackage, 'Biến thể sắp hết', `Tồn kho dưới ${tasks?.lowStockThreshold ?? 10} sản phẩm`, tasks?.lowStockVariants, '/admin/products'],
+  ];
+
+  const recentOrders = data?.recentOrders || [];
+  const topProducts = data?.topProducts || [];
+
+  return (
+    <div className="admin-dashboard">
+      <AdminSidebar active="dashboard" />
+      <main className="admin-main">
+        <header className="admin-topbar">
+          <span>8ThreadTech</span><span className="admin-slash">/</span><strong>Dashboard</strong>
+        </header>
+
+        <div className="admin-content">
+          <div className="admin-title-row">
+            <h1>Tổng quan kinh doanh</h1>
+            <div className="admin-date">
+              <IconCalendar size={16} stroke={1.5} />
+              {data ? `${formatFullDate(data.fromDate)} – ${formatFullDate(data.toDate)}` : '...'}
+            </div>
+          </div>
+
+          {error && <p className="admin-error" role="alert">{error}</p>}
+
+          <div className="admin-metrics">
+            <MetricCard label="Doanh thu" icon={IconWallet} metric={data?.revenue} format={formatMoney} days={days} loading={loading} />
+            <MetricCard label="Đơn hàng" icon={IconShoppingBag} metric={data?.orders} format={formatNumber} days={days} loading={loading} />
+            <MetricCard label="Sản phẩm bán" icon={IconPackage} metric={data?.itemsSold} format={formatNumber} days={days} loading={loading} />
+            <MetricCard label="Giá trị đơn trung bình" icon={IconReceipt} metric={data?.averageOrderValue} format={formatMoney} days={days} loading={loading} />
+          </div>
+
+          <div className="admin-grid">
+            <RevenueChart
+              data={data?.dailyRevenue}
+              fromDate={data?.fromDate}
+              toDate={data?.toDate}
+              days={days}
+              onDaysChange={setDays}
+            />
+
+            <section className="admin-panel admin-tasks">
+              <div className="admin-panel-heading">
+                <div><h2>Cần xử lý</h2><p>Ưu tiên để vận hành trơn tru hơn.</p></div>
+              </div>
+              <div className="admin-task-list">
+                {taskRows.map(([Icon, title, description, count, href], index) => (
+                  <Link to={href} className="admin-task" key={title}>
+                    <span className={`admin-task-icon ${index === 0 && count > 0 ? 'urgent' : ''}`}>
+                      <Icon size={17} stroke={1.5} />
+                    </span>
+                    <div><strong>{title}</strong><small>{description}</small></div>
+                    <b>{count ?? '—'}</b>
+                    <IconChevronRight size={14} />
+                  </Link>
+                ))}
+              </div>
+              <Link to="/admin/orders" className="admin-red-link">Quản lý đơn hàng <IconArrowRight size={14} /></Link>
+            </section>
+
+            <section className="admin-panel admin-orders">
+              <div className="admin-section-heading">
+                <h2>Đơn hàng gần đây</h2>
+                <Link to="/admin/orders" className="admin-red-link">Xem tất cả <IconArrowUpRight size={14} /></Link>
+              </div>
+              <div className="admin-table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Mã đơn</th><th>Khách hàng</th><th>Thời gian</th><th>Tổng tiền</th><th>Trạng thái</th><th aria-label="Chi tiết"></th></tr>
+                  </thead>
+                  <tbody>
+                    {recentOrders.length === 0 && (
+                      <tr><td colSpan={6} className="admin-muted">{loading ? 'Đang tải...' : 'Chưa có đơn hàng nào.'}</td></tr>
+                    )}
+                    {recentOrders.map((o) => (
+                      <tr key={o.orderCode} className="admin-row-link" onClick={() => navigate('/admin/orders')}>
+                        <td className="admin-order-id">#{o.orderCode}</td>
+                        <td>{o.customerName}</td>
+                        <td className="admin-muted">{formatDateTime(o.createdAt)}</td>
+                        <td className="admin-total">{formatMoney(o.totalAmount)}</td>
+                        <td>
+                          <span className={`admin-status ${['PENDING', 'PENDING_PAYMENT'].includes(o.status) ? 'pending' : ''}`}>
+                            {ORDER_STATUS_LABELS[o.status] || o.status}
+                          </span>
+                        </td>
+                        <td><IconChevronRight size={14} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="admin-table-footer">
+                {recentOrders.length} đơn mới nhất • {formatNumber(data?.orders?.value)} đơn hợp lệ trong {days} ngày qua
+              </div>
+            </section>
+
+            <section className="admin-panel admin-products">
+              <div className="admin-section-heading"><h2>Sản phẩm bán chạy</h2><span>{days} ngày qua</span></div>
+              <div>
+                {topProducts.length === 0 && (
+                  <p className="admin-empty">{loading ? 'Đang tải...' : 'Chưa có sản phẩm nào được bán trong kỳ này.'}</p>
+                )}
+                {topProducts.map((p) => (
+                  <div className="admin-product" key={p.productId}>
+                    <img src={p.imageUrl || fallbackImage} alt="" onError={(e) => { e.currentTarget.src = fallbackImage; }} />
+                    <div className="admin-product-info">
+                      <strong>{p.name}</strong>
+                      <small>Đơn giá TB {formatMoney(p.soldQuantity ? Number(p.revenue) / p.soldQuantity : 0)}</small>
+                    </div>
+                    <div className="admin-product-sales">
+                      <strong>{formatNumber(p.soldQuantity)} đã bán</strong>
+                      <small>{formatMoney(p.revenue)}</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="admin-products-footer">
+                <Link to="/admin/products" className="admin-red-link">Xem tất cả sản phẩm <IconArrowRight size={14} /></Link>
+              </div>
+            </section>
+          </div>
+
+          <p className="admin-updated">
+            {data?.generatedAt
+              ? `Cập nhật lúc ${new Date(data.generatedAt).toLocaleString('vi-VN')} • Doanh thu tính đơn đã đặt, không gồm đơn hủy và đơn chờ thanh toán online`
+              : ''}
+          </p>
+        </div>
+      </main>
+    </div>
+  );
 }
