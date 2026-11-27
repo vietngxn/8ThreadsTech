@@ -18,6 +18,7 @@ import OrderDetailPage from "./pages/OrderDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import AddressBookPage from "./pages/AddressBookPage.jsx";
 import ChangePasswordPage from "./pages/ChangePasswordPage.jsx";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import TeamPage from "./pages/TeamPage.jsx";
 
 // Pages quản trị Admin
@@ -86,6 +87,7 @@ export default function App() {
           <Route path="/doi-mat-khau" element={<ChangePasswordPage />} />
           <Route path="/dang-nhap" element={<LoginPage />} />
           <Route path="/dang-ky" element={<RegisterPage />} />
+          <Route path="/quen-mat-khau" element={<ForgotPasswordPage />} />
           <Route path="/xac-thuc-otp" element={<OtpPage />} />
           <Route path="/otp" element={<OtpPage />} />
 
