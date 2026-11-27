@@ -59,10 +59,15 @@ export default function OrderDetailPage() {
   }, [id]);
 
   // Hủy đơn trên BE (hoàn kho), rồi tải lại để hiển thị trạng thái mới
-  const handleCancel = async (reason) => {
-    await orderService.cancelOrder(order.orderCode, reason);
+  const reloadOrder = async () => {
+    if (!order?.orderCode) return;
     const fresh = await userService.getOrderDetails(order.orderCode);
     setOrder(fresh);
+  };
+
+  const handleCancel = async (reason) => {
+    await orderService.cancelOrder(order.orderCode, reason);
+    await reloadOrder();
   };
 
   return (
@@ -87,7 +92,7 @@ export default function OrderDetailPage() {
             </button>
           </div>
         ) : (
-          <OrderDetailMain order={order} onCancel={handleCancel} />
+          <OrderDetailMain order={order} onCancel={handleCancel} onReloadOrder={reloadOrder} />
         )}
       </main>
 

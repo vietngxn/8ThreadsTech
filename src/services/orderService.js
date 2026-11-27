@@ -5,7 +5,7 @@ import api from "./api";
  */
 export const orderService = {
   async getMyOrders() {
-    const response = await api.get("/api/orders/my-orders");
+    const response = await api.get("/api/users/orders");
     return response.data?.data || [];
   },
   /** Danh sách phương thức vận chuyển đang bán (code, name, description, baseCost) */
