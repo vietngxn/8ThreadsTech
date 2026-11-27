@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { IconArrowUpRight, IconEye, IconEyeOff, IconLock, IconMail } from "@tabler/icons-react";
 import { authService } from "../../services/authService";
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
@@ -142,9 +142,9 @@ export default function LoginForm({ notice, onNotice }) {
             <input type="checkbox" defaultChecked data-node-id="3:614" />
             <span data-node-id="3:617">Ghi nhớ đăng nhập</span>
           </label>
-          <a href="mailto:hello@8threadtech.vn?subject=H%E1%BB%97%20tr%E1%BB%A3%20t%C3%A0i%20kho%E1%BA%A3n" data-node-id="3:618">
+          <Link to="/quen-mat-khau" data-node-id="3:618">
             Quên mật khẩu?
-          </a>
+          </Link>
         </div>
 
         <button className="login-submit" type="submit" disabled={isLoading} data-node-id="3:619">
