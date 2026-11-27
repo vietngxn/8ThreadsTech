@@ -27,10 +27,10 @@ export default function AddressSidebar() {
       </div>
       <div className="address-sidebar-rule" data-node-id="20:44" />
       <nav className="address-account-menu" aria-label="Điều hướng tài khoản" data-node-id="20:45">
-        <a href="/ho-so" data-node-id="20:46"><IconUser data-node-id="20:47" /><span data-node-id="20:48">Hồ sơ cá nhân</span></a>
-        <a href="/don-hang" data-node-id="20:49"><IconPackage data-node-id="20:50" /><span data-node-id="20:51">Đơn hàng của tôi</span></a>
+        <a href="/ho-so" data-node-id="20:46"><IconUser data-node-id="20:47" /><span data-node-id="20:48">Hồ sơ cá nhân</span><IconChevronRight /></a>
+        <a href="/don-hang" data-node-id="20:49"><IconPackage data-node-id="20:50" /><span data-node-id="20:51">Đơn hàng của tôi</span><IconChevronRight /></a>
         <a className="is-active" href="/so-dia-chi" aria-current="page" data-node-id="20:52"><IconMapPin data-node-id="20:53" /><span data-node-id="20:54">Sổ địa chỉ</span><IconChevronRight data-node-id="20:55" /></a>
-        <a href="/doi-mat-khau" data-node-id="20:56"><IconLock data-node-id="20:57" /><span data-node-id="20:58">Đổi mật khẩu</span></a>
+        <a href="/doi-mat-khau" data-node-id="20:56"><IconLock data-node-id="20:57" /><span data-node-id="20:58">Đổi mật khẩu</span><IconChevronRight /></a>
         <button type="button" className="profile-logout" onClick={handleLogout} data-node-id="20:59">
           <IconLogout data-node-id="20:60" />
           <span data-node-id="20:61">Đăng xuất</span>

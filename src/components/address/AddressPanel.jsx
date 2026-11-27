@@ -69,9 +69,6 @@ export default function AddressPanel({ addresses, loading, onAdd, onEdit, onDefa
             <IconMapPin />
             <h3>Chưa có địa chỉ giao hàng</h3>
             <p>Thêm địa chỉ để hoàn tất đơn hàng nhanh chóng hơn.</p>
-            <button className="address-add-button" onClick={() => onAdd(true)}>
-              <IconPlus /> THÊM ĐỊA CHỈ MỚI
-            </button>
           </div>
         )}
       </section>

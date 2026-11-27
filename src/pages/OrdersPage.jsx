@@ -45,12 +45,12 @@ function OrdersSidebar() {
       </div>
       <div className="orders-sidebar-rule" />
       <nav className="orders-account-menu" aria-label="Điều hướng tài khoản">
-        <a href="/ho-so"><IconUser /><span>Hồ sơ cá nhân</span></a>
+        <a href="/ho-so"><IconUser /><span>Hồ sơ cá nhân</span><IconChevronRight /></a>
         <a className="is-active" href="/don-hang" aria-current="page">
           <IconPackage /><span>Đơn hàng của tôi</span><IconChevronRight />
         </a>
-        <a href="/so-dia-chi"><IconMapPin /><span>Sổ địa chỉ</span></a>
-        <a href="/doi-mat-khau"><IconLock /><span>Đổi mật khẩu</span></a>
+        <a href="/so-dia-chi"><IconMapPin /><span>Sổ địa chỉ</span><IconChevronRight /></a>
+        <a href="/doi-mat-khau"><IconLock /><span>Đổi mật khẩu</span><IconChevronRight /></a>
         <button
           type="button"
           className="profile-logout"
