@@ -1,4 +1,5 @@
 import api from "./api";
+import { hydrateMissingProductImages } from "../utils/productImage";
 
 /**
  * Service quản trị sản phẩm tại /api/admin/products (yêu cầu JWT ADMIN).
@@ -19,15 +20,24 @@ export const adminProductService = {
       params: queryParams,
     });
     const data = response.data?.data || {};
+    const products = data.products || {
+      content: [],
+      pageNumber: 0,
+      pageSize: 8,
+      totalElements: 0,
+      totalPages: 1,
+      last: true,
+    };
+
+    if (Array.isArray(products.content) && products.content.length > 0) {
+      products.content = await hydrateMissingProductImages(products.content, {
+        imageField: "imageUrl",
+        fetchDetail: (id) => api.get(`/api/admin/products/${id}`),
+      });
+    }
+
     return {
-      products: data.products || {
-        content: [],
-        pageNumber: 0,
-        pageSize: 8,
-        totalElements: 0,
-        totalPages: 1,
-        last: true,
-      },
+      products,
       summary: data.summary || {
         allProducts: 0,
         activeProducts: 0,

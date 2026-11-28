@@ -26,19 +26,34 @@
 .admin-profile-field input::placeholder { color: #777; opacity: 1; }
 .admin-profile-field input:focus,
 .admin-profile-field textarea:focus { border-color: #777; outline: none; }
+.admin-profile-field input:disabled { background: #121212; border-color: #292929; color: #929292; cursor: not-allowed; }
+.admin-profile-field input[type='date'] { color-scheme: dark; }
 .admin-profile-field small { color: #929292; font-size: 11px; font-weight: 400; line-height: 17px; }
 .admin-profile-email { margin-top: 17px; }
 .admin-profile-email small { margin-top: -3px; }
-.admin-profile-bio { margin-top: 19px; }
-.admin-profile-bio small { margin-top: -3px; }
+.admin-profile-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.admin-profile-gender { margin: 20px 0 0; padding: 0; border: none; }
+.admin-profile-gender legend { padding: 0; margin-bottom: 8px; color: #b6b6b6; font-size: 12px; font-weight: 500; line-height: 18px; }
+.admin-profile-gender-options { display: flex; flex-wrap: wrap; gap: 10px; }
+.admin-profile-gender-options label { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border: 1px solid #303030; border-radius: 6px; background: #141414; color: #b6b6b6; font-size: 12px; cursor: pointer; transition: border-color 0.15s, background-color 0.15s, color 0.15s; }
+.admin-profile-gender-options label input { position: absolute; opacity: 0; pointer-events: none; }
+.admin-profile-gender-options label.selected { border-color: #f02b24; background: rgba(240, 43, 36, 0.12); color: #f5f5f2; font-weight: 500; }
+.admin-profile-newsletter { position: relative; display: flex; align-items: flex-start; gap: 12px; margin-top: 20px; padding: 14px; border: 1px solid #292929; border-radius: 8px; background: #121212; cursor: pointer; }
+.admin-profile-newsletter input { position: absolute; opacity: 0; pointer-events: none; }
+.admin-profile-checkmark { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #3d3d3d; border-radius: 4px; background: #141414; color: transparent; transition: border-color 0.15s, background-color 0.15s, color 0.15s; }
+.admin-profile-newsletter input:checked + .admin-profile-checkmark { border-color: #f02b24; background: #f02b24; color: #f5f5f2; }
+.admin-profile-newsletter strong { display: block; color: #f5f5f2; font-size: 12px; font-weight: 500; line-height: 18px; }
+.admin-profile-newsletter small { display: block; margin-top: 2px; color: #929292; font-size: 11px; line-height: 16px; }
 .admin-profile-required { margin: 18px 0 0; color: #929292; font-size: 11px; line-height: 17px; }
 .admin-profile-side-stack { display: grid; gap: 20px; }
 .admin-account-card { min-height: 370px; }
 .admin-profile-readonly-field { display: flex; flex-direction: column; gap: 8px; margin-top: 19px; color: #b6b6b6; font-size: 12px; font-weight: 500; line-height: 18px; }
-.admin-profile-readonly-field > div { height: 42px; padding: 0 13px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #292929; border-radius: 6px; background: #121212; color: #929292; font-size: 12px; font-weight: 400; }
-.admin-profile-readonly-field small { color: #777; font-size: 10px; }
-.admin-profile-status { margin-top: 19px; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #b6b6b6; font-size: 12px; font-weight: 500; }
+.admin-profile-readonly-field > div { min-height: 42px; padding: 8px 13px; display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid #292929; border-radius: 6px; background: #121212; color: #929292; font-size: 12px; font-weight: 400; word-break: break-all; }
+.admin-profile-readonly-field small { flex: 0 0 auto; color: #777; font-size: 10px; }
+.admin-profile-status { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #b6b6b6; font-size: 12px; font-weight: 500; }
 .admin-profile-status strong { padding: 5px 10px; border-radius: 5px; background: #13251d; color: #65cc9a; font-size: 10px; font-weight: 500; white-space: nowrap; }
+.admin-profile-status strong.is-locked { background: #2c1515; color: #ff7770; }
+.admin-profile-status strong.is-unverified { background: #262014; color: #e2b857; }
 .admin-profile-note { margin: 17px 0 0; color: #929292; font-size: 11px; line-height: 17px; }
 .admin-security-card { min-height: 158px; }
 .admin-security-card > p { margin-top: 10px; }
@@ -50,9 +65,12 @@
 .admin-profile-actions { flex: 0 0 auto; display: flex; gap: 12px; }
 .admin-profile-actions button { min-width: 120px; height: 40px; padding: 0 18px; border: 1px solid #303030; border-radius: 6px; background: #171717; color: #f5f5f2; font: inherit; font-size: 12px; font-weight: 500; white-space: nowrap; }
 .admin-profile-actions button[type='submit'] { min-width: 146px; border-color: #f02b24; background: #f02b24; }
-.admin-profile-actions button:hover { filter: brightness(1.15); }
+.admin-profile-actions button:hover:not(:disabled) { filter: brightness(1.15); }
+.admin-profile-actions button:disabled { opacity: 0.6; cursor: not-allowed; }
 .admin-profile-feedback { min-height: 0; margin: 0; color: #b6b6b6; font-size: 11px; line-height: 18px; }
 .admin-profile-feedback:not(:empty) { min-height: 18px; margin-top: 8px; }
+.admin-profile-feedback.is-success { color: #65cc9a; }
+.admin-profile-feedback.is-error { color: #ff7770; }
 .admin-profile-footer { margin-top: 18px; display: flex; justify-content: space-between; gap: 16px; color: #929292; font-size: 10px; line-height: 16px; }
 .admin-profile-page .admin-sidebar-bottom > .admin-support:first-child { display: none; }
 .admin-profile-page .admin-account { color: inherit; text-decoration: none; }
@@ -75,6 +93,7 @@
   .admin-profile-heading p { max-width: 300px; }
   .admin-profile-back { height: 34px; padding: 0 10px; }
   .admin-profile-grid { gap: 16px; }
+  .admin-profile-row { grid-template-columns: 1fr; gap: 0; }
   .admin-profile-card { padding: 20px; }
   .admin-personal-card { min-height: auto; }
   .admin-profile-side-stack { grid-template-columns: 1fr; gap: 12px; }
