@@ -19,6 +19,10 @@ api.interceptors.request.use(
       config.headers.Authorization = `${tokenType} ${token}`;
     }
 
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+
     return config;
   },
   (error) => Promise.reject(error)

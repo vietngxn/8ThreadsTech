@@ -76,6 +76,18 @@ export const adminProductService = {
   },
 
   /**
+   * Tải một ảnh sản phẩm lên Cloudinary
+   */
+  async uploadImage(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await api.post("/api/admin/products/images", formData, {
+      timeout: 60000,
+    });
+    return response.data?.data;
+  },
+
+  /**
    * Xóa sản phẩm
    */
   async deleteProduct(id) {
