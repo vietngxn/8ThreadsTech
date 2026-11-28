@@ -55,7 +55,7 @@ export default function ProductDetailPage() {
     <main className="thread-page" data-node-id="3:1120">
       <Navbar onComingSoon={comingSoon} />
       <HeroSection product={product} color={color} onColorChange={setColor} colors={activeColors} />
-      <PurchaseSection product={product} color={color} onColorChange={setColor} colors={activeColors} onComingSoon={comingSoon} />
+      <PurchaseSection product={product} color={color} onColorChange={setColor} colors={activeColors} onComingSoon={comingSoon} onNotice={setNotice} />
       <ReviewsSection product={product} onComingSoon={comingSoon} />
       <PageFooter />
       <NoticeToast message={notice} onClose={() => setNotice("")} />

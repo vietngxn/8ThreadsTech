@@ -63,7 +63,13 @@ export default function CartList({
 
                   <div className="cart-stock">
                     <i />
-                    Có sẵn · Giao trong 24h
+                    {item.stockQuantity <= 0
+                      ? "Hết hàng"
+                      : item.stockQuantity < item.quantity
+                        ? `Chỉ còn ${item.stockQuantity} sản phẩm`
+                        : item.stockQuantity < 10
+                          ? `Sắp hết · còn ${item.stockQuantity}`
+                          : "Có sẵn · Giao trong 24h"}
                   </div>
                 </div>
 

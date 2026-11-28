@@ -154,3 +154,7 @@
 @media (prefers-reduced-motion: reduce) {
   .checkout-page *, .checkout-page *::before, .checkout-page *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+.checkout-coupon small { display: block; margin-top: 8px; font-size: 12px; }
+.checkout-coupon-ok { color: #22c55e; }
+.checkout-coupon-error { color: #f02b24; }
+.checkout-discount { color: #22c55e; }

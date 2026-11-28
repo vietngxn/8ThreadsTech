@@ -1,5 +1,7 @@
 import { IconArrowRight, IconArrowUpRight } from "@tabler/icons-react";
 
+import { describeCoupon } from "../../utils/couponText";
+
 const formatPrice = (price) => `${(price || 0).toLocaleString("vi-VN")} ₫`;
 
 export default function CheckoutSummary({
@@ -8,6 +10,12 @@ export default function CheckoutSummary({
   shippingFee,
   total,
   coupon,
+  appliedCoupon = null,
+  couponMessage = "",
+  couponLoading = false,
+  discount = 0,
+  onApplyCoupon = () => { },
+  onRemoveCoupon = () => { },
   payment,
   submitting = false,
   canSubmit = true,
@@ -73,22 +81,46 @@ export default function CheckoutSummary({
 
         <div className="checkout-coupon">
           <label htmlFor="checkout-coupon">BẠN CÓ MÃ ƯU ĐÃI?</label>
-          <div>
-            <input
-              id="checkout-coupon"
-              value={coupon}
-              onChange={(event) => onCouponChange(event.target.value)}
-              placeholder="Chưa hỗ trợ mã ưu đãi"
-              disabled
-            />
-            <button
-              type="button"
-              disabled
-              onClick={() => onCouponChange("")}
-            >
-              ÁP DỤNG
-            </button>
-          </div>
+          {appliedCoupon ? (
+            <div>
+              <input id="checkout-coupon" value={appliedCoupon.code} readOnly />
+              <button type="button" onClick={onRemoveCoupon} disabled={submitting}>
+                BỎ MÃ
+              </button>
+            </div>
+          ) : (
+            <div>
+              <input
+                id="checkout-coupon"
+                value={coupon}
+                onChange={(event) => onCouponChange(event.target.value.toUpperCase())}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    onApplyCoupon();
+                  }
+                }}
+                placeholder="Nhập mã khuyến mãi"
+                maxLength={50}
+              />
+              <button
+                type="button"
+                disabled={couponLoading || !coupon.trim()}
+                onClick={onApplyCoupon}
+              >
+                {couponLoading ? "ĐANG KIỂM TRA..." : "ÁP DỤNG"}
+              </button>
+            </div>
+          )}
+          {appliedCoupon && (
+            <small className="checkout-coupon-ok">
+              {appliedCoupon.name} · {describeCoupon(appliedCoupon)}
+              <br />Bạn được giảm {formatPrice(Number(appliedCoupon.discountAmount))}
+            </small>
+          )}
+          {!appliedCoupon && couponMessage && (
+            <small className="checkout-coupon-error" role="alert">{couponMessage}</small>
+          )}
         </div>
 
         <div className="checkout-costs">
@@ -97,8 +129,10 @@ export default function CheckoutSummary({
             <strong>{formatPrice(subtotal)}</strong>
           </div>
           <div>
-            <span>Giảm giá</span>
-            <strong>0 ₫</strong>
+            <span>Giảm giá{appliedCoupon ? ` (${appliedCoupon.code})` : ""}</span>
+            <strong className={discount > 0 ? "checkout-discount" : ""}>
+              {discount > 0 ? `− ${formatPrice(discount)}` : "0 ₫"}
+            </strong>
           </div>
           <div>
             <span>Phí vận chuyển</span>
