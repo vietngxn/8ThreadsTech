@@ -2,6 +2,7 @@
  * Service gọi API sản phẩm (dữ liệu hoàn toàn từ backend, không còn dữ liệu tĩnh)
  */
 import api from "./api";
+import { hydrateMissingProductImages } from "../utils/productImage";
 const DEFAULT_TAGLINE = "GÕ CHẤT. CHƠI KHÁC.";
 const DEFAULT_GLOW = "rgba(200, 201, 202, 0.22)";
 const DEFAULT_FEATURES = ["3 chế độ kết nối", "Khung hoàn thiện cao cấp", "Hot-swap linh hoạt"];
@@ -186,46 +187,10 @@ export const productService = {
         ? pageData.content
         : [];
 
-      const isValidHttpImage = (url) =>
-        typeof url === "string" &&
-        /^https?:\/\//i.test(url) &&
-        !url.includes("REPLACE_ME");
-
-      // Bổ sung ảnh hợp lệ từ API chi tiết nếu API danh sách trả về null/rỗng hoặc đường dẫn cũ chưa có file
-      const missingImageItems = rawList.filter(
-        (item) => item?.id != null && !isValidHttpImage(item.primaryImageUrl)
-      );
-
-      let list = rawList;
-      if (missingImageItems.length > 0) {
-        const detailResults = await Promise.allSettled(
-          missingImageItems.map((item) => api.get(`/api/products/${item.id}`))
-        );
-        const imageById = new Map();
-        detailResults.forEach((res, idx) => {
-          if (res.status !== "fulfilled") return;
-          const images = res.value?.data?.data?.images;
-          if (!Array.isArray(images) || images.length === 0) return;
-          const primary =
-            images.find((img) => img.isPrimary && isValidHttpImage(img.imageUrl))
-              ?.imageUrl ||
-            images.find((img) => isValidHttpImage(img.imageUrl))?.imageUrl ||
-            images.find((img) => img.isPrimary)?.imageUrl ||
-            images[0]?.imageUrl ||
-            "";
-          if (primary) {
-            imageById.set(missingImageItems[idx].id, primary);
-          }
-        });
-
-        if (imageById.size > 0) {
-          list = rawList.map((item) =>
-            !isValidHttpImage(item.primaryImageUrl) && imageById.has(item.id)
-              ? { ...item, primaryImageUrl: imageById.get(item.id) }
-              : item
-          );
-        }
-      }
+      const list = await hydrateMissingProductImages(rawList, {
+        imageField: "primaryImageUrl",
+        fetchDetail: (id) => api.get(`/api/products/${id}`),
+      });
 
       return {
         products: list.map(mapCardToFrontend).filter(Boolean),

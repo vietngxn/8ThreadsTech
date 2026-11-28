@@ -58,6 +58,25 @@ function normalizeImageItem(item) {
   };
 }
 
+function AdminProductThumb({ imageUrl, name }) {
+  const [failedUrl, setFailedUrl] = useState(null);
+  const showImage = Boolean(imageUrl) && failedUrl !== imageUrl;
+
+  return (
+    <span className="pm-product-image">
+      {showImage ? (
+        <img
+          src={imageUrl}
+          alt={name}
+          onError={() => setFailedUrl(imageUrl)}
+        />
+      ) : (
+        <IconPackage size={22} stroke={1.2} />
+      )}
+    </span>
+  );
+}
+
 /* ═══════════════════════════════════════════════
    HELPER: ImageUploadZone
    Tải ảnh lên Cloudinary và quản lý danh sách URL ảnh
@@ -1127,11 +1146,7 @@ export default function AdminProductManagement() {
 
                           <td>
                             <div className="pm-product-cell">
-                              <span className="pm-product-image">
-                                {p.imageUrl
-                                  ? <img src={p.imageUrl} alt={p.name} />
-                                  : <IconPackage size={22} stroke={1.2} />}
-                              </span>
+                              <AdminProductThumb imageUrl={p.imageUrl} name={p.name} />
                               <span className="pm-product-copy">
                                 <strong>{p.name}</strong>
                                 <small className="pm-slug">{p.slug}</small>
