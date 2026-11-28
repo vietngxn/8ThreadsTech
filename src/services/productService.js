@@ -186,9 +186,14 @@ export const productService = {
         ? pageData.content
         : [];
 
-      // Bổ sung primaryImageUrl từ API chi tiết nếu API danh sách trả về null/rỗng
+      const isValidHttpImage = (url) =>
+        typeof url === "string" &&
+        /^https?:\/\//i.test(url) &&
+        !url.includes("REPLACE_ME");
+
+      // Bổ sung ảnh hợp lệ từ API chi tiết nếu API danh sách trả về null/rỗng hoặc đường dẫn cũ chưa có file
       const missingImageItems = rawList.filter(
-        (item) => item?.id != null && !item.primaryImageUrl
+        (item) => item?.id != null && !isValidHttpImage(item.primaryImageUrl)
       );
 
       let list = rawList;
@@ -202,6 +207,9 @@ export const productService = {
           const images = res.value?.data?.data?.images;
           if (!Array.isArray(images) || images.length === 0) return;
           const primary =
+            images.find((img) => img.isPrimary && isValidHttpImage(img.imageUrl))
+              ?.imageUrl ||
+            images.find((img) => isValidHttpImage(img.imageUrl))?.imageUrl ||
             images.find((img) => img.isPrimary)?.imageUrl ||
             images[0]?.imageUrl ||
             "";
@@ -212,7 +220,7 @@ export const productService = {
 
         if (imageById.size > 0) {
           list = rawList.map((item) =>
-            !item.primaryImageUrl && imageById.has(item.id)
+            !isValidHttpImage(item.primaryImageUrl) && imageById.has(item.id)
               ? { ...item, primaryImageUrl: imageById.get(item.id) }
               : item
           );
