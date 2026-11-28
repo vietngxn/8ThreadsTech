@@ -23,6 +23,7 @@ import AddressBookPage from "./pages/AddressBookPage.jsx";
 import ChangePasswordPage from "./pages/ChangePasswordPage.jsx";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import TeamPage from "./pages/TeamPage.jsx";
+import CustomerRoute from "./components/common/CustomerRoute.jsx";
 
 // Pages quản trị Admin
 import AdminLoginPage from "./pages/admin/AdminLoginPage.jsx";
@@ -76,46 +77,37 @@ export default function App() {
 
         {/* === NHÓM CỬA HÀNG KHÁCH HÀNG (Bọc trong Storefront Layout) === */}
         <Route element={<Layout />}>
-          {/* Trang chủ */}
+          {/* Trang công khai */}
           <Route path="/" element={<LandingPage />} />
-
-          {/* Sản phẩm & Chi tiết */}
           <Route path="/ban-phim" element={<ProductListPage />} />
           <Route path="/keycap" element={<ProductListPage />} />
           <Route path="/phu-kien" element={<ProductListPage />} />
-
           <Route path="/san-pham" element={<ProductListPage />} />
-
           <Route path="/ban-phim/:id" element={<ProductDetailPage />} />
           <Route path="/keycap/:id" element={<ProductDetailPage />} />
           <Route path="/phu-kien/:id" element={<ProductDetailPage />} />
           <Route path="/san-pham/:id" element={<ProductDetailPage />} />
 
-          {/* Mua hàng & Giỏ hàng */}
-          <Route path="/gio-hang" element={<CartPage />} />
-          <Route path="/thanh-toan" element={<CheckoutPage />} />
-          <Route path="/hoan-tat" element={<OrderCompletePage />} />
-
-          {/* Đơn hàng */}
-          <Route path="/don-hang" element={<OrdersPage />} />
-          <Route path="/don-hang/chi-tiet" element={<OrderDetailPage />} />
-          <Route path="/don-hang/:id" element={<OrderDetailPage />} />
-
-          {/* Tài khoản cá nhân */}
-          <Route path="/ho-so" element={<ProfilePage />} />
-          <Route path="/so-dia-chi" element={<AddressBookPage />} />
-          <Route path="/doi-mat-khau" element={<ChangePasswordPage />} />
+          {/* Trang đăng nhập, đăng ký */}
           <Route path="/dang-nhap" element={<LoginPage />} />
           <Route path="/dang-ky" element={<RegisterPage />} />
           <Route path="/quen-mat-khau" element={<ForgotPasswordPage />} />
           <Route path="/xac-thuc-otp" element={<OtpPage />} />
           <Route path="/otp" element={<OtpPage />} />
 
-          {/* Về chúng tôi */}
-          <Route path="/ve-8threads-team" element={<TeamPage />} />
+          {/* Trang cần đăng nhập */}
+          <Route element={<CustomerRoute />}>
+            <Route path="/gio-hang" element={<CartPage />} />
+            <Route path="/thanh-toan" element={<CheckoutPage />} />
+            <Route path="/hoan-tat" element={<OrderCompletePage />} />
+            <Route path="/don-hang" element={<OrdersPage />} />
+            <Route path="/don-hang/:id" element={<OrderDetailPage />} />
+            <Route path="/ho-so" element={<ProfilePage />} />
+            <Route path="/so-dia-chi" element={<AddressBookPage />} />
+            <Route path="/doi-mat-khau" element={<ChangePasswordPage />} />
+          </Route>
 
-          {/* Fallback điều hướng về trang chủ */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/ve-8threads-team" element={<TeamPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
