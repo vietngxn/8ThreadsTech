@@ -10,6 +10,25 @@ const DEFAULT_FEATURES = ["3 chế độ kết nối", "Khung hoàn thiện cao 
 const toNumber = (v) => (v != null ? Number(v) : undefined);
 const formatVnd = (n) => `${Number(n).toLocaleString("vi-VN")} ₫`;
 
+function hexToGlow(hex, alpha = 0.25) {
+  if (typeof hex !== "string") return "";
+  const clean = hex.trim().replace(/^#/, "");
+  if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$|^[0-9a-fA-F]{8}$/.test(clean)) {
+    return "";
+  }
+  const full =
+    clean.length === 3
+      ? clean
+        .split("")
+        .map((ch) => ch + ch)
+        .join("")
+      : clean.slice(0, 6);
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // Suy ra loại switch/kết nối để bộ lọc ở trang danh sách hoạt động
 function deriveSwitchType(switchName = "") {
   if (/magnetic|\bHE\b/i.test(switchName)) return "Magnetic";
@@ -40,7 +59,7 @@ export function mapCardToFrontend(card) {
     color: c.hex || "#393b3d",
     switchDesc: c.switchName ? `${c.switchName} · Êm & mượt` : "",
     tagline: DEFAULT_TAGLINE,
-    glow: DEFAULT_GLOW,
+    glow: hexToGlow(c.hex) || DEFAULT_GLOW,
     image,
     price: toNumber(c.price),
     compareAtPrice: toNumber(c.compareAtPrice),
@@ -53,7 +72,7 @@ export function mapCardToFrontend(card) {
     name: card.name,
     heroWord: "Thread",
     heroNumber: card.name?.match(/\d+/)?.[0] || "75",
-    badge: card.badge || "MỚI RA MẮT",
+    badge: card.specifications?.badge || "MỚI RA MẮT",
     variant: card.subtitle || "",
     specs: highlights.join(" · "),
     features: highlights.length > 0 ? highlights : DEFAULT_FEATURES,
@@ -68,8 +87,8 @@ export function mapCardToFrontend(card) {
     switch: card.switchType || "",
     description: "",
     tagline: DEFAULT_TAGLINE,
-    statValue: "1.000 Hz",
-    statLabel: "KHÔNG DÂY · KHÔNG ĐỘ TRỄ",
+    statValue: card.statValue || "",
+    statLabel: card.statLabel || "",
     colors,
     rawVariants: apiColors.map((c) => ({
       id: c.variantId,
@@ -85,6 +104,38 @@ export function mapCardToFrontend(card) {
   };
 }
 
+function extractSpecificationBadges(spec) {
+  if (!spec) return [];
+  let parsed = spec;
+  if (typeof spec === "string") {
+    const trimmed = spec.trim();
+    if (!trimmed) return [];
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+      try {
+        parsed = JSON.parse(trimmed);
+      } catch {
+        return [trimmed];
+      }
+    } else {
+      return [trimmed];
+    }
+  }
+  if (Array.isArray(parsed)) {
+    return parsed
+      .map((item) => (typeof item === "string" ? item.trim() : String(item?.value ?? item?.label ?? "").trim()))
+      .filter(Boolean)
+      .slice(0, 3);
+  }
+  if (typeof parsed === "object") {
+    const ignoredKeys = new Set(["badge", "tagline", "hz", "pollingRate", "frequency"]);
+    return Object.entries(parsed)
+      .filter(([k, v]) => !ignoredKeys.has(k) && v != null && String(v).trim() !== "")
+      .map(([, v]) => String(v).trim())
+      .slice(0, 3);
+  }
+  return [];
+}
+
 /** Adapter CHI TIẾT: ProductDetailResponse (GET /api/products/slug/{slug}) -> cấu trúc UI */
 export function mapDetailToFrontend(d) {
   if (!d) return null;
@@ -96,15 +147,15 @@ export function mapDetailToFrontend(d) {
   const image = slides[0] || def.images?.[0] || "";
   const compareAtPrice = def.compareAtPrice != null ? Number(def.compareAtPrice) : null;
   const inStock = variants.some((v) => v.inStock);
-  const number = d.name?.match(/\d+/)?.[0];
 
-  const colors = variants.map((v, i) => ({
+  const colors = variants.map((v) => ({
     variantId: v.id,
-    name: v.color || `Màu ${i + 1}`,
-    color: v.colorHex || "#393b3d",
-    switchDesc: v.switchDesc || (v.switchName ? `${v.switchName} · Êm & mượt` : ""),
-    tagline: v.tagline || DEFAULT_TAGLINE,
-    glow: v.glow || DEFAULT_GLOW,
+    name: v.name || v.color || "",
+    colorName: v.color || "",
+    color: v.colorHex || "",
+    switchDesc: v.switchDesc || v.switchName || "",
+    tagline: v.tagline || "",
+    glow: v.glow || hexToGlow(v.colorHex),
     image: v.images?.[0] || image,
     images: v.images || [],
     inStock: v.inStock,
@@ -112,36 +163,45 @@ export function mapDetailToFrontend(d) {
     compareAtPrice: toNumber(v.compareAtPrice),
   }));
 
+  const rawSpec = d.specification ?? d.specifications;
+  const specObj =
+    rawSpec && typeof rawSpec === "object" && !Array.isArray(rawSpec) ? rawSpec : {};
+  const specBadges = extractSpecificationBadges(rawSpec);
+  const specHz = specObj.hz || specObj.pollingRate || specObj.frequency || "";
+  const specTagline = specObj.tagline || "";
+  const specBadge = specObj.badge || "";
+
   return {
     id: d.slug,
     numericId: d.id,
     slug: d.slug,
-    name: d.name,
-    heroWord: hero.titleMain || "Thread",
-    heroNumber: hero.titleAccent || number || "75",
-    badge: d.badge || "MỚI RA MẮT",
+    name: d.name || "",
+    heroWord: hero.titleMain || "",
+    heroNumber: hero.titleAccent || "",
+    badge: d.badge || specBadge || "",
     variant: def.color ? `${def.color}${def.switchName ? ` · ${def.switchName}` : ""}` : "",
     specs: d.shortDescription || "",
-    features: d.features?.length ? d.features : DEFAULT_FEATURES,
-    price: def.price != null ? Number(def.price) : 0,
+    features: specBadges,
+    specifications: rawSpec || null,
+    price: def.price != null ? Number(def.price) : null,
     oldPrice: compareAtPrice ? formatVnd(compareAtPrice) : null,
     image,
     images: slides,
     inStock,
-    availability: inStock ? "Có sẵn · Giao trong 24h" : "Tạm hết hàng",
-    layout: number ? `${number}%` : "",
-    connection: "3 chế độ kết nối",
-    switch: deriveSwitchType(def.switchName),
+    availability: variants.length > 0 ? (inStock ? "Có sẵn · Giao trong 24h" : "Tạm hết hàng") : "",
+    layout: "",
+    connection: "",
+    switch: def.switchName ? deriveSwitchType(def.switchName) : "",
     description: d.description || "",
-    tagline: def.tagline || DEFAULT_TAGLINE,
-    statValue: hero.statValue || "1.000 Hz",
-    statLabel: hero.statLabel || "KHÔNG DÂY · KHÔNG ĐỘ TRỄ",
+    tagline: def.tagline || d.tagline || specTagline || "",
+    statValue: hero.statValue || specHz || "",
+    statLabel: hero.statLabel || (specHz ? "Tần số phản hồi" : ""),
     colors,
     rawVariants: variants,
     defaultVariantId: d.defaultVariantId,
     reviews: d.reviews || null, // { summary, items, hasNext }
-    categoryName: d.categoryName,
-    brandName: d.brandName,
+    categoryName: d.categoryName || "",
+    brandName: d.brandName || "",
   };
 }
 
@@ -218,9 +278,47 @@ export const productService = {
    */
   async getProductBySlug(slug) {
     if (!slug) return null;
+    const mergeMissingDetailFields = async (detailData, prefetchedProduct = null) => {
+      if (!detailData?.id) return detailData;
+      const needsVariantNames =
+        Array.isArray(detailData.variants) &&
+        detailData.variants.some((v) => !v.name);
+      const needsBadge = !detailData.badge;
+      const needsSpec = !detailData.specification && !detailData.specifications;
+      if (!needsVariantNames && !needsBadge && !needsSpec) {
+        return detailData;
+      }
+      try {
+        let rawProduct = prefetchedProduct;
+        if (!rawProduct) {
+          const rawRes = await api.get(`/api/products/${detailData.id}`);
+          rawProduct = rawRes.data?.data;
+        }
+        if (rawProduct) {
+          const rawVariants = rawProduct.variants;
+          const nameById = Array.isArray(rawVariants)
+            ? new Map(rawVariants.map((rv) => [rv.id, rv.name]))
+            : null;
+          return {
+            ...detailData,
+            badge: detailData.badge || rawProduct.badge || "",
+            specification: detailData.specification ?? rawProduct.specification ?? null,
+            specifications: detailData.specifications ?? rawProduct.specifications ?? null,
+            variants:
+              nameById && Array.isArray(detailData.variants)
+                ? detailData.variants.map((v) => ({
+                  ...v,
+                  name: v.name || nameById.get(v.id) || "",
+                }))
+                : detailData.variants,
+          };
+        }
+      } catch {
+      }
+      return detailData;
+    };
 
     try {
-      // Nếu là số ID thay vì slug, tra cứu ID trước để lấy slug chính xác
       if (/^\d+$/.test(String(slug).trim())) {
         try {
           const res = await api.get(`/api/products/${slug}`);
@@ -229,18 +327,18 @@ export const productService = {
             const detailRes = await api.get(
               `/api/products/slug/${encodeURIComponent(product.slug)}`
             );
-            return mapDetailToFrontend(detailRes.data?.data);
+            const merged = await mergeMissingDetailFields(detailRes.data?.data, product);
+            return mapDetailToFrontend(merged);
           }
         } catch {
-          // Bỏ qua nếu không tìm thấy theo id, tiếp tục thử theo slug
         }
       }
 
       const response = await api.get(
         `/api/products/slug/${encodeURIComponent(slug)}`
       );
-
-      return mapDetailToFrontend(response.data?.data);
+      const merged = await mergeMissingDetailFields(response.data?.data);
+      return mapDetailToFrontend(merged);
     } catch (error) {
       console.warn(
         "Không thể tải chi tiết sản phẩm:",

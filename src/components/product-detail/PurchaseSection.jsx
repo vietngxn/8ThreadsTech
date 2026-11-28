@@ -7,30 +7,12 @@ import { authService } from "../../services/authService";
 
 const formatPrice = (value) => `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
 
-const defaultColors = [
-  {
-    name: "Bạc ánh trăng",
-    color: "#c8c9ca",
-    switchDesc: "Linear Red Switch · Êm & mượt",
-  },
-  {
-    name: "Đen nguyên bản",
-    color: "#393b3d",
-    switchDesc: "Linear Black Switch · Đầm tay & tĩnh lặng",
-  },
-  {
-    name: "Đỏ dung nham",
-    color: "#a82125",
-    switchDesc: "Rapid Trigger Switch · Nhạy bén & sắc sảo",
-  },
-];
-
 export default function PurchaseSection({
   color = 0,
-  onColorChange = () => {},
-  colors = defaultColors,
-  onComingSoon = () => {},
-  onNotice = () => {},
+  onColorChange = () => { },
+  colors = [],
+  onComingSoon = () => { },
+  onNotice = () => { },
   product = null,
 }) {
   const sectionRef = useRef(null);
@@ -38,8 +20,8 @@ export default function PurchaseSection({
   const colorDescRef = useRef(null);
   const isFirstMount = useRef(true);
 
-  const activeColors = colors.length > 0 ? colors : defaultColors;
-  const currentColor = activeColors[color] || activeColors[0];
+  const activeColors = colors;
+  const currentColor = activeColors[color] || activeColors[0] || null;
   const [added, setAdded] = useState(false);
   const [busy, setBusy] = useState(null); // "cart" | null
   const navigate = useNavigate();
@@ -49,7 +31,7 @@ export default function PurchaseSection({
   const variantId = currentColor?.variantId;
   const price = currentColor?.price ?? product?.price;
   const oldPrice = currentColor?.compareAtPrice;
-  const inStock = currentColor?.inStock !== false;
+  const inStock = activeColors.length > 0 ? currentColor?.inStock !== false : !!product?.inStock;
 
   /** Kiểm tra chung trước khi thêm. Trả về false nếu không thêm được. */
   const canAdd = () => {
@@ -170,51 +152,61 @@ export default function PurchaseSection({
     }
   };
 
+  const colorDesc =
+    currentColor?.switchDesc ||
+    (currentColor?.colorName && currentColor.colorName !== currentColor.name
+      ? currentColor.colorName
+      : "") ||
+    product?.variant ||
+    "";
+  const features = Array.isArray(product?.features) ? product.features.slice(0, 3) : [];
+
   return (
     <section ref={sectionRef} className="purchase" data-node-id="3:1165">
       {/* Chọn màu */}
-      <div className="color-select">
-        <div className="small-label">PHỐI MÀU CỦA BẠN</div>
-        <div className="swatches" role="radiogroup" aria-label="Chọn màu sắc bàn phím">
-          {activeColors.map((item, index) => (
-            <button
-              key={item.name}
-              type="button"
-              className={color === index ? "selected" : ""}
-              onClick={(e) => handleColorClick(index, e)}
-              aria-label={item.name}
-              aria-pressed={color === index}
-            >
-              <span style={{ background: item.color }} />
-            </button>
-          ))}
+      {activeColors.length > 0 && (
+        <div className="color-select">
+          <div className="small-label">PHIÊN BẢN</div>
+          <div className="swatches" role="radiogroup" aria-label="Chọn phiên bản sản phẩm">
+            {activeColors.map((item, index) => (
+              <button
+                key={item.variantId ?? index}
+                type="button"
+                className={color === index ? "selected" : ""}
+                onClick={(e) => handleColorClick(index, e)}
+                aria-label={item.name || `Phiên bản ${index + 1}`}
+                aria-pressed={color === index}
+              >
+                <span style={{ background: item.color || "#393b3d" }} />
+              </button>
+            ))}
+          </div>
+          {currentColor?.name && <strong ref={colorNameRef}>{currentColor.name}</strong>}
+          {colorDesc && <p ref={colorDescRef}>{colorDesc}</p>}
         </div>
-        <strong ref={colorNameRef}>{currentColor.name}</strong>
-        <p ref={colorDescRef}>{currentColor.switchDesc || product?.variant || "Linear Red Switch · Êm & mượt"}</p>
-      </div>
+      )}
 
       {/* Thông tin sản phẩm */}
       <div className="product-info">
         <div className="product-title">
-          <h1>{product?.name || "THREAD 75"}</h1>
-          <span>{product?.badge || "MỚI RA MẮT"}</span>
+          {product?.name && <h1>{product.name}</h1>}
+          {product?.badge && <span>{product.badge}</span>}
         </div>
-        <p>
-          {product?.description ||
-            "Từng phím gõ, một nhịp cảm hứng. Thiết kế 75% gọn gàng, hoàn thiện cho cả làm việc lẫn cuộc chơi."}
-        </p>
-        <div className="features">
-          {(product?.features || ["Nhôm CNC", "Hot-swap", "3 chế độ kết nối"]).map((feat, i) => (
-            <span key={i}>{feat}</span>
-          ))}
-        </div>
+        {product?.description && <p>{product.description}</p>}
+        {features.length > 0 && (
+          <div className="features">
+            {features.map((feat, i) => (
+              <span key={i}>{feat}</span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Giá & nút mua */}
       <div className="purchase-action">
         <div className="price">
           <strong>{price != null ? formatPrice(price) : "—"}</strong>
-          {oldPrice > price && <del>{formatPrice(oldPrice)}</del>}
+          {oldPrice != null && price != null && oldPrice > price && <del>{formatPrice(oldPrice)}</del>}
         </div>
         <div className="purchase-buttons">
           <button
@@ -237,13 +229,13 @@ export default function PurchaseSection({
             {busy === "cart" ? "ĐANG THÊM..." : added ? "ĐÃ THÊM VÀO GIỎ" : "THÊM VÀO GIỎ"}
           </button>
         </div>
-        <p className="stock">
-          <span />
-          {inStock ? "Có sẵn · Sẵn sàng giao trong 24h" : "Phiên bản này tạm hết hàng"}
-        </p>
+        {activeColors.length > 0 && (
+          <p className="stock">
+            <span />
+            {inStock ? "Có sẵn · Sẵn sàng giao trong 24h" : "Phiên bản này tạm hết hàng"}
+          </p>
+        )}
       </div>
     </section>
   );
 }
-
-export { defaultColors as colors };

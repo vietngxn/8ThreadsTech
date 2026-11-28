@@ -80,7 +80,7 @@ function RatingCard({ stats, onComingSoon }) {
   );
 }
 
-function ReviewCard({ review, productName = "THREAD 75" }) {
+function ReviewCard({ review, productName = "" }) {
   const reviewerName = review.reviewerName || review.name || "Khách hàng";
   const displayProduct = review.productName || productName;
   const displayDate = formatReviewDate(review.createdAt || review.date);
@@ -301,7 +301,7 @@ export default function ReviewsSection({ onComingSoon, product = null }) {
               <ReviewCard
                 key={review.id ?? `${review.reviewerName || "review"}-${page}-${index}`}
                 review={review}
-                productName={product?.name || "THREAD 75"}
+                productName={product?.name || ""}
               />
             ))
           )}

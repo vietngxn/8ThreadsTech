@@ -1,11 +1,10 @@
 import { useRef, useEffect, useState } from "react";
 import { gsap, useGSAP } from "../../lib/gsap";
-import defaultKeyboard from "../../assets/thread-keyboard.png";
 
 export default function HeroSection({
   product = null,
   color = 0,
-  onColorChange = () => {},
+  onColorChange = () => { },
   colors = [],
 }) {
   const heroRef = useRef(null);
@@ -13,13 +12,7 @@ export default function HeroSection({
   const glowRef = useRef(null);
   const isFirstMount = useRef(true);
 
-  // Fallback defaults if colors prop is empty
-  const currentColorData = colors[color] || {
-    name: "Bạc ánh trăng",
-    image: product?.image || defaultKeyboard,
-    tagline: product?.tagline || "GÕ CHẤT. CHƠI KHÁC.",
-    glow: "rgba(240, 43, 36, 0.2)",
-  };
+  const currentColorData = colors[color] || {};
 
   const [displayedIndex, setDisplayedIndex] = useState(color);
   const displayedColorData = colors[displayedIndex] || currentColorData;
@@ -62,7 +55,7 @@ export default function HeroSection({
             "-=0.95"
           )
           .from(
-            imageRef.current,
+            ".hero-keyboard",
             {
               autoAlpha: 0,
               scale: 0.82,
@@ -129,7 +122,7 @@ export default function HeroSection({
         });
 
         // Floating idle animation on keyboard
-        gsap.to(imageRef.current, {
+        gsap.to(".hero-keyboard", {
           y: "+=12px",
           rotation: 0.6,
           duration: 3,
@@ -189,9 +182,9 @@ export default function HeroSection({
       });
 
     // Cập nhật hiệu ứng hào quang (glow)
-    if (glow && colors[color]?.glow) {
+    if (glow) {
       gsap.to(glow, {
-        backgroundColor: colors[color].glow,
+        backgroundColor: colors[color]?.glow || "transparent",
         scale: 1.1,
         duration: 0.3,
         yoyo: true,
@@ -248,13 +241,16 @@ export default function HeroSection({
     });
   };
 
-  const totalColors = colors.length || 1;
+  const totalColors = colors.length;
   const currentCount = String(color + 1).padStart(2, "0");
   const totalCount = String(totalColors).padStart(2, "0");
 
-  const heroWord = product?.heroWord || "Thread";
-  const heroNumber = product?.heroNumber || "75";
+  const heroWord = product?.heroWord || "";
+  const heroNumber = product?.heroNumber || "";
   const isLongHeroNumber = heroNumber.length > 3;
+  const heroImage = displayedColorData.image || product?.image || "";
+  const taglineText = displayedColorData.tagline || product?.tagline || "";
+  const hasStat = Boolean(product?.statValue || product?.statLabel);
 
   return (
     <section
@@ -280,54 +276,64 @@ export default function HeroSection({
         <path d="M-80 480 C 220 525, 320 10, 650 65 S 890 430, 1135 300 S 1400 100, 1520 20" />
       </svg>
 
-      <div className="hero-word">{heroWord}</div>
-      <div
-        className="hero-number"
-        style={isLongHeroNumber ? { fontSize: "clamp(54px, 8.5vw, 115px)", top: "115px" } : undefined}
-      >
-        {heroNumber}
-      </div>
+      {heroWord && <div className="hero-word">{heroWord}</div>}
+      {heroNumber && (
+        <div
+          className="hero-number"
+          style={isLongHeroNumber ? { fontSize: "clamp(54px, 8.5vw, 115px)", top: "115px" } : undefined}
+        >
+          {heroNumber}
+        </div>
+      )}
 
       {/* Vùng hiển thị bàn phím với hiệu ứng GSAP */}
-      <div className="hero-keyboard-wrap">
-        <div
-          ref={glowRef}
-          className="hero-keyboard-glow"
-          style={{
-            backgroundColor: displayedColorData.glow || "rgba(240, 43, 36, 0.2)",
-          }}
-        />
-        <img
-          ref={imageRef}
-          className="hero-keyboard"
-          src={displayedColorData.image || product?.image || defaultKeyboard}
-          alt={`Bàn phím cơ ${product?.name || "THREAD 75"} - ${displayedColorData.name || "Màu sắc"}`}
-          data-node-id="3:1157"
-        />
-      </div>
+      {heroImage && (
+        <div className="hero-keyboard-wrap">
+          <div
+            ref={glowRef}
+            className="hero-keyboard-glow"
+            style={{
+              backgroundColor: displayedColorData.glow || "transparent",
+            }}
+          />
+          <img
+            ref={imageRef}
+            className="hero-keyboard"
+            src={heroImage}
+            alt={`Bàn phím cơ ${product?.name || ""}${displayedColorData.name ? ` - ${displayedColorData.name}` : ""}`}
+            data-node-id="3:1157"
+          />
+        </div>
+      )}
 
-      <p className="hero-tagline">{displayedColorData.tagline || product?.tagline || "GÕ CHẤT. CHƠI KHÁC."}</p>
+      {taglineText && <p className="hero-tagline">{taglineText}</p>}
 
-      <div className="hero-stat">
-        <strong>{product?.statValue || "1.000 Hz"}</strong>
-        <span>{product?.statLabel || "KHÔNG DÂY. KHÔNG ĐỘ TRỄ."}</span>
-      </div>
+      {hasStat && (
+        <div className="hero-stat">
+          {product?.statValue && <strong>{product.statValue}</strong>}
+          {product?.statLabel && <span>{product.statLabel}</span>}
+        </div>
+      )}
 
       {/* Bộ chọn chấm tròn điều hướng màu */}
-      <div className="hero-dots" aria-label="Bộ chọn màu sắc">
-        {colors.map((item, index) => (
-          <button
-            key={item.name || index}
-            type="button"
-            className={color === index ? "active" : ""}
-            onClick={() => onColorChange(index)}
-            title={`Chọn phối màu: ${item.name || `Màu ${index + 1}`}`}
-            aria-label={`Chọn phối màu: ${item.name || `Màu ${index + 1}`}`}
-          />
-        ))}
-      </div>
+      {totalColors > 0 && (
+        <>
+          <div className="hero-dots" aria-label="Bộ chọn màu sắc">
+            {colors.map((item, index) => (
+              <button
+                key={item.name || index}
+                type="button"
+                className={color === index ? "active" : ""}
+                onClick={() => onColorChange(index)}
+                title={`Chọn phối màu: ${item.name || `Màu ${index + 1}`}`}
+                aria-label={`Chọn phối màu: ${item.name || `Màu ${index + 1}`}`}
+              />
+            ))}
+          </div>
 
-      <span className="hero-count">{currentCount} / {totalCount}</span>
+          <span className="hero-count">{currentCount} / {totalCount}</span>
+        </>
+      )}
     </section>
   );
 }
