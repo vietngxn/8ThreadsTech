@@ -16,6 +16,30 @@ const LAYOUTS = ['60%', '65%', '75%', '80%', '87%', '98%', '100%', 'Full-size', 
 const CONNECTIONS = ['3 chế độ kết nối', 'Không dây Bluetooth', 'Có dây USB-C', 'USB-C'];
 const SWITCH_TYPES = ['Linear', 'Tactile', 'Magnetic'];
 
+const KEYCAP_MATERIALS = ['PBT', 'ABS', 'POM', 'PC'];
+const KEYCAP_PROFILES = ['Cherry', 'OEM', 'SA', 'MT3', 'XDA', 'KAT', 'MDA'];
+const KEYCAP_PRINT_METHODS = ['Doubleshot', 'Dye-sub', 'Laser etched', 'Pad printing'];
+const POLLING_RATES = ['125Hz', '500Hz', '1000Hz', '2000Hz', '4000Hz', '8000Hz'];
+const BADGE_SUGGESTIONS = ['MỚI RA MẮT', 'BÁN CHẠY', 'HOT', 'GIỚI HẠN', 'GIẢM GIÁ'];
+
+function getCategoryKind(category) {
+  if (!category) return null;
+  const text = [category.name, category.slug, category.parentName, category.parentSlug]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  if (text.includes('keycap')) return 'keycap';
+  if (
+    text.includes('bàn phím') ||
+    text.includes('ban phim') ||
+    text.includes('ban-phim') ||
+    text.includes('keyboard')
+  ) {
+    return 'keyboard';
+  }
+  return null;
+}
+
 const STOCK_LABEL = {
   IN_STOCK: { cls: 'available', text: 'Còn hàng' },
   LOW_STOCK: { cls: 'low', text: 'Sắp hết' },
@@ -450,10 +474,21 @@ function ProductDialog({ product, categories, brands, onClose, onSave }) {
     layout: specs.layout || product?.layout || '',
     connection: specs.connection || specs.connectionType || product?.connection || '',
     switchType: specs.switchType || product?.switch || '',
-    shortDescription: product?.shortDescription || '',
+    hz: specs.hz || specs.pollingRate || specs.frequency || product?.hz || '',
+    tagline: specs.tagline || product?.tagline || '',
+    material: specs.material || '',
+    profile: specs.profile || '',
+    printMethod: specs.printMethod || specs.printingMethod || '',
+    badge: specs.badge || '',
     description: product?.description || '',
     status: product?.status || 'ACTIVE',
   });
+
+  const selectedCategory = useMemo(
+    () => categories.find((c) => String(c.id) === String(form.categoryId)) || null,
+    [categories, form.categoryId]
+  );
+  const categoryKind = getCategoryKind(selectedCategory);
 
   const [variants, setVariants] = useState(() => mapDetailToVariants(product));
   const [saving, setSaving] = useState(false);
@@ -585,16 +620,25 @@ function ProductDialog({ product, categories, brands, onClose, onSave }) {
       });
 
       const specifications = {};
-      if (form.layout) specifications.layout = form.layout;
-      if (form.connection) specifications.connection = form.connection;
-      if (form.switchType) specifications.switchType = form.switchType;
+      if (form.badge.trim()) specifications.badge = form.badge.trim();
+      if (categoryKind === 'keyboard') {
+        if (form.layout) specifications.layout = form.layout;
+        if (form.connection) specifications.connection = form.connection;
+        if (form.switchType) specifications.switchType = form.switchType;
+        if (form.hz.trim()) specifications.hz = form.hz.trim();
+        if (form.tagline.trim()) specifications.tagline = form.tagline.trim();
+      } else if (categoryKind === 'keycap') {
+        if (form.material) specifications.material = form.material;
+        if (form.profile) specifications.profile = form.profile;
+        if (form.printMethod) specifications.printMethod = form.printMethod;
+      }
 
       const payload = {
         categoryId: Number(form.categoryId),
         ...(form.brandId ? { brandId: Number(form.brandId) } : {}),
         name: form.name.trim(),
         slug: form.slug.trim(),
-        shortDescription: form.shortDescription.trim(),
+        badge: form.badge.trim() || null,
         description: form.description.trim(),
         specifications,
         status: form.status,
@@ -681,38 +725,98 @@ function ProductDialog({ product, categories, brands, onClose, onSave }) {
                 </label>
               </div>
 
-              <div className="pm-form-grid pm-form-grid-3">
-                <label>
-                  Layout
-                  <select value={form.layout} onChange={updateForm('layout')}>
-                    <option value="">— Chọn —</option>
-                    {LAYOUTS.map((l) => <option key={l} value={l}>{l}</option>)}
-                  </select>
-                </label>
-                <label>
-                  Kết nối
-                  <select value={form.connection} onChange={updateForm('connection')}>
-                    <option value="">— Chọn —</option>
-                    {CONNECTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </label>
-                <label>
-                  Loại Switch
-                  <select value={form.switchType} onChange={updateForm('switchType')}>
-                    <option value="">— Chọn —</option>
-                    {SWITCH_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </label>
-              </div>
+              {categoryKind === 'keyboard' && (
+                <>
+                  <div className="pm-form-grid pm-form-grid-3">
+                    <label>
+                      Layout
+                      <select value={form.layout} onChange={updateForm('layout')}>
+                        <option value="">— Chọn —</option>
+                        {LAYOUTS.map((l) => <option key={l} value={l}>{l}</option>)}
+                      </select>
+                    </label>
+                    <label>
+                      Kết nối
+                      <select value={form.connection} onChange={updateForm('connection')}>
+                        <option value="">— Chọn —</option>
+                        {CONNECTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </label>
+                    <label>
+                      Loại Switch
+                      <select value={form.switchType} onChange={updateForm('switchType')}>
+                        <option value="">— Chọn —</option>
+                        {SWITCH_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="pm-form-grid">
+                    <label>
+                      Tần số (Hz)
+                      <input
+                        list="pm-hz-suggestions"
+                        value={form.hz}
+                        onChange={updateForm('hz')}
+                        placeholder="Ví dụ: 1000Hz, 8000Hz"
+                      />
+                      <datalist id="pm-hz-suggestions">
+                        {POLLING_RATES.map((rate) => (
+                          <option key={rate} value={rate} />
+                        ))}
+                      </datalist>
+                    </label>
+                    <label>
+                      Tagline
+                      <input
+                        value={form.tagline}
+                        onChange={updateForm('tagline')}
+                        placeholder="Ví dụ: GÕ CHẤT. CHƠI KHÁC."
+                      />
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {categoryKind === 'keycap' && (
+                <div className="pm-form-grid pm-form-grid-3">
+                  <label>
+                    Chất liệu
+                    <select value={form.material} onChange={updateForm('material')}>
+                      <option value="">— Chọn —</option>
+                      {KEYCAP_MATERIALS.map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </label>
+                  <label>
+                    Profile
+                    <select value={form.profile} onChange={updateForm('profile')}>
+                      <option value="">— Chọn —</option>
+                      {KEYCAP_PROFILES.map((p) => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </label>
+                  <label>
+                    Phương pháp in
+                    <select value={form.printMethod} onChange={updateForm('printMethod')}>
+                      <option value="">— Chọn —</option>
+                      {KEYCAP_PRINT_METHODS.map((pm) => <option key={pm} value={pm}>{pm}</option>)}
+                    </select>
+                  </label>
+                </div>
+              )}
 
               <div className="pm-form-grid">
                 <label>
-                  Mô tả ngắn
+                  Badge sản phẩm
                   <input
-                    value={form.shortDescription}
-                    onChange={updateForm('shortDescription')}
-                    placeholder="Switch bàn phím magnetic"
+                    list="pm-badge-suggestions"
+                    value={form.badge}
+                    onChange={updateForm('badge')}
+                    placeholder="Ví dụ: MỚI RA MẮT, HOT..."
                   />
+                  <datalist id="pm-badge-suggestions">
+                    {BADGE_SUGGESTIONS.map((b) => (
+                      <option key={b} value={b} />
+                    ))}
+                  </datalist>
                 </label>
                 <label>
                   Trạng thái hiển thị

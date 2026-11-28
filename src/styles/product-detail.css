@@ -335,6 +335,7 @@
 .product-title {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
 }
 
@@ -347,6 +348,8 @@
 }
 
 .product-title span {
+  flex-shrink: 0;
+  white-space: nowrap;
   font-size: 9px;
   font-weight: 800;
   background: #f02b24;

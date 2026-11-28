@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { IconCheck, IconPhotoOff, IconShoppingBag } from "@tabler/icons-react";
 
 const formatPrice = (price) => `${price.toLocaleString("vi-VN")} đ`;
@@ -8,6 +8,9 @@ function ProductCard({ product, onAddToCart }) {
   const [added, setAdded] = useState(false);
   const [failedImageUrl, setFailedImageUrl] = useState(null);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const categorySlug = pathname.split("/")[1] || "ban-phim";
+  const detailPath = `/${categorySlug}/${product.id}`;
 
   const showImage = Boolean(product.image) && failedImageUrl !== product.image;
 
@@ -27,7 +30,7 @@ function ProductCard({ product, onAddToCart }) {
   const handleCardClick = (e) => {
     // Nếu bấm vào nút thêm giỏ hàng thì không điều hướng
     if (e.target.closest("button")) return;
-    navigate(`/ban-phim/${product.id}`);
+    navigate(detailPath);
   };
 
   return (
@@ -38,7 +41,7 @@ function ProductCard({ product, onAddToCart }) {
       style={{ cursor: "pointer" }}
     >
       <div className="pl-product-image" data-node-id={product.imageFrameId}>
-        <Link to={`/ban-phim/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
+        <Link to={detailPath} aria-label={`Xem chi tiết ${product.name}`}>
           {showImage ? (
             <img
               src={product.image}
@@ -62,7 +65,9 @@ function ProductCard({ product, onAddToCart }) {
       <div className="pl-product-info">
         <div className="pl-product-title">
           <h2>
-            <Link to={`/ban-phim/${product.id}`}>{product.name}</Link>
+            <Link to={detailPath} title={product.name}>
+              {product.name}
+            </Link>
           </h2>
           <div className="pl-swatches" aria-label="Màu sắc">
             {product.colors.map((colorItem, idx) => {

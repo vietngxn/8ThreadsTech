@@ -7,13 +7,12 @@ import ReviewsSection from "../components/product-detail/ReviewsSection";
 import PageFooter from "../components/product-detail/PageFooter";
 import NoticeToast from "../components/product-detail/NoticeToast";
 import { productService } from "../services/productService";
-import { productStore } from "../services/productStore";
 
 export default function ProductDetailPage() {
-  const { id } = useParams(); // id là slug
+  const { id } = useParams();
   const [color, setColor] = useState(0);
   const [notice, setNotice] = useState("");
-  const [product, setProduct] = useState(() => productStore.findById(id) || null);
+  const [product, setProduct] = useState(null);
   const [notFound, setNotFound] = useState(false);
 
   const comingSoon = (name) => setNotice(`${name} đang được hoàn thiện.`);
@@ -21,14 +20,13 @@ export default function ProductDetailPage() {
   useEffect(() => {
     let alive = true;
     setColor(0);
+    setProduct(null);
     setNotFound(false);
-    // Hiển thị ngay bản rút gọn từ danh sách (nếu có), rồi thay bằng bản đầy đủ từ BE
-    setProduct(productStore.findById(id) || null);
 
     productService.getProductBySlug(id).then((detail) => {
       if (!alive) return;
       if (detail) setProduct(detail);
-      else if (!productStore.findById(id)) setNotFound(true);
+      else setNotFound(true);
     });
 
     return () => { alive = false; };
