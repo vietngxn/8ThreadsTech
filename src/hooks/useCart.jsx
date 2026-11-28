@@ -214,8 +214,9 @@ export function CartProvider({ children }) {
 
   // Thêm sản phẩm
   const addToCart = async (productVariantId, quantity = 1) => {
-    await cartService.addToCart(productVariantId, quantity);
+    const added = await cartService.addToCart(productVariantId, quantity);
     await loadCart();
+    return added; // CartItemResponse có cartItemId
   };
 
   const refreshCart = () => loadCart();

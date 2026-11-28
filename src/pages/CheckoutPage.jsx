@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import CartFooter from "../components/cart/CartFooter";
@@ -39,6 +39,9 @@ export default function CheckoutPage() {
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [payment, setPayment] = useState("COD");
   const [coupon, setCoupon] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponMessage, setCouponMessage] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -50,6 +53,9 @@ export default function CheckoutPage() {
     }
   }, [navigate]);
 
+  // Mua ngay: 1 sản phẩm mang từ trang chi tiết, KHÔNG nằm trong giỏ
+  const buyNow = location.state?.buyNow || null;
+
   // Các dòng giỏ được chọn từ trang giỏ hàng. Vào thẳng /thanh-toan thì lấy cả giỏ.
   const selectedCartItemIds = useMemo(() => {
     const ids = location.state?.cartItemIds;
@@ -57,11 +63,12 @@ export default function CheckoutPage() {
   }, [location.state]);
 
   const items = useMemo(() => {
+    if (buyNow) return [{ ...buyNow, cartItemId: `buy-now-${buyNow.productVariantId}` }];
     if (selectedCartItemIds === null) return cartItems;
     return cartItems.filter((item) =>
       selectedCartItemIds.includes(item.cartItemId)
     );
-  }, [cartItems, selectedCartItemIds]);
+  }, [buyNow, cartItems, selectedCartItemIds]);
 
   // Phương thức vận chuyển lấy từ BE
   useEffect(() => {
@@ -172,7 +179,47 @@ export default function CheckoutPage() {
 
   const selectedShipping = shippingMethods.find((m) => m.code === shipping);
   const shippingFee = Number(selectedShipping?.baseCost || 0);
-  const total = subtotal + shippingFee;
+  // Số tiền giảm chỉ để hiển thị. BE tự tính lại khi đặt hàng.
+  const discount = Math.min(Number(appliedCoupon?.discountAmount || 0), subtotal);
+  const total = subtotal - discount + shippingFee;
+
+  const applyCoupon = async (codeArg) => {
+    const code = (typeof codeArg === "string" ? codeArg : coupon).trim();
+    if (!code || couponLoading) return;
+
+    setCouponLoading(true);
+    setCouponMessage("");
+    try {
+      const result = await orderService.previewCoupon(code, subtotal);
+      setAppliedCoupon(result);
+    } catch (error) {
+      setAppliedCoupon(null);
+      setCouponMessage(getOrderErrorMessage(error));
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponMessage("");
+  };
+
+  // Tạm tính đổi (giỏ tải lại) thì số tiền giảm cũ không còn đúng: bỏ mã, để khách áp lại
+  useEffect(() => {
+    setAppliedCoupon(null);
+  }, [subtotal]);
+
+  // Mã đã áp ở trang giỏ hàng: tự áp lại khi tạm tính đã có (phải đặt SAU effect bỏ mã ở trên)
+  const carriedCoupon = location.state?.couponCode;
+  const carriedAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!carriedCoupon || carriedAppliedRef.current || subtotal <= 0) return;
+    carriedAppliedRef.current = true;
+    setCoupon(carriedCoupon);
+    applyCoupon(carriedCoupon);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carriedCoupon, subtotal]);
 
   const submitOrder = async (event) => {
     event.preventDefault();
@@ -183,7 +230,10 @@ export default function CheckoutPage() {
 
     try {
       const order = await orderService.createOrder({
-        cartItemIds: items.map((item) => item.cartItemId),
+        // Mua ngay gửi biến thể + số lượng, còn lại gửi các dòng giỏ đã chọn
+        ...(buyNow
+          ? { buyNow: { productVariantId: buyNow.productVariantId, quantity: buyNow.quantity } }
+          : { cartItemIds: items.map((item) => item.cartItemId) }),
         shippingMethodCode: shipping,
         paymentMethod: payment,
         customerName: form.customerName.trim(),
@@ -194,6 +244,7 @@ export default function CheckoutPage() {
         ward: form.ward.trim(),
         addressLine: form.addressLine.trim(),
         customerNote: form.customerNote.trim() || null,
+        couponCode: appliedCoupon?.code || null,
       });
 
       // BE đã xóa các dòng giỏ đã mua, tải lại để số lượng trên Navbar đúng
@@ -224,7 +275,7 @@ export default function CheckoutPage() {
     }
   };
 
-  const isEmpty = !cartLoading && items.length === 0;
+  const isEmpty = !buyNow && !cartLoading && items.length === 0;
 
   return (
     <div className="checkout-page" data-node-id="3:58">
@@ -269,6 +320,12 @@ export default function CheckoutPage() {
               shippingFee={shippingFee}
               total={total}
               coupon={coupon}
+              appliedCoupon={appliedCoupon}
+              couponMessage={couponMessage}
+              couponLoading={couponLoading}
+              discount={discount}
+              onApplyCoupon={applyCoupon}
+              onRemoveCoupon={removeCoupon}
               payment={payment}
               submitting={submitting}
               canSubmit={items.length > 0 && Boolean(shipping)}

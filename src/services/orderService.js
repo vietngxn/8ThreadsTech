@@ -36,6 +36,12 @@ export const orderService = {
     );
     return response.data?.data;
   },
+
+    /** Xem trước mã khuyến mãi (chỉ để hiển thị, BE tính lại khi đặt hàng) */
+  async previewCoupon(code, subtotal) {
+    const response = await api.post("/api/coupons/preview", { code, subtotal });
+    return response.data?.data;
+  },
 };
 
 /**

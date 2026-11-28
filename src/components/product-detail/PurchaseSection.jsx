@@ -1,7 +1,11 @@
 import { useRef, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { IconArrowUpRight, IconShoppingBag, IconCheck } from "@tabler/icons-react";
 import { gsap, useGSAP } from "../../lib/gsap";
-import { cartService } from "../../services/cartService";
+import { useCart } from "../../hooks/useCart";
+import { authService } from "../../services/authService";
+
+const formatPrice = (value) => `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
 
 const defaultColors = [
   {
@@ -26,6 +30,7 @@ export default function PurchaseSection({
   onColorChange = () => {},
   colors = defaultColors,
   onComingSoon = () => {},
+  onNotice = () => {},
   product = null,
 }) {
   const sectionRef = useRef(null);
@@ -36,31 +41,66 @@ export default function PurchaseSection({
   const activeColors = colors.length > 0 ? colors : defaultColors;
   const currentColor = activeColors[color] || activeColors[0];
   const [added, setAdded] = useState(false);
+  const [busy, setBusy] = useState(null); // "cart" | null
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    if (product) {
-      cartService.addToCart(product, {
-        color: currentColor?.name,
-        switch: currentColor?.switchDesc,
-        price: currentColor?.price || product.price,
-        image: currentColor?.image || product.image,
-      });
+  // Biến thể đang chọn (màu/switch). Giá và tồn kho lấy theo biến thể, không theo sản phẩm.
+  const variantId = currentColor?.variantId;
+  const price = currentColor?.price ?? product?.price;
+  const oldPrice = currentColor?.compareAtPrice;
+  const inStock = currentColor?.inStock !== false;
+
+  /** Kiểm tra chung trước khi thêm. Trả về false nếu không thêm được. */
+  const canAdd = () => {
+    if (!authService.getToken()) {
+      navigate("/dang-nhap", { state: { from: window.location.pathname } });
+      return false;
+    }
+    if (!variantId) {
+      onNotice("Không xác định được phiên bản sản phẩm. Vui lòng tải lại trang.");
+      return false;
+    }
+    if (!inStock) {
+      onNotice("Phiên bản này đã hết hàng.");
+      return false;
+    }
+    return true;
+  };
+
+  const handleAddToCart = async () => {
+    if (busy || !canAdd()) return;
+    setBusy("cart");
+    try {
+      await addToCart(variantId, 1);
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
-      if (onComingSoon) onComingSoon(`Đã thêm "${product.name}" vào giỏ hàng.`);
+      onNotice(`Đã thêm "${product?.name}" (${currentColor?.name}) vào giỏ hàng.`);
+    } catch (err) {
+      onNotice(err.message || "Không thể thêm vào giỏ hàng.");
+    } finally {
+      setBusy(null);
     }
   };
 
+  // Mua ngay: KHÔNG thêm vào giỏ. Mang thông tin biến thể sang trang thanh toán,
+  // BE tạo đơn trực tiếp từ productVariantId (source_type = BUY_NOW).
   const handleBuyNow = () => {
-    if (product) {
-      cartService.addToCart(product, {
-        color: currentColor?.name,
-        switch: currentColor?.switchDesc,
-        price: currentColor?.price || product.price,
-        image: currentColor?.image || product.image,
-      });
-    }
+    if (busy || !canAdd()) return;
+    navigate("/thanh-toan", {
+      state: {
+        buyNow: {
+          productVariantId: variantId,
+          quantity: 1,
+          name: product?.name,
+          image: currentColor?.image || product?.image,
+          color: currentColor?.name,
+          switch: currentColor?.switchDesc,
+          price,
+          oldPrice: oldPrice > price ? oldPrice : null,
+        },
+      },
+    });
   };
 
   // Scroll reveal animation với ScrollTrigger
@@ -173,25 +213,33 @@ export default function PurchaseSection({
       {/* Giá & nút mua */}
       <div className="purchase-action">
         <div className="price">
-          <strong>
-            {product?.price
-              ? `${product.price.toLocaleString("vi-VN")} ₫`
-              : "2.490.000 ₫"}
-          </strong>
-          <del>{product?.oldPrice || "2.790.000 ₫"}</del>
+          <strong>{price != null ? formatPrice(price) : "—"}</strong>
+          {oldPrice > price && <del>{formatPrice(oldPrice)}</del>}
         </div>
         <div className="purchase-buttons">
-          <a className="buy-button" href="/thanh-toan" onClick={handleBuyNow}>
+          <button
+            type="button"
+            className="buy-button"
+            onClick={handleBuyNow}
+            disabled={!!busy || !inStock}
+            style={{ cursor: busy || !inStock ? "not-allowed" : "pointer", border: "none", opacity: inStock ? 1 : 0.5 }}
+          >
             MUA NGAY <IconArrowUpRight size={18} />
-          </a>
-          <button type="button" className="add-button" onClick={handleAddToCart} style={{ cursor: "pointer", border: "none" }}>
+          </button>
+          <button
+            type="button"
+            className="add-button"
+            onClick={handleAddToCart}
+            disabled={!!busy || !inStock}
+            style={{ cursor: busy || !inStock ? "not-allowed" : "pointer", border: "none", opacity: inStock ? 1 : 0.5 }}
+          >
             {added ? <IconCheck size={18} /> : <IconShoppingBag size={18} />}
-            {added ? "ĐÃ THÊM VÀO GIỎ" : "THÊM VÀO GIỎ"}
+            {busy === "cart" ? "ĐANG THÊM..." : added ? "ĐÃ THÊM VÀO GIỎ" : "THÊM VÀO GIỎ"}
           </button>
         </div>
         <p className="stock">
           <span />
-          {product?.availability || "Có sẵn · Sẵn sàng giao trong 24h"}
+          {inStock ? "Có sẵn · Sẵn sàng giao trong 24h" : "Phiên bản này tạm hết hàng"}
         </p>
       </div>
     </section>
