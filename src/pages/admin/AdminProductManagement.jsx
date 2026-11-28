@@ -41,42 +41,138 @@ function getApiErrorMessage(err) {
   return data?.message || err?.message || 'Có lỗi xảy ra, vui lòng thử lại.';
 }
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+function normalizeImageItem(item) {
+  if (!item) return null;
+  if (typeof item === 'string') {
+    const clean = item.trim();
+    return clean ? { imageUrl: clean, publicId: null } : null;
+  }
+  const imageUrl = (item.imageUrl || item.url || '').trim();
+  if (!imageUrl) return null;
+  return {
+    imageUrl,
+    publicId: item.publicId || null,
+  };
+}
+
 /* ═══════════════════════════════════════════════
    HELPER: ImageUploadZone
-   Quản lý danh sách URL ảnh (và preview kéo thả)
+   Tải ảnh lên Cloudinary và quản lý danh sách URL ảnh
 ═══════════════════════════════════════════════ */
-function ImageUploadZone({ images = [], onChange, maxCount = 6, hint }) {
+function ImageUploadZone({ images = [], onChange, maxCount = 6, hint, onUploadingChange }) {
   const fileRef = useRef(null);
   const [urlInput, setUrlInput] = useState('');
   const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
-  const handleFiles = (files) => {
-    const list = Array.from(files).filter((f) => f.type.startsWith('image/'));
-    if (!list.length) return;
-    const urls = list.map((f) => URL.createObjectURL(f));
-    onChange([...images, ...urls].slice(0, maxCount));
+  const normalizedImages = useMemo(
+    () => images.map(normalizeImageItem).filter(Boolean),
+    [images]
+  );
+
+  const handleFiles = async (files) => {
+    const selected = Array.from(files || []);
+    if (!selected.length) return;
+
+    setUploadError('');
+    const remaining = maxCount - normalizedImages.length;
+    if (remaining <= 0) {
+      setUploadError(`Đã đạt tối đa ${maxCount} ảnh cho phiên bản này.`);
+      return;
+    }
+
+    const candidates = selected.slice(0, remaining);
+    const validFiles = [];
+    const errors = [];
+
+    for (const file of candidates) {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        errors.push(`"${file.name}" không đúng định dạng (chỉ nhận JPEG, PNG, WebP).`);
+        continue;
+      }
+      if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        errors.push(`"${file.name}" vượt quá giới hạn 10 MB.`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (selected.length > remaining) {
+      errors.push(`Chỉ có thể thêm tối đa ${remaining} ảnh nữa.`);
+    }
+
+    if (!validFiles.length) {
+      setUploadError(errors.join(' '));
+      return;
+    }
+
+    setUploading(true);
+    onUploadingChange?.(true);
+    try {
+      const results = await Promise.allSettled(
+        validFiles.map((file) => adminProductService.uploadImage(file))
+      );
+
+      const uploaded = [];
+      results.forEach((res, idx) => {
+        if (res.status === 'fulfilled' && res.value?.imageUrl) {
+          uploaded.push({
+            imageUrl: res.value.imageUrl,
+            publicId: res.value.publicId || null,
+          });
+        } else {
+          const msg = res.status === 'rejected'
+            ? getApiErrorMessage(res.reason)
+            : 'Không nhận được URL ảnh từ máy chủ.';
+          errors.push(`Tải "${validFiles[idx].name}" thất bại: ${msg}`);
+        }
+      });
+
+      if (uploaded.length > 0) {
+        const existingUrls = new Set(normalizedImages.map((img) => img.imageUrl));
+        const uniqueUploaded = uploaded.filter((img) => !existingUrls.has(img.imageUrl));
+        if (uniqueUploaded.length > 0) {
+          onChange([...normalizedImages, ...uniqueUploaded].slice(0, maxCount));
+        }
+      }
+
+      if (errors.length > 0) {
+        setUploadError(errors.join(' '));
+      }
+    } finally {
+      setUploading(false);
+      onUploadingChange?.(false);
+    }
   };
 
   const addUrl = () => {
     const url = urlInput.trim();
     if (!url) return;
-    if (images.includes(url)) { setUrlInput(''); return; }
-    onChange([...images, url].slice(0, maxCount));
+    setUploadError('');
+    if (normalizedImages.some((img) => img.imageUrl === url)) {
+      setUrlInput('');
+      return;
+    }
+    onChange([...normalizedImages, { imageUrl: url, publicId: null }].slice(0, maxCount));
     setUrlInput('');
   };
 
-  const removeImage = (idx) => onChange(images.filter((_, i) => i !== idx));
+  const removeImage = (idx) => onChange(normalizedImages.filter((_, i) => i !== idx));
 
   const moveLeft = (idx) => {
     if (idx === 0) return;
-    const next = [...images];
+    const next = [...normalizedImages];
     [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
     onChange(next);
   };
 
   const moveRight = (idx) => {
-    if (idx === images.length - 1) return;
-    const next = [...images];
+    if (idx === normalizedImages.length - 1) return;
+    const next = [...normalizedImages];
     [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
     onChange(next);
   };
@@ -84,7 +180,9 @@ function ImageUploadZone({ images = [], onChange, maxCount = 6, hint }) {
   const onDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    handleFiles(e.dataTransfer.files);
+    if (!uploading) {
+      handleFiles(e.dataTransfer.files);
+    }
   };
 
   return (
@@ -97,45 +195,46 @@ function ImageUploadZone({ images = [], onChange, maxCount = 6, hint }) {
         {hint && <small className="pm-image-zone-hint">{hint}</small>}
       </div>
 
-      {images.length > 0 && (
+      {normalizedImages.length > 0 && (
         <div className="pm-image-thumbs">
-          {images.map((src, i) => (
-            <div key={`${src}-${i}`} className={`pm-thumb ${i === 0 ? 'pm-thumb-primary' : ''}`}>
-              <img src={src} alt={`Ảnh ${i + 1}`} />
+          {normalizedImages.map((img, i) => (
+            <div key={`${img.imageUrl}-${i}`} className={`pm-thumb ${i === 0 ? 'pm-thumb-primary' : ''}`}>
+              <img src={img.imageUrl} alt={`Ảnh ${i + 1}`} />
               {i === 0 && <span className="pm-thumb-primary-badge">Chính</span>}
               <div className="pm-thumb-actions">
                 <button type="button" title="Dịch trái" disabled={i === 0} onClick={() => moveLeft(i)}><IconChevronLeft size={11} /></button>
-                <button type="button" title="Dịch phải" disabled={i === images.length - 1} onClick={() => moveRight(i)}><IconChevronDown size={11} style={{ transform: 'rotate(-90deg)' }} /></button>
+                <button type="button" title="Dịch phải" disabled={i === normalizedImages.length - 1} onClick={() => moveRight(i)}><IconChevronDown size={11} style={{ transform: 'rotate(-90deg)' }} /></button>
                 <button type="button" title="Xóa ảnh" className="pm-thumb-del" onClick={() => removeImage(i)}><IconX size={11} /></button>
               </div>
             </div>
           ))}
 
-          {images.length < maxCount && (
+          {normalizedImages.length < maxCount && (
             <button
               type="button"
               className="pm-thumb pm-thumb-add"
-              onClick={() => fileRef.current?.click()}
-              title="Thêm ảnh"
+              onClick={() => !uploading && fileRef.current?.click()}
+              disabled={uploading}
+              title={uploading ? 'Đang tải ảnh...' : 'Thêm ảnh'}
             >
-              <IconPlus size={18} />
-              <small>Thêm</small>
+              {uploading ? <IconLoader2 size={18} className="pm-spin" /> : <IconPlus size={18} />}
+              <small>{uploading ? 'Đang tải' : 'Thêm'}</small>
             </button>
           )}
         </div>
       )}
 
-      {images.length === 0 && (
+      {normalizedImages.length === 0 && (
         <div
-          className={`pm-dropzone ${dragging ? 'dragging' : ''}`}
-          onClick={() => fileRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          className={`pm-dropzone ${dragging ? 'dragging' : ''} ${uploading ? 'uploading' : ''}`}
+          onClick={() => !uploading && fileRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); if (!uploading) setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
         >
-          <IconUpload size={22} />
-          <span>Kéo thả ảnh hoặc dán URL bên dưới</span>
-          <small>Cần URL công khai (https://...) khi gửi lên backend</small>
+          {uploading ? <IconLoader2 size={22} className="pm-spin" /> : <IconUpload size={22} />}
+          <span>{uploading ? 'Đang tải ảnh lên Cloudinary...' : 'Kéo thả hoặc nhấn để chọn ảnh tải lên'}</span>
+          <small>Hỗ trợ JPEG, PNG, WebP · Tối đa 10 MB mỗi ảnh</small>
         </div>
       )}
 
@@ -144,24 +243,27 @@ function ImageUploadZone({ images = [], onChange, maxCount = 6, hint }) {
           value={urlInput}
           onChange={(e) => setUrlInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addUrl())}
-          placeholder="Dán URL ảnh (https://...) rồi nhấn Thêm..."
-          disabled={images.length >= maxCount}
+          placeholder="Hoặc dán URL ảnh (https://...) rồi nhấn Thêm..."
+          disabled={normalizedImages.length >= maxCount || uploading}
         />
         <button
           type="button"
           className="pm-button secondary pm-btn-sm"
           onClick={addUrl}
-          disabled={!urlInput.trim() || images.length >= maxCount}
+          disabled={!urlInput.trim() || normalizedImages.length >= maxCount || uploading}
         >
           Thêm
         </button>
       </div>
 
+      {uploadError && <p className="pm-image-error">{uploadError}</p>}
+
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         multiple
+        disabled={uploading}
         className="pm-file-input"
         onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
       />
@@ -172,7 +274,7 @@ function ImageUploadZone({ images = [], onChange, maxCount = 6, hint }) {
 /* ═══════════════════════════════════════════════
    VARIANT ITEM trong modal
 ═══════════════════════════════════════════════ */
-function VariantItem({ variant, index, onChange, onRemove, canRemove }) {
+function VariantItem({ variant, index, onChange, onRemove, canRemove, onUploadingChange }) {
   const update = (key) => (e) =>
     onChange(index, { ...variant, [key]: e.target.value });
 
@@ -254,6 +356,7 @@ function VariantItem({ variant, index, onChange, onRemove, canRemove }) {
         images={variant.images || []}
         onChange={updateImages}
         maxCount={6}
+        onUploadingChange={onUploadingChange}
       />
 
       {canRemove && (
@@ -284,7 +387,7 @@ function mapDetailToVariants(detail) {
       compareAtPrice: '',
       stockQuantity: 0,
       status: 'ACTIVE',
-      images: allImages.map((img) => img.imageUrl || img.url).filter(Boolean),
+      images: allImages.map(normalizeImageItem).filter(Boolean),
     }];
   }
 
@@ -293,10 +396,12 @@ function mapDetailToVariants(detail) {
     const vImages = allImages
       .filter((img) => img.variantId === v.id || (idx === 0 && !img.variantId))
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-      .map((img) => img.imageUrl || img.url)
+      .map(normalizeImageItem)
       .filter(Boolean);
 
-    const fallbackVImgs = Array.isArray(v.images) ? v.images : [];
+    const fallbackVImgs = Array.isArray(v.images)
+      ? v.images.map(normalizeImageItem).filter(Boolean)
+      : [];
 
     return {
       id: v.id,
@@ -333,7 +438,12 @@ function ProductDialog({ product, categories, brands, onClose, onSave }) {
 
   const [variants, setVariants] = useState(() => mapDetailToVariants(product));
   const [saving, setSaving] = useState(false);
+  const [uploadingCount, setUploadingCount] = useState(0);
   const [error, setError] = useState('');
+
+  const handleUploadingChange = useCallback((isUploading) => {
+    setUploadingCount((c) => Math.max(0, c + (isUploading ? 1 : -1)));
+  }, []);
 
   const updateForm = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -403,9 +513,14 @@ function ProductDialog({ product, categories, brands, onClose, onSave }) {
       skuSet.add(s);
     }
 
-    const allUrls = variants.flatMap((v) => v.images || []);
-    if (allUrls.some((u) => u.startsWith('blob:'))) {
-      setError('Ảnh vừa chọn từ máy tính cần được tải lên dịch vụ lưu trữ và dán URL công khai (https://...) trước khi lưu.');
+    if (uploadingCount > 0) {
+      setError('Vui lòng đợi ảnh tải lên Cloudinary hoàn tất trước khi lưu.');
+      return;
+    }
+
+    const allImgs = variants.flatMap((v) => (v.images || []).map(normalizeImageItem).filter(Boolean));
+    if (allImgs.some((img) => img.imageUrl.startsWith('blob:'))) {
+      setError('Ảnh chưa được tải lên Cloudinary. Vui lòng thử tải lại ảnh.');
       return;
     }
 
@@ -436,11 +551,12 @@ function ProductDialog({ product, categories, brands, onClose, onSave }) {
       const builtImages = [];
       let order = 0;
       variants.forEach((v) => {
-        (v.images || []).forEach((url) => {
-          const cleanUrl = url.trim();
-          if (!cleanUrl) return;
+        (v.images || []).forEach((rawImg) => {
+          const img = normalizeImageItem(rawImg);
+          if (!img) return;
           builtImages.push({
-            imageUrl: cleanUrl,
+            imageUrl: img.imageUrl,
+            ...(img.publicId ? { publicId: img.publicId } : {}),
             isPrimary: order === 0,
             sortOrder: order,
             ...(v.id ? { variantId: v.id } : { variantSku: v.sku.trim() }),
@@ -464,7 +580,7 @@ function ProductDialog({ product, categories, brands, onClose, onSave }) {
         specifications,
         status: form.status,
         variants: builtVariants,
-        ...(builtImages.length > 0 ? { images: builtImages } : {}),
+        ...(builtImages.length > 0 || isEdit ? { images: builtImages } : {}),
       };
 
       if (isEdit) {
@@ -614,6 +730,7 @@ function ProductDialog({ product, categories, brands, onClose, onSave }) {
                     onChange={updateVariant}
                     onRemove={removeVariant}
                     canRemove={variants.length > 1}
+                    onUploadingChange={handleUploadingChange}
                   />
                 ))}
               </div>
@@ -645,10 +762,12 @@ function ProductDialog({ product, categories, brands, onClose, onSave }) {
 
         <div className="pm-dialog-actions">
           <button type="button" className="pm-button secondary" onClick={onClose} disabled={saving}>Hủy</button>
-          <button className="pm-button primary" type="submit" disabled={saving}>
+          <button className="pm-button primary" type="submit" disabled={saving || uploadingCount > 0}>
             {saving
               ? <><IconLoader2 size={15} className="pm-spin" /> Đang lưu...</>
-              : isEdit ? 'Lưu thay đổi' : 'Thêm sản phẩm'}
+              : uploadingCount > 0
+                ? <><IconLoader2 size={15} className="pm-spin" /> Đang tải ảnh...</>
+                : isEdit ? 'Lưu thay đổi' : 'Thêm sản phẩm'}
           </button>
         </div>
       </form>
