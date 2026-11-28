@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { IconCheck, IconShoppingBag } from "@tabler/icons-react";
+import { IconCheck, IconPhotoOff, IconShoppingBag } from "@tabler/icons-react";
 
 const formatPrice = (price) => `${price.toLocaleString("vi-VN")} đ`;
 
 function ProductCard({ product, onAddToCart }) {
   const [added, setAdded] = useState(false);
+  const [failedImageUrl, setFailedImageUrl] = useState(null);
   const navigate = useNavigate();
+
+  const showImage = Boolean(product.image) && failedImageUrl !== product.image;
 
   const handleAdd = async (e) => {
     e.stopPropagation();
@@ -36,7 +39,20 @@ function ProductCard({ product, onAddToCart }) {
     >
       <div className="pl-product-image" data-node-id={product.imageFrameId}>
         <Link to={`/ban-phim/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
-          <img src={product.image} alt={product.name} data-node-id={product.imageNodeId} loading="lazy" />
+          {showImage ? (
+            <img
+              src={product.image}
+              alt={product.name}
+              data-node-id={product.imageNodeId}
+              loading="lazy"
+              onError={() => setFailedImageUrl(product.image)}
+            />
+          ) : (
+            <div className="pl-image-fallback" aria-hidden="true">
+              <IconPhotoOff size={28} stroke={1.5} />
+              <span>Chưa có hình ảnh</span>
+            </div>
+          )}
         </Link>
         <span className={`pl-badge ${product.badge === "MỚI RA MẮT" ? "is-new" : ""}`}>
           {product.badge}

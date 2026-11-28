@@ -182,9 +182,42 @@ export const productService = {
       });
 
       const pageData = response.data?.data || {};
-      const list = Array.isArray(pageData.content)
+      const rawList = Array.isArray(pageData.content)
         ? pageData.content
         : [];
+
+      // Bổ sung primaryImageUrl từ API chi tiết nếu API danh sách trả về null/rỗng
+      const missingImageItems = rawList.filter(
+        (item) => item?.id != null && !item.primaryImageUrl
+      );
+
+      let list = rawList;
+      if (missingImageItems.length > 0) {
+        const detailResults = await Promise.allSettled(
+          missingImageItems.map((item) => api.get(`/api/products/${item.id}`))
+        );
+        const imageById = new Map();
+        detailResults.forEach((res, idx) => {
+          if (res.status !== "fulfilled") return;
+          const images = res.value?.data?.data?.images;
+          if (!Array.isArray(images) || images.length === 0) return;
+          const primary =
+            images.find((img) => img.isPrimary)?.imageUrl ||
+            images[0]?.imageUrl ||
+            "";
+          if (primary) {
+            imageById.set(missingImageItems[idx].id, primary);
+          }
+        });
+
+        if (imageById.size > 0) {
+          list = rawList.map((item) =>
+            !item.primaryImageUrl && imageById.has(item.id)
+              ? { ...item, primaryImageUrl: imageById.get(item.id) }
+              : item
+          );
+        }
+      }
 
       return {
         products: list.map(mapCardToFrontend).filter(Boolean),
